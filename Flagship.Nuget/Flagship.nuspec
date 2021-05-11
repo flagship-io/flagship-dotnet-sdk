@@ -24,11 +24,6 @@
         <dependency id="Microsoft.Net.Http" version="2.2.29" />
         <dependency id="Microsoft.Bcl.Async" version="1.0.168" />
       </group>
-      <group targetFramework=".NETStandard1.6">
-        <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="murmurhash-signed" version="1.0.3" />
-        <dependency id="Newtonsoft.Json" version="12.0.3" />
-      </group>
       <group targetFramework="netstandard2.0">
         <dependency id="NETStandard.Library" version="2.0.3" />
         <dependency id="murmurhash-signed" version="1.0.3" />

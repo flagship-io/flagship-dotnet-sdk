@@ -12,11 +12,6 @@ Copy-Item -Path "..\Flagship\bin\Release\net45\Flagship*.dll" -Destination ".\li
 Copy-Item -Path "..\Flagship\bin\Release\net45\Flagship*.pdb" -Destination ".\lib\net45" -Recurse -force
 Copy-Item -Path "..\Flagship\bin\Release\net45\Flagship*.xml" -Destination ".\lib\net45" -Recurse -force
 
-New-Item -Path ".\lib\netstandard1.6" -ItemType "directory" -force
-Copy-Item -Path "..\Flagship\bin\Release\netstandard1.6\Flagship*.dll" -Destination ".\lib\netstandard1.6" -Recurse -force
-Copy-Item -Path "..\Flagship\bin\Release\netstandard1.6\Flagship*.pdb" -Destination ".\lib\netstandard1.6" -Recurse -force
-Copy-Item -Path "..\Flagship\bin\Release\netstandard1.6\Flagship*.xml" -Destination ".\lib\netstandard1.6" -Recurse -force
-
 New-Item -Path ".\lib\netstandard2.0" -ItemType "directory" -force
 Copy-Item -Path "..\Flagship\bin\Release\netstandard2.0\Flagship*.dll" -Destination ".\lib\netstandard2.0" -Recurse -force
 Copy-Item -Path "..\Flagship\bin\Release\netstandard2.0\Flagship*.pdb" -Destination ".\lib\netstandard2.0" -Recurse -force

@@ -17,7 +17,9 @@ jobs:
         run: dotnet restore
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1.0.2
+        uses: NuGet/setup-nuget@v1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
 
       - name: Restore NuGet Packages
         run: nuget restore Flagship.sln
@@ -28,6 +30,6 @@ jobs:
       - uses: codecov/codecov-action@v1
         with:
           file: ./CoverageResults.xml
-          
+
       - name: Update codecov
         run: bash <(curl -s https://codecov.io/bash)

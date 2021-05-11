@@ -194,7 +194,10 @@
           />
           <label class="form-check-label"> Activate </label>
         </div>
-        <div class="alert alert-warning mt-3 mb-3" v-if="flagOk && flagOk.error">
+        <div
+          class="alert alert-warning mt-3 mb-3"
+          v-if="flagOk && flagOk.error"
+        >
           {{flagOk.error}}
         </div>
 
@@ -234,9 +237,9 @@
 
         <div
           class="alert alert-success mt-3 mb-3"
-          v-if="flagInfoOk && !flagInfoOk.error"
+          v-if="flagInfoOk && !flagInfoOk.error && flagInfoOk.value"
         >
-          {{flagInfoOk}}
+          {{flagInfoOk.value}}
         </div>
       </form>
     </div>

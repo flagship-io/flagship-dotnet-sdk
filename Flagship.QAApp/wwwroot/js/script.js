@@ -140,7 +140,7 @@ var app = new Vue({
       this.$http.get(`/flag/${name}/info`).then(
         (response) => {
           console.log(response.body.value);
-          this.flagInfoOk = response.body.value;
+          this.flagInfoOk = response.body;
         },
         (response) => {
           console.log("youpi");

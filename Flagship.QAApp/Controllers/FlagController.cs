@@ -101,9 +101,11 @@ namespace QAApp.Controllers
         [Route("{name}/info")]
         public IActionResult GetInfos(string name)
         {
+            var infos = VisitorController.Visitor.GetModificationInfo(name);
             return Ok(new
             {
-                value = VisitorController.Visitor.GetModificationInfo(name)
+                value = infos,
+                error = infos == null ? "Flag key not found" : null
             });
         }
     }

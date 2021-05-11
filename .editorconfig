@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CA1303: Ne pas passer de littéraux en paramètres localisés
+dotnet_diagnostic.CA1303.severity = none

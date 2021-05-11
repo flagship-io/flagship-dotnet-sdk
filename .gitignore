@@ -1,0 +1,7 @@
+/.vs
+/*/bin
+/*/obj
+/packages
+/CoverageReport
+/Flagship.Nuget/lib
+CoverageResults.xml

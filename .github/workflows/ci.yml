@@ -24,6 +24,12 @@ jobs:
       - name: Restore NuGet Packages
         run: nuget restore Flagship.sln
 
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+      
+      - name: Build dll
+        run: MSBuild Flagship.Test/Flagship.Test.csproj -property:Configuration=Release
+
       - name: Run tests
         shell: pwsh
         run: ./coverage-ci.bat

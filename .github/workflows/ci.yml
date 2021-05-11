@@ -11,6 +11,8 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '5.0.x'
+      - name: Install package
+        run: dotnet restore
       - name: Run tests
         shell: pwsh
         run: ./coverage-ci.bat

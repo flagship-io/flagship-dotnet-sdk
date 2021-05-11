@@ -14,7 +14,7 @@ namespace Flagship.Tests.Model.Hits
             var result = hit.Validate();
 
             Assert.IsFalse(result.Success);
-            Assert.AreEqual(2, result.Errors.Length);
+            Assert.AreEqual(1, result.Errors.Length);
 
             hit.PageTitle = "title";
             hit.DocumentLocation = "screen";

@@ -1,10 +1,15 @@
 name: CI pipeline
 # This workflow is triggered on pushes to the repository.
-on: [push]
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
 
 jobs:
   build:
-    name: Test & Coverage
+    name: Deploy NuGet package
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -24,13 +29,7 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Build dll
-        run: MSBuild Flagship.Tests/Flagship.Tests.csproj -property:Configuration=Debug
-
-      - name: Run tests
+      - name: Build nuget
         shell: pwsh
-        run: ./coverage-ci.bat
-
-      - uses: codecov/codecov-action@v1
-        with:
-          file: ./CoverageResults.xml
+        run: ./pack.ps1
+        working-directory: Flagship.Nuget

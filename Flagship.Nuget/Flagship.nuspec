@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
-    <id>ABTasty.Flagship.SDK</id>
+    <id>Flagship.SDK</id>
     <version>0.0.1</version>
     <title>Flagship C# SDK</title>
     <authors>Flagship Team</authors>
-    <owners>abtasty.flagship</owners>
     <license type="expression">Apache-2.0</license>
-    <projectUrl>https://github.com/abtasty/flagship-csharp-sdk</projectUrl>
+    <projectUrl>https://github.com/flagship-io/flagship-dotnet-sdk</projectUrl>
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>C# SDK for ABTasty Flagship</description>
-    <releaseNotes>https://github.com/abtasty/flagship-csharp-sdk/blob/master/CHANGELOG.md</releaseNotes>
+    <description>C# SDK for Flagship</description>
+    <releaseNotes>https://github.com/flagship-io/flagship-dotnet-sdk/blob/master/CHANGELOG.md</releaseNotes>
     <copyright>Copyright 2021-2021</copyright>
     <tags>ABTasty Flagship</tags>
     <dependencies>
@@ -43,7 +42,7 @@
     </dependencies>
   </metadata>
   <files>
-	<file src="lib\**" target="lib" />
-	<file src="images\icon.png" target="images\" />
+    <file src="lib\**" target="lib" />
+    <file src="images\icon.png" target="images\" />
   </files>
 </package>

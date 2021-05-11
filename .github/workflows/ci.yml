@@ -8,16 +8,26 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '5.0.x'
-      - name: Install package
+
+      - name: Install packages
         run: dotnet restore
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.2
+
+      - name: Restore NuGet Packages
+        run: nuget restore Flagship.sln
+
       - name: Run tests
         shell: pwsh
         run: ./coverage-ci.bat
       - uses: codecov/codecov-action@v1
         with:
           file: ./CoverageResults.xml
+          
       - name: Update codecov
         run: bash <(curl -s https://codecov.io/bash)

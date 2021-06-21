@@ -33,3 +33,9 @@ jobs:
         shell: pwsh
         run: ./pack.ps1
         working-directory: Flagship.Nuget
+
+      - name: Archive Nuget file
+        uses: actions/upload-artifact@v2
+        with:
+          name: Nuget file
+          path: Flagship.Nuget\Flagship.SDK.0.0.1.nupkg

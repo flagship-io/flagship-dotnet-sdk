@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Flagship.SDK</id>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
     <title>Flagship C# SDK</title>
     <authors>Flagship Team</authors>
     <license type="expression">Apache-2.0</license>

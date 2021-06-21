@@ -25,6 +25,7 @@ namespace Flagship.Model.Hits
         /// Item code (SKU for instance)
         /// </summary>
         [JsonProperty("ic")]
+        [JsonRequired]
         public string Code { get; set; }
 
         /// <summary>

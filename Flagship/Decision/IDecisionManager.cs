@@ -14,9 +14,9 @@ namespace Flagship.Decision
     {
         public event StatusChangeDelegate StatusChange;
 
-        public bool IsPanic();
-         
-        public ICollection<FlagDTO> GetFlags (ICollection<Campaign> campaigns);
+        public bool IsPanic { get; }
+
+        public Task<ICollection<FlagDTO>> GetFlags (ICollection<Campaign> campaigns);
 
         public Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
 

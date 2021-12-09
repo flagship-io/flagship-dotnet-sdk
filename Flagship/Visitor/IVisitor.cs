@@ -11,9 +11,9 @@ namespace Flagship.FsVisitor
 {
     public interface IVisitor
     { 
-        public string VisitorID { get; set; }
+        public string VisitorId { get; set; }
 
-        public string? Anonymous { get; }
+        public string? AnonymousId { get; }
 
         public ICollection<FlagDTO> Flags { get; set; }
 

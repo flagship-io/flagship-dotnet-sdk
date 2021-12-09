@@ -17,7 +17,7 @@ namespace Flagship.Model
 
         public bool IsReference { get; set; }
 
-        public IDictionary<string,object> Value { get; set; }
+        public object Value { get; set; }
 
     }
 }

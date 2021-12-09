@@ -13,21 +13,21 @@ namespace Flagship.FsVisitor
     {
         private IDictionary<string, object> _context;
         private bool _hasConsented;
-        protected string? _anonymous;
-        public string VisitorID { get; set; }
+        protected string? _anonymousId;
+        public string VisitorId { get; set; }
         public ICollection<FlagDTO> Flags { get; set; }
         public bool HasConsented => _hasConsented;
         public FlagshipConfig Config { get; set; }
         public IConfigManager ConfigManager { get; set; }
         public IDictionary<string, object> Context => _context;
-        public string Anonymous => _anonymous ;
+        public string AnonymousId => _anonymousId ;
 
         public VisitorDelegateAbstract(string? visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
             ConfigManager = configManager;
             UpdateContex(context);
             SetConsent(hasConsented);
-            VisitorID = visitorID; // TO DO create an visitorID if null is given
+            VisitorId = visitorID; // TO DO create an visitorID if null is given
 
 
         }

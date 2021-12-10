@@ -32,13 +32,22 @@ namespace Flagship.FsVisitor
 
         }
 
+        protected VisitorStrategyAbstract GetStrategy()
+        {
+            
+        }
+
+        public void SetConsent(bool hasConsented)
+        {
+            _hasConsented = hasConsented;
+            this.GetStrategy().SetConsent(hasConsented);
+        }
+
         abstract public void ClearContext();
 
         abstract public Task FetchFlags();
 
         abstract public IFlag GetFlag<T>(string key, T defaultValue);
-
-        abstract public void SetConsent(bool hasConsented);
 
         abstract public void UpdateContex(IDictionary<string, object> context);
     }

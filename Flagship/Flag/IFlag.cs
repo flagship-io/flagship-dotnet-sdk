@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Flag
 {
-    internal interface IFlag
+    public interface IFlag
     {
     }
 }

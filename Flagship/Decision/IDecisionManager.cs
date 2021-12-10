@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Decision
 {
-    internal interface IDecisionManager
+    public interface IDecisionManager
     {
         public event StatusChangeDelegate StatusChange;
 

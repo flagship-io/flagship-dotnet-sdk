@@ -1,7 +1,6 @@
 ﻿using Flagship.Config;
-using Flagship.Flag;
+using Flagship.FsFlag;
 using Flagship.Model;
-using Flagship.Visitor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,21 +9,21 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
-    public interface IVisitor : IVisitorCore
-    { 
-        public string VisitorId { get; set; }
+    internal interface IVisitor : IVisitorCore
+    {
+        string VisitorId { get; set; }
 
-        public string? AnonymousId { get; }
+        string AnonymousId { get; }
 
-        public ICollection<FlagDTO> Flags { get; set; }
+        ICollection<FlagDTO> Flags { get; }
 
-        public bool HasConsented { get; }
+        bool HasConsented { get; }
 
-        public FlagshipConfig Config { get; set; }
+        FlagshipConfig Config { get; }
 
-        public IDictionary<string, object> Context { get; }
+        IDictionary<string, object> Context { get; }
 
-        public IFlag GetFlag<T>(string key, T defaultValue);
-       
+        IFlag<T> GetFlag<T>(string key, T defaultValue);
+
     }
 }

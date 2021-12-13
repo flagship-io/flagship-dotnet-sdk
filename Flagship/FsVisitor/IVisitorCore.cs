@@ -8,11 +8,11 @@ namespace Flagship.FsVisitor
 {
     public interface IVisitorCore
     { 
-        public void UpdateContex(IDictionary<string, object> context);
-        public void ClearContext();
+         void UpdateContex(IDictionary<string, object> context);
+         void ClearContext();
 
-        public Task FetchFlags();
+         Task FetchFlags();
 
-        public void SetConsent(bool hasConsented);
+         void SetConsent(bool hasConsented);
     }
 }

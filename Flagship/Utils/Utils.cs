@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Flagship.Utils
 {
-    internal static class Utils
+    internal static class Log
     {
         public static void LogError(FlagshipConfig config, string message, string tag)
         {
             try
             {
-                if (config == null || config.LogManager == null ||  config.LogLevel< Enum.LogLevel.ERROR)
+                if (config == null || config.LogManager == null ||  config.LogLevel< Enums.LogLevel.ERROR)
                 {
                     return;
                 }
@@ -30,7 +30,7 @@ namespace Flagship.Utils
         {
             try
             {
-                if (config == null || config.LogManager==null || config.LogLevel < Enum.LogLevel.INFO)
+                if (config == null || config.LogManager==null || config.LogLevel < Enums.LogLevel.INFO)
                 {
                     return;
                 }

@@ -1,4 +1,4 @@
-﻿using Flagship.Enum;
+﻿using Flagship.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

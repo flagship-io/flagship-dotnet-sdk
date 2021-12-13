@@ -1,4 +1,4 @@
-﻿using Flagship.Enum;
+﻿using Flagship.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,14 +9,14 @@ namespace Flagship.Utils
 {
     public interface IFsLogManager
     {
-        public void Emergency(string message, string tag);
-        public void Alert(string message, string tag);
-        public void Critical(string message, string tag);
-        public void Error(string message, string tag);
-        public void Warning(string message, string tag);
-        public void Notice(string message, string tag);
-        public void Info(string message, string tag);
-        public void Debug(string message, string tag);
-        public void Log(LogLevel level, string message, string tag);
+         void Emergency(string message, string tag);
+         void Alert(string message, string tag);
+         void Critical(string message, string tag);
+         void Error(string message, string tag);
+         void Warning(string message, string tag);
+         void Notice(string message, string tag);
+         void Info(string message, string tag);
+         void Debug(string message, string tag);
+         void Log(LogLevel level, string message, string tag);
     }
 }

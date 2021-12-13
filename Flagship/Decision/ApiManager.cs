@@ -1,5 +1,5 @@
 ﻿using Flagship.Config;
-using Flagship.Enum;
+using Flagship.Enums;
 using Flagship.FsVisitor;
 using Flagship.Model;
 using Newtonsoft.Json;
@@ -8,12 +8,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Flagship.Decision
 {
-    public class ApiManager : DecisionManager
+    internal class ApiManager : DecisionManager
     {
         public ApiManager(HttpClient httpClient, FlagshipConfig config) : base(httpClient, config)
         {
@@ -23,12 +24,21 @@ namespace Flagship.Decision
         {
             try
             {
-                HttpClient.DefaultRequestHeaders.Clear();
-                HttpClient.DefaultRequestHeaders.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
-                HttpClient.DefaultRequestHeaders.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
-                HttpClient.DefaultRequestHeaders.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
-                HttpClient.DefaultRequestHeaders.Add(Constants.HEADER_CONTENT_TYPE, Constants.HEADER_APPLICATION_JSON);
+                
+                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true";
+                if (!visitor.HasConsented)
+                {
+                    url += $"&{Constants.SEND_CONTEXT_EVENT}=false";
+                }
 
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+
+                requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
+                requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
+                requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+                
+               
                 var postData = new Dictionary<string, object>
                 {
                     ["visitorId"] = visitor.VisitorId,
@@ -37,19 +47,18 @@ namespace Flagship.Decision
                     ["context"] = visitor.Context
                 };
 
-
                 var postDatajson = JsonConvert.SerializeObject(postData);
 
                 var stringContent = new StringContent(postDatajson, Encoding.UTF8, "application/json");
 
-                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true";
+                requestMessage.Content = stringContent;
 
-                if (!visitor.HasConsented)
+                var response = await HttpClient.SendAsync(requestMessage);
+
+                if (response.StatusCode!= System.Net.HttpStatusCode.OK)
                 {
-                    url += $"&{Constants.SEND_CONTEXT_EVENT}=false"; 
-                }
-
-                var response = await HttpClient.PostAsync(url, stringContent);
+                    throw new Exception(response.ReasonPhrase);
+                }   
 
                 string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -62,7 +71,7 @@ namespace Flagship.Decision
             }
             catch (Exception ex)
             {
-                Utils.Utils.LogError(Config, ex.Message, "GetCampaigns");
+                Utils.Log.LogError(Config, ex.Message, "GetCampaigns");
                 return new Collection<Campaign>();
             }
         }

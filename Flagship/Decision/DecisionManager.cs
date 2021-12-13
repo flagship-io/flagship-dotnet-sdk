@@ -1,6 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.Delegate;
-using Flagship.Enum;
+using Flagship.Enums;
 using Flagship.FsVisitor;
 using Flagship.Model;
 using System;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Decision
 {
-    public abstract class DecisionManager : IDecisionManager
+    internal abstract class DecisionManager : IDecisionManager
     {
         public event StatusChangeDelegate StatusChange;
         protected bool _isPanic = false;
@@ -38,7 +38,7 @@ namespace Flagship.Decision
 
         public Task<ICollection<FlagDTO>> GetFlags(ICollection<Campaign> campaigns)
         {
-           return Task.Run(() =>
+           return Task.Factory.StartNew(() =>
             {
                 ICollection<FlagDTO> flags = new Collection<FlagDTO>();
                 try
@@ -62,7 +62,7 @@ namespace Flagship.Decision
                 }
                 catch (Exception ex)
                 {
-                    Utils.Utils.LogError(Config, ex.Message, "GetFlags");
+                    Utils.Log.LogError(Config, ex.Message, "GetFlags");
                 }
                
                 return flags;

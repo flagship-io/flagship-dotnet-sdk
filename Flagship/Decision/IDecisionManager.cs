@@ -10,15 +10,15 @@ using System.Threading.Tasks;
 
 namespace Flagship.Decision
 {
-    public interface IDecisionManager
+    internal interface IDecisionManager
     {
-        public event StatusChangeDelegate StatusChange;
+         event StatusChangeDelegate StatusChange;
 
-        public bool IsPanic { get; }
+         bool IsPanic { get; }
 
-        public Task<ICollection<FlagDTO>> GetFlags (ICollection<Campaign> campaigns);
+         Task<ICollection<FlagDTO>> GetFlags (ICollection<Campaign> campaigns);
 
-        public Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
+         Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
 
     }
 }

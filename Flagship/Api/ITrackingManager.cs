@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace Flagship.Api
 {
-    public interface ITrackingManager
+    internal interface ITrackingManager
     {
-        public FlagshipConfig Config { get; set; }
+        FlagshipConfig Config { get; set; }
 
-        public Task SendActive(VisitorDelegateAbstract visitor, FlagDTO flag);
+        Task SendActive(VisitorDelegateAbstract visitor, FlagDTO flag);
 
-        public Task SendHit(object hit);
+        Task SendHit(object hit);
 
-        public Task SendConsentHit(VisitorDelegateAbstract visitor);
+        Task SendConsentHit(VisitorDelegateAbstract visitor);
     }
 }

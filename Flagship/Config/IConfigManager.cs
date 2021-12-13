@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Flagship.Config
 {
-    public interface IConfigManager
+    interface IConfigManager
     {
-        public IDecisionManager DecisionManager { get; set; }
+        IDecisionManager DecisionManager { get; set; }
 
-        public FlagshipConfig Config { get; set; }
+        FlagshipConfig Config { get; set; }
 
-        public ITrackingManager TrackingManager { get; set; }
+        ITrackingManager TrackingManager { get; set; }
 
     }
 }

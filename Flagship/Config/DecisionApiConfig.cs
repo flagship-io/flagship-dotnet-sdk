@@ -10,7 +10,7 @@ namespace Flagship.Config
     {
         public DecisionApiConfig() : base()
         {
-            DecisionMode = Enum.DecisionMode.DECISION_API;
+            DecisionMode = Enums.DecisionMode.DECISION_API;
         }
     }
 }

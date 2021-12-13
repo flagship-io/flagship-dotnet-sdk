@@ -1,5 +1,5 @@
 ﻿using Flagship.Delegate;
-using Flagship.Enum;
+using Flagship.Enums;
 using Flagship.Utils;
 using System;
 using System.Collections.Generic;
@@ -22,14 +22,21 @@ namespace Flagship.Config
          
         public event StatusChangeDelegate StatusChange;
 
+        internal void SetStatus(FlagshipStatus status)
+        {
+            StatusChange?.Invoke(status);
+        }
+
         public IFsLogManager LogManager { get; set; }
 
         public FlagshipConfig()
         {
+            LogLevel = LogLevel.ALL;
             if (!Timeout.HasValue)
             {
                 Timeout = Constants.REQUEST_TIME_OUT;
             }
+
         }
 
     }

@@ -1,5 +1,5 @@
 ﻿using Flagship.Config;
-using Flagship.Flag;
+using Flagship.FsFlag;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 { 
-    public abstract class VisitorDelegateAbstract : IVisitor
+    internal abstract class VisitorDelegateAbstract : IVisitor
     {
-        private IDictionary<string, object> _context;
+        private readonly IDictionary<string, object> _context;
         private bool _hasConsented;
-        protected string? _anonymousId;
+        protected string _anonymousId;
         public string VisitorId { get; set; }
         public ICollection<FlagDTO> Flags { get; set; }
         public bool HasConsented => _hasConsented;
@@ -22,9 +22,10 @@ namespace Flagship.FsVisitor
         public IDictionary<string, object> Context => _context;
         public string AnonymousId => _anonymousId ;
 
-        public VisitorDelegateAbstract(string? visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
+        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
             ConfigManager = configManager;
+            _context = new Dictionary<string, object>();
             UpdateContex(context);
             SetConsent(hasConsented);
             VisitorId = visitorID; // TO DO create an visitorID if null is given
@@ -34,7 +35,7 @@ namespace Flagship.FsVisitor
 
         protected VisitorStrategyAbstract GetStrategy()
         {
-            
+            return new DefaultStrategy(this);
         }
 
         public void SetConsent(bool hasConsented)
@@ -47,8 +48,12 @@ namespace Flagship.FsVisitor
 
         abstract public Task FetchFlags();
 
-        abstract public IFlag GetFlag<T>(string key, T defaultValue);
+        abstract public IFlag<T> GetFlag<T>(string key, T defaultValue);
 
         abstract public void UpdateContex(IDictionary<string, object> context);
+
+        abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
+        abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
+        abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
     }
 }

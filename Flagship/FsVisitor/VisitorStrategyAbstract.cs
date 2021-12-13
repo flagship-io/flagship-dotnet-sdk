@@ -1,7 +1,9 @@
 ﻿using Flagship.Api;
 using Flagship.Config;
 using Flagship.Decision;
+using Flagship.FsFlag;
 using Flagship.FsVisitor;
+using Flagship.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
-    public abstract class VisitorStrategyAbstract : IVisitorCore
+    internal abstract class VisitorStrategyAbstract : IVisitorCore
     {
         protected VisitorDelegateAbstract Visitor { get; set; }
 
@@ -34,7 +36,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Utils.LogError(Config, ex.Message, method);
+                Utils.Log.LogError(Config, ex.Message, method);
             }
         }
 
@@ -43,5 +45,9 @@ namespace Flagship.FsVisitor
         abstract public void ClearContext();
 
         abstract public Task FetchFlags();
+
+        abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag); 
+        abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
+        abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
     }
 }

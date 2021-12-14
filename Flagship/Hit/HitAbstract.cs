@@ -10,8 +10,8 @@ namespace Flagship.Hit
 {
     public abstract class HitAbstract
     {
-        public string VisitorId { get; set; }
-        public FlagshipConfig Config { get; set; }
+        internal string VisitorId { get; set; }
+        internal FlagshipConfig Config { get; set; }
         internal HitType Type { get; set; }
         internal string DS { get; set; }
         internal string AnonymousId { get; set; }
@@ -32,12 +32,28 @@ namespace Flagship.Hit
                 [Constants.VISITOR_ID_API_ITEM] = VisitorId,
                 [Constants.DS_API_ITEM] = DS,
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config.EnvId,
-                [Constants.T_API_ITEM] = $"{Type}",
-                [Constants.USER_IP_API_ITEM] = UserIp,
-                [Constants.SCREEN_RESOLUTION_API_ITEM] = ScreenResolution,
-                [Constants.USER_LANGUAGE] = Locale,
-                [Constants.SESSION_NUMBER] = SessionNumber
+                [Constants.T_API_ITEM] = $"{Type}"
             };
+
+            if (UserIp!=null)
+            {
+                apiKeys[Constants.USER_IP_API_ITEM] = UserIp;
+            }
+
+            if (ScreenResolution != null)
+            {
+                apiKeys[Constants.SCREEN_RESOLUTION_API_ITEM] = ScreenResolution;
+            }
+
+            if (Locale!=null)
+            {
+                apiKeys[Constants.USER_LANGUAGE] = Locale;
+            }
+
+            if (SessionNumber!=null)
+            {
+                apiKeys[Constants.SESSION_NUMBER] = SessionNumber;
+            }
 
             if (!string.IsNullOrWhiteSpace(VisitorId) && !string.IsNullOrWhiteSpace(AnonymousId))
             {

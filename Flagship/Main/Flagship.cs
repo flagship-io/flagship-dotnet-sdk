@@ -87,8 +87,8 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProto
 
             fsInstance.SetStatus(FlagshipStatus.STARTING);
             var httpClient = new HttpClient();
-            var decisionManager = new ApiManager(httpClient, config);
-            var trackingManager = new TrackingManager(httpClient, config);
+            var decisionManager = new ApiManager(config);
+            var trackingManager = new TrackingManager(config);
 
             if (fsInstance._configManager == null)
             {

@@ -1,6 +1,7 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
 using Flagship.Model;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,11 +41,6 @@ namespace Flagship.FsVisitor
             return _visitorDelegate.FetchFlags();
         }
 
-        public IFlag<T> GetFlag<T>(string key, T defaultValue)
-        {
-            return _visitorDelegate.GetFlag(key, defaultValue); 
-        }
-
         public void SetConsent(bool hasConsented)
         {
              _visitorDelegate.SetConsent(hasConsented);   
@@ -55,9 +51,29 @@ namespace Flagship.FsVisitor
             _visitorDelegate.UpdateContex(context);
         }
 
-        IFlag<T> IVisitor.GetFlag<T>(string key, T defaultValue)
+        public IFlag<string> GetFlag(string key, string defaultValue)
         {
-            throw new NotImplementedException();
+            return _visitorDelegate.GetFlag(key, defaultValue);
+        }
+
+        public IFlag<double> GetFlag(string key, double defaultValue)
+        {
+            return _visitorDelegate.GetFlag(key, defaultValue);
+        }
+
+        public IFlag<bool> GetFlag(string key, bool defaultValue)
+        {
+            return _visitorDelegate.GetFlag(key, defaultValue);
+        }
+
+        public IFlag<JObject> GetFlag(string key, JObject defaultValue)
+        {
+            return _visitorDelegate.GetFlag(key, defaultValue);
+        }
+
+        public IFlag<JArray> GetFlag(string key, JArray defaultValue)
+        {
+            return _visitorDelegate.GetFlag(key, defaultValue);
         }
     }
 }

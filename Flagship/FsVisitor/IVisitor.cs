@@ -1,6 +1,7 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
 using Flagship.Model;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,11 @@ namespace Flagship.FsVisitor
 
         IDictionary<string, object> Context { get; }
 
-        IFlag<T> GetFlag<T>(string key, T defaultValue);
+        IFlag<string> GetFlag(string key, string defaultValue);
+        IFlag<double> GetFlag(string key, double defaultValue);
+        IFlag<bool> GetFlag(string key, bool defaultValue);
+        IFlag<JObject> GetFlag(string key, JObject defaultValue);
+        IFlag<JArray> GetFlag(string key, JArray defaultValue);
 
     }
 }

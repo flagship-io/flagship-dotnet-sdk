@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,11 +30,37 @@ namespace Flagship.FsVisitor
             GetStrategy().UpdateContex(context);
         }
 
-        public override IFlag<T> GetFlag<T>(string key, T defaultValue)
+        private IFlag<T> CreateFlag<T>(string key, T defaultValue)
         {
-            var flagDTO = Flags.FirstOrDefault(x=>x.Key==key);
-            return new Flag<T>(key, this, flagDTO, defaultValue);;
+            var flagDTO = Flags.FirstOrDefault(x => x.Key == key);
+            return new Flag<T>(key, this, flagDTO, defaultValue);
         }
+
+        public override IFlag<string> GetFlag(string key, string defaultValue)
+        {
+            return CreateFlag(key, defaultValue);
+        }
+
+        public override IFlag<double> GetFlag(string key, double defaultValue)
+        {
+            return CreateFlag(key, defaultValue);
+        }
+
+        public override IFlag<bool> GetFlag(string key, bool defaultValue)
+        {
+            return CreateFlag(key, defaultValue);
+        }
+
+        public override IFlag<JObject> GetFlag(string key, JObject defaultValue)
+        {
+            return CreateFlag(key, defaultValue);
+        }
+
+        public override IFlag<JArray> GetFlag(string key, JArray defaultValue)
+        {
+            return CreateFlag(key, defaultValue);
+        }
+
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
         {
@@ -49,5 +76,6 @@ namespace Flagship.FsVisitor
         {
             return GetStrategy().UserExposed(key, defaultValue, flag);  
         }
+
     }
 }

@@ -39,9 +39,9 @@ namespace Flagship.Main
 
         }
 
-        public static FlagshipStatus Status=> GetInstance()._status;
+        public static FlagshipStatus Status => GetInstance()._status;
 
-        public static FlagshipConfig Config  => GetInstance()._config;
+        public static FlagshipConfig Config => GetInstance()._config;
 
         private void SetStatus(FlagshipStatus status)
         {
@@ -56,6 +56,12 @@ namespace Flagship.Main
 
         public static void Start(string envId, string apiKey, FlagshipConfig config = null)
         {
+#if NET40 || NETSTANDARD2_0
+ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
+#else
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+#endif
+
             if (config == null)
             {
                 config = new DecisionApiConfig();
@@ -64,7 +70,7 @@ namespace Flagship.Main
 
             fsInstance._config = config;
 
-            if (config.LogManager==null)
+            if (config.LogManager == null)
             {
                 config.LogManager = new FsLogManager();
             }

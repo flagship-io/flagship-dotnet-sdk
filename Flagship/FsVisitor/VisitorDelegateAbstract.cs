@@ -1,6 +1,7 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
 using Flagship.Model;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Flagship.FsVisitor
         public string VisitorId { get; set; }
         public ICollection<FlagDTO> Flags { get; set; }
         public bool HasConsented => _hasConsented;
-        public FlagshipConfig Config { get; set; }
+        public FlagshipConfig Config => ConfigManager.Config;
         public IConfigManager ConfigManager { get; set; }
         public IDictionary<string, object> Context => _context;
         public string AnonymousId => _anonymousId ;
@@ -28,9 +29,13 @@ namespace Flagship.FsVisitor
             _context = new Dictionary<string, object>();
             UpdateContex(context);
             SetConsent(hasConsented);
-            VisitorId = visitorID; // TO DO create an visitorID if null is given
+            VisitorId = visitorID ?? CreateVisitorId();
+        }
 
-
+        protected string CreateVisitorId()
+        {
+            var date = DateTime.Now;
+            return $"{date.Year}{date.Month}{date.Day}{date.Hour}{date.Minute}{date.Second}{new Random().Next(10000, 99999)}";
         }
 
         protected VisitorStrategyAbstract GetStrategy()
@@ -48,7 +53,11 @@ namespace Flagship.FsVisitor
 
         abstract public Task FetchFlags();
 
-        abstract public IFlag<T> GetFlag<T>(string key, T defaultValue);
+        abstract public IFlag<string> GetFlag(string key, string defaultValue);
+        abstract public IFlag<double> GetFlag(string key, double defaultValue); 
+        abstract public IFlag<bool> GetFlag(string key, bool defaultValue);
+        abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
+        abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);
 
         abstract public void UpdateContex(IDictionary<string, object> context);
 

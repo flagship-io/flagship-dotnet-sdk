@@ -1,21 +1,18 @@
 ﻿using Flagship.FsVisitor;
 using Flagship.Model;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace Flagship.FsFlag 
+namespace Flagship.FsFlag
 {
-    public class Flag<T> : IFlag<T>
+    public class Flag<T> : IFlag<T> 
     {
         private string _key;
         private VisitorDelegateAbstract _visitorDelegateAbstract;
         private FlagDTO _flagDTO;
-        private T _defaultValue;
+        private object _defaultValue;
         private IFlagMetadata _metadata;
-        internal Flag(string key, VisitorDelegateAbstract visitorDelegate, FlagDTO flag, T DefaultValue )
+        internal Flag(string key, VisitorDelegateAbstract visitorDelegate, FlagDTO flag, object DefaultValue )
         {
             _key = key;
             _visitorDelegateAbstract = visitorDelegate;
@@ -23,6 +20,7 @@ namespace Flagship.FsFlag
             _defaultValue = DefaultValue;
             _metadata = new FlagMetadata(flag?.CampaignId ?? "", flag?.VariationGroupId ?? "", flag?.VariationId ?? "", flag?.IsReference ?? false, "");
         }
+       
         public bool Exist => _flagDTO!=null;
 
         public IFlagMetadata Metadata => throw new NotImplementedException();
@@ -32,9 +30,9 @@ namespace Flagship.FsFlag
             return _visitorDelegateAbstract.UserExposed(_key, _defaultValue, _flagDTO);
         }
 
-        public T Value(bool userExposed)
+        public T Value(bool userExposed=true)
         {
-            throw new NotImplementedException();
+            return _visitorDelegateAbstract.GetFlagValue(_key, (T) _defaultValue,_flagDTO, userExposed);
         }
     }
 }

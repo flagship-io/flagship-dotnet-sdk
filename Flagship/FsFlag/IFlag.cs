@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsFlag
 {
-    public interface IFlag<T>
+    public interface IFlag<T> 
     {
         T Value(bool userExposed=true);
 

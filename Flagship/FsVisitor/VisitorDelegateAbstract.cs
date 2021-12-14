@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
+using Flagship.Hit;
 using Flagship.Model;
 using Newtonsoft.Json.Linq;
 using System;
@@ -28,8 +29,8 @@ namespace Flagship.FsVisitor
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
             UpdateContex(context);
-            SetConsent(hasConsented);
             VisitorId = visitorID ?? CreateVisitorId();
+            SetConsent(hasConsented);
         }
 
         protected string CreateVisitorId()
@@ -46,7 +47,7 @@ namespace Flagship.FsVisitor
         public void SetConsent(bool hasConsented)
         {
             _hasConsented = hasConsented;
-            this.GetStrategy().SetConsent(hasConsented);
+            this.GetStrategy().SendConsentHit(hasConsented);
         }
 
         abstract public void ClearContext();
@@ -64,5 +65,6 @@ namespace Flagship.FsVisitor
         abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
+        abstract public Task SendHit(HitAbstract hit);
     }
 }

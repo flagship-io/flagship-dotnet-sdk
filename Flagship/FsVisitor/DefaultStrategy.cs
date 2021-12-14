@@ -1,5 +1,6 @@
 ﻿using Flagship.Enums;
 using Flagship.FsFlag;
+using Flagship.Hit;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
@@ -120,6 +121,36 @@ namespace Flagship.FsVisitor
                 return FlagMetadata.EmptyMetadata();
             }
             return metadata;
+        }
+
+        public override Task SendHit(HitAbstract hit)
+        {
+            const string functionName = "SendHit";
+            try
+            {
+                if (hit == null)
+                {
+                    return default;
+                }
+
+                hit.VisitorId = Visitor.VisitorId;
+                hit.DS = Constants.SDK_APP;
+                hit.Config = Config;
+                hit.AnonymousId = Visitor.AnonymousId;
+
+                if (!hit.IsReady())
+                {
+                    Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
+                    return default;
+                }
+
+                return TrackingManager.SendHit(hit);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, functionName);
+                return default;
+            }
         }
     }
 }

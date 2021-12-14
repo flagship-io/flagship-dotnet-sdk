@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
+using Flagship.Hit;
 using Flagship.Model;
 using Newtonsoft.Json.Linq;
 using System;
@@ -19,7 +20,7 @@ namespace Flagship.FsVisitor
         ICollection<FlagDTO> Flags { get; }
 
         bool HasConsented { get; }
-
+        void SetConsent(bool hasConsented);
         FlagshipConfig Config { get; }
 
         IDictionary<string, object> Context { get; }
@@ -29,6 +30,5 @@ namespace Flagship.FsVisitor
         IFlag<bool> GetFlag(string key, bool defaultValue);
         IFlag<JObject> GetFlag(string key, JObject defaultValue);
         IFlag<JArray> GetFlag(string key, JArray defaultValue);
-
     }
 }

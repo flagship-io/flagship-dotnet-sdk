@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
+using Flagship.Hit;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -75,6 +76,11 @@ namespace Flagship.FsVisitor
         public override Task UserExposed<T>(string key, T defaultValue, Model.FlagDTO flag)
         {
             return GetStrategy().UserExposed(key, defaultValue, flag);  
+        }
+
+        public override Task SendHit(HitAbstract hit)
+        {
+            return GetStrategy().SendHit(hit);
         }
 
     }

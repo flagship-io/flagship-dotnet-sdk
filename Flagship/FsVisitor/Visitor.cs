@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.FsFlag;
+using Flagship.Hit;
 using Flagship.Model;
 using Newtonsoft.Json.Linq;
 using System;
@@ -74,6 +75,11 @@ namespace Flagship.FsVisitor
         public IFlag<JArray> GetFlag(string key, JArray defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
+        }
+
+        public Task SendHit(HitAbstract hit)
+        {
+            return _visitorDelegate.SendHit(hit);
         }
     }
 }

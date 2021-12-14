@@ -1,8 +1,10 @@
 ﻿using Flagship.Api;
 using Flagship.Config;
 using Flagship.Decision;
+using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.FsVisitor;
+using Flagship.Hit;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
@@ -27,12 +29,14 @@ namespace Flagship.FsVisitor
             Visitor = visitor;
         }
 
-        public async void SetConsent(bool hasConsented)
+        public void SendConsentHit(bool hasConsented) 
         {
             const string method = "setConsent";
             try
             {
-                await TrackingManager.SendConsentHit(Visitor);
+                var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, "fs_consent");
+                hitEvent.Label = $"{Constants.SDK_LANGUAGE}:{hasConsented}";
+                SendHit(hitEvent);
             }
             catch (Exception ex)
             {
@@ -49,5 +53,7 @@ namespace Flagship.FsVisitor
         abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag); 
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
+
+        abstract public Task SendHit(HitAbstract hit);
     }
 }

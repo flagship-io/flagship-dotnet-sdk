@@ -72,29 +72,43 @@ namespace Flagship.FsVisitor
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
         {
             const string functionName = "getFlag value";
-            if (flag==null)
+            try
             {
-                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR,key), functionName);
-                return defaultValue;
-            }
+                if (flag == null)
+                {
+                    Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName);
+                    return defaultValue;
+                }
 
-            if(flag.Value.GetType() != defaultValue.GetType())
-            {
-                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR,key), functionName);
+                if (flag.Value == null)
+                {
+                    if (userExposed)
+                    {
+                        UserExposed(key, defaultValue, flag);
+                    }
+                    Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
+                    return defaultValue;
+                }
 
-                if (flag.Value==null && userExposed)
+                if (!flag.Value.GetType().Equals(defaultValue.GetType()))
+                {
+                    Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
+                    return defaultValue;
+                }
+
+                if (userExposed)
                 {
                     UserExposed(key, defaultValue, flag);
                 }
+
+                return (T)flag.Value;
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogInfo(Config, ex.Message, functionName);
                 return defaultValue;
             }
-
-            if (userExposed)
-            {
-                UserExposed(key, defaultValue, flag);
-            }
-
-            return (T)flag.Value;
+           
         }
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)

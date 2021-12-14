@@ -19,7 +19,6 @@ namespace Flagship.Decision
         protected bool _isPanic = false;
 
         public FlagshipConfig Config { get; set; }
-        public HttpClient HttpClient { get; set; }
         public bool IsPanic { 
             get => _isPanic; 
             protected set {
@@ -28,9 +27,8 @@ namespace Flagship.Decision
             }
         }
 
-        public DecisionManager(HttpClient httpClient, FlagshipConfig config)
+        public DecisionManager(FlagshipConfig config)
         {
-            HttpClient = httpClient;
             Config = config;    
         }
 

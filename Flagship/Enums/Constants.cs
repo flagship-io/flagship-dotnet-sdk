@@ -48,6 +48,40 @@ namespace Flagship.Enums
         public const string USER_EXPOSED_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, no activate will be sent";
 
         public const string GET_METADATA_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, an empty metadata object is returned";
+
+        public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
+        public const string CUSTOMER_UID = "cuid";
+        public const string ANONYMOUS_ID = "aid";
+        public const string VISITOR_ID_API_ITEM = "vid";
+        public const string VARIATION_GROUP_ID_API_ITEM = "caid";
+        public const string VARIATION_ID_API_ITEM = "vaid";
+        public const string DS_API_ITEM = "ds";
+        public const string T_API_ITEM = "t";
+        public const string DL_API_ITEM = "dl";
+        public const string SDK_APP = "APP";
+        public const string TID_API_ITEM = "tid";
+        public const string TA_API_ITEM = "ta";
+        public const string TT_API_ITEM = "tt";
+        public const string TC_API_ITEM = "tc";
+        public const string TCC_API_ITEM = "tcc";
+        public const string ICN_API_ITEM = "icn";
+        public const string SM_API_ITEM = "sm";
+        public const string PM_API_ITEM = "pm";
+        public const string TR_API_ITEM = "tr";
+        public const string TS_API_ITEM = "ts";
+        public const string IN_API_ITEM = "in";
+        public const string IC_API_ITEM = "ic";
+        public const string IP_API_ITEM = "ip";
+        public const string IQ_API_ITEM = "iq";
+        public const string IV_API_ITEM = "iv";
+        public const string EVENT_CATEGORY_API_ITEM = "ec";
+        public const string EVENT_ACTION_API_ITEM = "ea";
+        public const string EVENT_LABEL_API_ITEM = "el";
+        public const string EVENT_VALUE_API_ITEM = "ev";
+        public const string USER_IP_API_ITEM = "uip";
+        public const string SCREEN_RESOLUTION_API_ITEM = "sr";
+        public const string USER_LANGUAGE = "ul";
+        public const string SESSION_NUMBER = "sn";
     }
 
 }

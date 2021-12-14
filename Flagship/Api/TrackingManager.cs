@@ -1,6 +1,7 @@
 ﻿using Flagship.Config;
 using Flagship.Enums;
 using Flagship.FsVisitor;
+using Flagship.Hit;
 using Flagship.Model;
 using Newtonsoft.Json;
 using System;
@@ -16,11 +17,9 @@ namespace Flagship.Api
     internal class TrackingManager : ITrackingManager
     {
         public FlagshipConfig Config { get; set; }
-        public HttpClient HttpClient { get; set; }
 
-        public TrackingManager(HttpClient httpClient, FlagshipConfig config)
+        public TrackingManager(FlagshipConfig config)
         {
-            HttpClient = httpClient;
             Config = config;
         }
 
@@ -28,6 +27,11 @@ namespace Flagship.Api
         {
             return Task.Factory.StartNew(async () =>
             {
+                var HttpClient = new HttpClient
+                {
+                    Timeout = Config.Timeout.Value
+                };
+
                 try
                 {
                     var url = $"{Constants.BASE_API_URL}activate";
@@ -37,6 +41,7 @@ namespace Flagship.Api
                     requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
                     requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
                     requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+                    
 
                     var postData = new Dictionary<string, object>
                     {
@@ -69,17 +74,42 @@ namespace Flagship.Api
                 {
                     Utils.Log.LogError(Config, ex.Message, "SendActive");
                 }
+                finally{
+
+                    HttpClient.Dispose();
+                }
             });
         }
 
-        public Task SendConsentHit(VisitorDelegateAbstract visitor)
+        public Task SendHit(HitAbstract hit)
         {
-            throw new NotImplementedException();
-        }
+            return Task.Factory.StartNew(async () => {
 
-        public Task SendHit(object hit)
-        {
-            throw new NotImplementedException();
+                var HttpClient = new HttpClient
+                {
+                    Timeout = Config.Timeout.Value
+                };
+                try
+                {
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Post, Constants.HIT_API_URL);
+                    var postDatajson = JsonConvert.SerializeObject(hit.ToApiKeys());
+
+                    var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+
+                    requestMessage.Content = stringContent;
+
+                    var response = await HttpClient.SendAsync(requestMessage);
+                }
+                catch (Exception ex)
+                {
+                    Utils.Log.LogError(Config, ex.Message, "SendHit");
+                }
+                finally
+                {
+                    HttpClient.Dispose();
+                }
+                
+            });
         }
     }
 }

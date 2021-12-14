@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.FsVisitor;
+using Flagship.Hit;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
@@ -15,8 +16,6 @@ namespace Flagship.Api
 
         Task SendActive(VisitorDelegateAbstract visitor, FlagDTO flag);
 
-        Task SendHit(object hit);
-
-        Task SendConsentHit(VisitorDelegateAbstract visitor);
+        Task SendHit(HitAbstract hit);
     }
 }

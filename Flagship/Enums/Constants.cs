@@ -82,6 +82,16 @@ namespace Flagship.Enums
         public const string SCREEN_RESOLUTION_API_ITEM = "sr";
         public const string USER_LANGUAGE = "ul";
         public const string SESSION_NUMBER = "sn";
+
+        public const string HIT_EVENT_ERROR_MESSSAGE = "event category and event action are required";
+
+        public const string HIT_ITEM_ERROR_MESSAGE = "Transaction Id, Item name and item code are required";
+
+        public const string HIT_PAGE_ERROR_MESSAGE = "documentLocation url is required";
+
+        public const string HIT_SCREEN_ERROR_MESSAGE = "documentLocation Screen name is required";
+
+        public const string HIT_TRANSACTION_ERROR_MESSAGE = "Transaction Id and Transaction affiliation are required";
     }
 
 }

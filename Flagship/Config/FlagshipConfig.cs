@@ -16,7 +16,7 @@ namespace Flagship.Config
 
         public DecisionMode DecisionMode {  get; protected set; }
 
-        public int? Timeout { get; set; }
+        public TimeSpan? Timeout { get; set; }
 
         public LogLevel LogLevel { get; set; }
          
@@ -34,7 +34,7 @@ namespace Flagship.Config
             LogLevel = LogLevel.ALL;
             if (!Timeout.HasValue)
             {
-                Timeout = Constants.REQUEST_TIME_OUT;
+                Timeout = TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT);
             }
 
         }

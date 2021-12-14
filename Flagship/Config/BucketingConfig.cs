@@ -9,13 +9,13 @@ namespace Flagship.Config
 {
     public class BucketingConfig : FlagshipConfig
     {
-        public int? PollingInterval { get; set; }
+        public TimeSpan? PollingInterval { get; set; }
         public BucketingConfig():base()
         {
             DecisionMode = DecisionMode.BUCKETING;
             if (!PollingInterval.HasValue)
             {
-                PollingInterval = Constants.DEFAULT_POLLING_INTERVAL;
+                PollingInterval = TimeSpan.FromMilliseconds(Constants.DEFAULT_POLLING_INTERVAL);
             }
         }
     }

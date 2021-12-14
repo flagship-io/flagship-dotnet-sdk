@@ -8,13 +8,15 @@ namespace Flagship.Enums
 {
     internal static class Constants
     {
-        public const int DEFAULT_POLLING_INTERVAL = 1;
+        public const int DEFAULT_POLLING_INTERVAL = 2000;
         /// <summary>
         /// Default request timeout in second
         /// </summary>
-        public const int REQUEST_TIME_OUT = 2;
+        public const int REQUEST_TIME_OUT = 2000;
 
         public const string BASE_API_URL = "https://decision.flagship.io/v2/";
+
+        public const string HIT_API_URL = "https://ariane.abtasty.com";
 
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 

@@ -78,8 +78,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\TrackingManager.cs" />
     <Compile Include="Bucketing\TargetingMatch.cs" />
+    <Compile Include="Config\DecisionApiConfigTests.cs" />
     <Compile Include="Config\FlagshipOptionsTests.cs" />
+    <Compile Include="Decision\ApiManagerTests.cs" />
     <Compile Include="Model\Hits\ItemTest.cs" />
     <Compile Include="Model\Hits\TransactionTest.cs" />
     <Compile Include="Model\Hits\ScreenviewTest.cs" />

@@ -18,26 +18,23 @@ namespace Flagship.FsVisitor
 
         public override Task FetchFlags()
         {
-            Log("FetchFlags");
-            return default;
+            return Task.Factory.StartNew(() => { Log("FetchFlags"); });
         }
 
         public override Task SendHit(HitAbstract hit)
         {
-            Log("SendHit");
-            return default;
+            return Task.Factory.StartNew(() => { Log("SendHit"); });
         }
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
         {
             Log("Flag.value");
-            return default;
+            return defaultValue;
         }
 
         public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
-            Log("UserExposed");
-            return default;
+            return Task.Factory.StartNew(() => { Log("UserExposed"); });
         }
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)

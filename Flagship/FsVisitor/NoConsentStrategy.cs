@@ -13,19 +13,25 @@ namespace Flagship.FsVisitor
     {
         public NoConsentStrategy(VisitorDelegateAbstract visitor) : base(visitor)
         {
-           
+
         }
 
         public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
-            Log("UserExposed");
-            return default;
+
+            return Task.Factory.StartNew(() =>
+            {
+                Log("UserExposed");
+            });
         }
 
         public override Task SendHit(HitAbstract hit)
         {
-            Log("SendHit");
-            return default;
+
+            return Task.Factory.StartNew(() =>
+            {
+                Log("SendHit");
+            });
         }
 
         private void Log(string methodName)

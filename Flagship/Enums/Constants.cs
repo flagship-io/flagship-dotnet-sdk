@@ -51,6 +51,8 @@ namespace Flagship.Enums
 
         public const string GET_METADATA_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, an empty metadata object is returned";
 
+        public const string METHOD_DEACTIVATED_CONSENT_ERROR = "Method {0} is deactivated for visitor {1} : visitor did not consent.";
+
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
         public const string CUSTOMER_UID = "cuid";
         public const string ANONYMOUS_ID = "aid";

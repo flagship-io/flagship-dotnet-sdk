@@ -24,6 +24,8 @@ namespace Flagship.FsVisitor
         public IDictionary<string, object> Context => _context;
         public string AnonymousId => _anonymousId ;
 
+        private VisitorStrategyAbstract _strategy;
+
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
             ConfigManager = configManager;
@@ -41,13 +43,29 @@ namespace Flagship.FsVisitor
 
         protected VisitorStrategyAbstract GetStrategy()
         {
-            return new DefaultStrategy(this);
+            if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.NOT_INITIALIZED)
+            {
+                _strategy = _strategy!=null &&  _strategy.GetType().Name == typeof(NotReadyStrategy).Name ? _strategy: new NotReadyStrategy(this);
+            }
+            else if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.READY_PANIC_ON)
+            {
+                _strategy = _strategy != null && _strategy.GetType().Name == typeof(PanicStrategy).Name ? _strategy : new PanicStrategy(this);
+            }
+            else if (!HasConsented)
+            {
+                _strategy = _strategy != null && _strategy.GetType().Name == typeof(NoConsentStrategy).Name ? _strategy : new NoConsentStrategy(this);
+            }
+            else
+            {
+                _strategy = _strategy != null && _strategy.GetType().Name == typeof(DefaultStrategy).Name ? _strategy : new DefaultStrategy(this);
+            }
+            return _strategy;
         }
 
         public void SetConsent(bool hasConsented)
         {
             _hasConsented = hasConsented;
-            this.GetStrategy().SendConsentHit(hasConsented);
+            this.GetStrategy().SendConsentHitAsync(hasConsented);
         }
 
         abstract public void ClearContext();

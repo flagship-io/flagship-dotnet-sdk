@@ -29,14 +29,20 @@ namespace Flagship.FsVisitor
             Visitor = visitor;
         }
 
-        public void SendConsentHit(bool hasConsented) 
+        virtual public async void SendConsentHitAsync(bool hasConsented) 
         {
             const string method = "setConsent";
             try
             {
-                var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, "fs_consent");
-                hitEvent.Label = $"{Constants.SDK_LANGUAGE}:{hasConsented}";
-                SendHit(hitEvent);
+                var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, "fs_consent")
+                {
+                    Label = $"{Constants.SDK_LANGUAGE}:{hasConsented}",
+                    VisitorId = Visitor.VisitorId,
+                    DS = Constants.SDK_APP,
+                    Config = Config,
+                    AnonymousId = Visitor.AnonymousId
+                };
+               await TrackingManager.SendHit(hitEvent);
             }
             catch (Exception ex)
             {

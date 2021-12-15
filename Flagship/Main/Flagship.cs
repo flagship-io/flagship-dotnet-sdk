@@ -90,6 +90,8 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProto
             var decisionManager = new ApiManager(config);
             var trackingManager = new TrackingManager(config);
 
+            decisionManager.StatusChange += DecisionManager_StatusChange;
+
             if (fsInstance._configManager == null)
             {
                 fsInstance._configManager = new ConfigManager(config, decisionManager, trackingManager);
@@ -103,6 +105,11 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProto
             fsInstance.SetStatus(FlagshipStatus.READY);
             Log.LogInfo(config, string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION),
                 Constants.PROCESS_INITIALIZATION);
+        }
+
+        private static void DecisionManager_StatusChange(FlagshipStatus status)
+        {
+            GetInstance().SetStatus(status);
         }
 
         /// <summary>

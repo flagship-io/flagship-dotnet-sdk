@@ -12,21 +12,18 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Flagship.Decision
 {
     internal class ApiManager : DecisionManager
     {
-        public ApiManager(FlagshipConfig config) : base(config)
+        public ApiManager(FlagshipConfig config, HttpClient httpClient) : base(config, httpClient)
         {
         }
 
         public async override Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
         {
-            var HttpClient = new HttpClient
-            {
-                Timeout = Config.Timeout.Value
-            };
-
+            
             try
             {
                 
@@ -78,10 +75,6 @@ namespace Flagship.Decision
             {
                 Utils.Log.LogError(Config, ex.Message, "GetCampaigns");
                 return new Collection<Campaign>();
-            }
-            finally
-            {
-                HttpClient.Dispose();
             }
         }
     }

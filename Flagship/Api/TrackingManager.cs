@@ -9,29 +9,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Flagship.Api
 {
+
     internal class TrackingManager : ITrackingManager
     {
         public FlagshipConfig Config { get; set; }
+        public HttpClient HttpClient { get ; set ; }
 
-        public TrackingManager(FlagshipConfig config)
+        public TrackingManager(FlagshipConfig config, HttpClient httpClient)
         {
             Config = config;
+            HttpClient = httpClient;
         }
 
         public Task SendActive(VisitorDelegateAbstract visitor, FlagDTO flag)
         {
             return Task.Factory.StartNew(async () =>
             {
-                var HttpClient = new HttpClient
-                {
-                    Timeout = Config.Timeout.Value
-                };
-
+               
                 try
                 {
                     var url = $"{Constants.BASE_API_URL}activate";
@@ -74,21 +75,12 @@ namespace Flagship.Api
                 {
                     Utils.Log.LogError(Config, ex.Message, "SendActive");
                 }
-                finally{
-
-                    HttpClient.Dispose();
-                }
             });
         }
 
         public Task SendHit(HitAbstract hit)
         {
             return Task.Factory.StartNew(async () => {
-
-                var HttpClient = new HttpClient
-                {
-                    Timeout = Config.Timeout.Value
-                };
                 try
                 {
                     var requestMessage = new HttpRequestMessage(HttpMethod.Post, Constants.HIT_API_URL);
@@ -103,10 +95,6 @@ namespace Flagship.Api
                 catch (Exception ex)
                 {
                     Utils.Log.LogError(Config, ex.Message, "SendHit");
-                }
-                finally
-                {
-                    HttpClient.Dispose();
                 }
                 
             });

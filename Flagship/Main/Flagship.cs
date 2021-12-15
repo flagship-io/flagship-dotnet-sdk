@@ -10,9 +10,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("Flagship.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Flagship.Main
 {
     public class Flagship
@@ -87,8 +90,8 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProto
 
             fsInstance.SetStatus(FlagshipStatus.STARTING);
             var httpClient = new HttpClient();
-            var decisionManager = new ApiManager(config);
-            var trackingManager = new TrackingManager(config);
+            var decisionManager = new ApiManager(config, httpClient);
+            var trackingManager = new TrackingManager(config, httpClient);
 
             decisionManager.StatusChange += DecisionManager_StatusChange;
 

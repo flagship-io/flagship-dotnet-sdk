@@ -27,9 +27,12 @@ namespace Flagship.Decision
             }
         }
 
-        public DecisionManager(FlagshipConfig config)
+        public HttpClient HttpClient { get ; set ; }
+
+        public DecisionManager(FlagshipConfig config, HttpClient httpClient)
         {
             Config = config;    
+            HttpClient = httpClient;
         }
 
         abstract public Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);

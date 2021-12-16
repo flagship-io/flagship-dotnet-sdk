@@ -15,6 +15,15 @@ namespace Flagship.FsVisitor
         public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
         {
         }
+        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, string> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
+        {
+        }
+        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, double> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
+        {
+        }
+        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, bool> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
+        {
+        }
 
         public override void ClearContext()
         {
@@ -24,11 +33,6 @@ namespace Flagship.FsVisitor
         public override Task FetchFlags()
         {
             return this.GetStrategy().FetchFlags();
-        }
-
-        public override void UpdateContex(IDictionary<string, object> context)
-        {
-            GetStrategy().UpdateContex(context);
         }
 
         private IFlag<T> CreateFlag<T>(string key, T defaultValue)
@@ -83,5 +87,39 @@ namespace Flagship.FsVisitor
             return GetStrategy().SendHit(hit);
         }
 
+        public override void UpdateContex(IDictionary<string, string> context)
+        {
+            GetStrategy().UpdateContex(context);
+        }
+
+        public override void UpdateContex(IDictionary<string, double> context)
+        {
+            GetStrategy().UpdateContex(context);
+        }
+
+        public override void UpdateContex(IDictionary<string, bool> context)
+        {
+            GetStrategy().UpdateContex(context);
+        }
+
+        public override void UpdateContex(string key, string value)
+        {
+            GetStrategy().UpdateContex(key, value);
+        }
+
+        public override void UpdateContex(string key, double value)
+        {
+            GetStrategy().UpdateContex(key, value);
+        }
+
+        public override void UpdateContex(string key, bool value)
+        {
+            GetStrategy().UpdateContex(key, value);
+        }
+
+        public override void UpdateContexCommon(IDictionary<string, object> context)
+        {
+            GetStrategy().UpdateContexCommon(context); 
+        }
     }
 }

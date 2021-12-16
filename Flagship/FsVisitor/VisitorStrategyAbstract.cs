@@ -50,8 +50,6 @@ namespace Flagship.FsVisitor
             }
         }
 
-        abstract public void UpdateContex(IDictionary<string, object> context);
-
         abstract public void ClearContext();
 
         abstract public Task FetchFlags();
@@ -61,5 +59,18 @@ namespace Flagship.FsVisitor
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
 
         abstract public Task SendHit(HitAbstract hit);
+
+        abstract public void UpdateContexCommon(IDictionary<string, object> context);
+        abstract public void UpdateContex(IDictionary<string, string> context);
+
+        abstract public void UpdateContex(IDictionary<string, double> context);
+
+        abstract public void UpdateContex(IDictionary<string, bool> context);
+
+        abstract public void UpdateContex(string key, string value);
+
+        abstract public void UpdateContex(string key, double value);
+
+        abstract public void UpdateContex(string key, bool value);
     }
 }

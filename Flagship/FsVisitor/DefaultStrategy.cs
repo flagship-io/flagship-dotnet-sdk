@@ -16,9 +16,9 @@ namespace Flagship.FsVisitor
         {
         }
 
-        protected void UpdateContexKeyValue(string key, object value)
+        virtual protected void UpdateContexKeyValue(string key, object value)
         {
-            if (!(value is string) && !(value is int) && !(value is double))
+            if (!(value is string) && !(value is bool) && !(value is double) && !(value is long) && !(value is int))
             {
                 Utils.Log.LogError(Config, string.Format(Constants.CONTEXT_PARAM_ERROR, key), "UpdateContex");
                 return;
@@ -27,12 +27,51 @@ namespace Flagship.FsVisitor
            Visitor.Context[key] = value;
         }
 
-        public override void UpdateContex(IDictionary<string, object> context)
+        public override void UpdateContexCommon(IDictionary<string, object> context)
         {
             foreach (var item in context)
             {
                 UpdateContexKeyValue(item.Key, item.Value);
             }
+        }
+
+        public override void UpdateContex(IDictionary<string, string> context)
+        {
+            foreach (var item in context)
+            {
+                UpdateContexKeyValue(item.Key, item.Value);
+            }
+        }
+
+        public override void UpdateContex(IDictionary<string, double> context)
+        {
+            foreach (var item in context)
+            {
+                UpdateContexKeyValue(item.Key, item.Value);
+            }
+        }
+
+        public override void UpdateContex(IDictionary<string, bool> context)
+        {
+            foreach (var item in context)
+            {
+                UpdateContexKeyValue(item.Key, item.Value);
+            }
+        }
+
+        public override void UpdateContex(string key, string value)
+        {
+            UpdateContexKeyValue(key,value);
+        }
+
+        public override void UpdateContex(string key, double value)
+        {
+            UpdateContexKeyValue(key, value);
+        }
+
+        public override void UpdateContex(string key, bool value)
+        {
+            UpdateContexKeyValue(key, value);
         }
 
         public override void ClearContext()
@@ -151,5 +190,7 @@ namespace Flagship.FsVisitor
                 return default;
             }
         }
+
+       
     }
 }

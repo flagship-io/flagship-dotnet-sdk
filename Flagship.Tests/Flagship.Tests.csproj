@@ -85,6 +85,7 @@
     <Compile Include="Decision\ApiManagerTests.cs" />
     <Compile Include="FsFlag\FlagMetadataTest.cs" />
     <Compile Include="FsFlag\FlagTests.cs" />
+    <Compile Include="FsVisitor\DefaultStrategyTests.cs" />
     <Compile Include="Model\Hits\ItemTest.cs" />
     <Compile Include="Model\Hits\TransactionTest.cs" />
     <Compile Include="Model\Hits\ScreenviewTest.cs" />

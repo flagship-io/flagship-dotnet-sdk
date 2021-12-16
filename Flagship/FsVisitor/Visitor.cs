@@ -47,11 +47,6 @@ namespace Flagship.FsVisitor
              _visitorDelegate.SetConsent(hasConsented);   
         }
 
-        public void UpdateContex(IDictionary<string, object> context)
-        {
-            _visitorDelegate.UpdateContex(context);
-        }
-
         public IFlag<string> GetFlag(string key, string defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
@@ -80,6 +75,36 @@ namespace Flagship.FsVisitor
         public Task SendHit(HitAbstract hit)
         {
             return _visitorDelegate.SendHit(hit);
+        }
+
+        public void UpdateContex(IDictionary<string, string> context)
+        {
+            _visitorDelegate.UpdateContex(context);
+        }
+
+        public void UpdateContex(IDictionary<string, double> context)
+        {
+            _visitorDelegate.UpdateContex(context);
+        }
+
+        public void UpdateContex(IDictionary<string, bool> context)
+        {
+            _visitorDelegate.UpdateContex(context);
+        }
+
+        public void UpdateContex(string key, string value)
+        {
+            _visitorDelegate.UpdateContex(key, value);  
+        }
+
+        public void UpdateContex(string key, double value)
+        {
+            _visitorDelegate.UpdateContex(key, value);
+        }
+
+        public void UpdateContex(string key, bool value)
+        {
+            _visitorDelegate.UpdateContex(key, value);
         }
     }
 }

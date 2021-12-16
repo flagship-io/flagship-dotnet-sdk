@@ -30,6 +30,31 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
+            UpdateContexCommon(context);
+            VisitorId = visitorID ?? CreateVisitorId();
+            SetConsent(hasConsented);
+        }
+        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, string> context, bool hasConsented, IConfigManager configManager)
+        {
+            ConfigManager = configManager;
+            _context = new Dictionary<string, object>();
+            UpdateContex(context);
+            VisitorId = visitorID ?? CreateVisitorId();
+            SetConsent(hasConsented);
+        }
+        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, double> context, bool hasConsented, IConfigManager configManager)
+        {
+            ConfigManager = configManager;
+            _context = new Dictionary<string, object>();
+            UpdateContex(context);
+            VisitorId = visitorID ?? CreateVisitorId();
+            SetConsent(hasConsented);
+        }
+
+        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, bool> context, bool hasConsented, IConfigManager configManager)
+        {
+            ConfigManager = configManager;
+            _context = new Dictionary<string, object>();
             UpdateContex(context);
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
@@ -78,11 +103,19 @@ namespace Flagship.FsVisitor
         abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
         abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);
 
-        abstract public void UpdateContex(IDictionary<string, object> context);
-
         abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
-        abstract public Task SendHit(HitAbstract hit);
+        abstract public Task SendHit(HitAbstract hit); 
+
+        abstract public void UpdateContexCommon(IDictionary<string, object> context);
+        abstract public void UpdateContex(IDictionary<string, string> context);
+        abstract public void UpdateContex(IDictionary<string, double> context);
+        abstract public void UpdateContex(IDictionary<string, bool> context);
+        abstract public void UpdateContex(string key, string value);
+
+        abstract public void UpdateContex(string key, double value);
+
+        abstract public void UpdateContex(string key, bool value);
     }
 }

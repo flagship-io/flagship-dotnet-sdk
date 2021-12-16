@@ -21,7 +21,12 @@ namespace Flagship.FsVisitor
             Log("SendConsentHitAsync");
         }
 
-        public override void UpdateContex(IDictionary<string, object> context)
+        public override void UpdateContexCommon(IDictionary<string, object> context)
+        {
+            Log("UpdateContex");
+        }
+
+        protected override void UpdateContexKeyValue(string key, object value)
         {
             Log("UpdateContex");
         }

@@ -23,7 +23,7 @@ namespace Flagship.Decision
             get => _isPanic; 
             protected set {
                 _isPanic = value;
-                StatusChange?.Invoke(_isPanic? FlagshipStatus.READY_PANIC_ON: FlagshipStatus.READY);
+                StatusChange?.Invoke(_isPanic ? FlagshipStatus.READY_PANIC_ON : FlagshipStatus.READY);
             }
         }
 
@@ -42,8 +42,6 @@ namespace Flagship.Decision
            return Task.Factory.StartNew(() =>
             {
                 ICollection<FlagDTO> flags = new Collection<FlagDTO>();
-                try
-                {
                     foreach (var campaign in campaigns)
                     {
                         foreach (var item in campaign.Variation.Modifications.Value)
@@ -60,12 +58,6 @@ namespace Flagship.Decision
                             flags.Add(flag);
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Utils.Log.LogError(Config, ex.Message, "GetFlags");
-                }
-               
                 return flags;
             });
         }

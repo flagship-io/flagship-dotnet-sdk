@@ -11,6 +11,7 @@ using Moq.Protected;
 using Moq;
 using Flagship.Enums;
 using System.Net.Http.Headers;
+using System.Collections.ObjectModel;
 
 namespace Flagship.Decision.Tests
 {
@@ -55,9 +56,126 @@ namespace Flagship.Decision.Tests
 
             var decisionManager = new Flagship.Decision.ApiManager(config, httpClient);
 
-            var campaigns = await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+            decisionManager.StatusChange += DecisionManager_StatusChange1;
+
+            Collection<Flagship.Model.Campaign> campaigns = (Collection<Model.Campaign>)await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+
+            Collection<Flagship.Model.FlagDTO> flags  = (Collection<Model.FlagDTO>)await decisionManager.GetFlags(campaigns).ConfigureAwait(false); 
 
             Assert.AreEqual(campaigns.Count, 3);
+            Assert.AreEqual(campaigns[0].Id, "c3ev1afkprbg5u3burag");
+            Assert.AreEqual(campaigns[2].Id, "c20j8bk3fk9hdphqtd1g");
+
+            Assert.AreEqual(flags.Count, 6);
+            Assert.AreEqual(flags[0].Key, "array");
+            Assert.AreEqual(flags[5].Key, "my_text");
+
+            httpClient.Dispose();
+            httpResponse.Dispose();
+        }
+
+        private void DecisionManager_StatusChange1(FlagshipStatus status)
+        {
+            Assert.AreEqual(status, FlagshipStatus.READY);
+        }
+
+        [TestMethod()]
+        public async Task GetCampaignsPanicModeTest()
+        {
+            var config = new Flagship.Config.DecisionApiConfig()
+            {
+                EnvId = "envID"
+            };
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("{'visitorId':'anonymeId','campaigns':[],'panic':true}", Encoding.UTF8, "application/json")
+            };
+
+            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true&{Constants.SEND_CONTEXT_EVENT}=false";
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>();
+
+            var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var decisionManager = new Flagship.Decision.ApiManager(config, httpClient);
+
+            decisionManager.StatusChange += DecisionManager_StatusChange;
+
+            var campaigns = await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+
+            Assert.AreEqual(campaigns.Count, 0);
+
+            Assert.IsTrue(decisionManager.IsPanic);
+
+            httpClient.Dispose();
+            httpResponse.Dispose();
+        }
+
+        private void DecisionManager_StatusChange(FlagshipStatus status)
+        {
+            Assert.AreEqual(status, FlagshipStatus.READY_PANIC_ON);
+        }
+
+        [TestMethod()]
+        public async Task GetCampaignsTestFailTest()
+        {
+            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+
+
+            var config = new Flagship.Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            var responseContent = "Error";
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.BadRequest,
+                Content = new StringContent(responseContent, Encoding.UTF8, "application/json")
+            };
+
+            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true&{Constants.SEND_CONTEXT_EVENT}=false";
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>();
+
+            var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var decisionManager = new Flagship.Decision.ApiManager(config, httpClient);
+
+            var campaigns = await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+
+            Assert.AreEqual(campaigns.Count, 0);
+
+            fsLogManagerMock.Verify(x => x.Error("Bad Request", "GetCampaigns"), Times.Once());
 
             httpClient.Dispose();
             httpResponse.Dispose();

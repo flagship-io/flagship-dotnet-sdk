@@ -42,7 +42,7 @@ namespace Flagship.FsVisitor
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFlag<double> GetFlag(string key, double defaultValue)
+        public override IFlag<long> GetFlag(string key, long defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }

@@ -9,14 +9,19 @@ namespace Flagship.FsFlag
 {
     public class FlagMetadata : IFlagMetadata
     {
+        [JsonProperty("campaignId")]
         public string CampaignId { get; set; }
 
+        [JsonProperty("variationGroupId")]
         public string VariationGroupId { get; set; }
 
+        [JsonProperty("variationId")]
         public string VariationId { get; set; }
 
+        [JsonProperty("isReference")]
         public bool IsReference { get; set; }
 
+        [JsonProperty("campaignType")]
         public string CampaignType { get; set; }
 
         internal FlagMetadata(string campaignId, string variationGroupId, string variationId, bool isReference, string campaignType)
@@ -26,20 +31,11 @@ namespace Flagship.FsFlag
             VariationId = variationId;
             IsReference = isReference;
             CampaignType = campaignType;
-
         }
 
         public string ToJson()
         {
-            try
-            {
-                return JsonConvert.SerializeObject(this);
-            }
-            catch (Exception)
-            {
-                return "{}";
-            }
-             
+            return JsonConvert.SerializeObject(this);
         }
 
         internal static IFlagMetadata EmptyMetadata()

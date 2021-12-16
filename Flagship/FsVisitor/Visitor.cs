@@ -57,7 +57,7 @@ namespace Flagship.FsVisitor
             return _visitorDelegate.GetFlag(key, defaultValue);
         }
 
-        public IFlag<double> GetFlag(string key, double defaultValue)
+        public IFlag<long> GetFlag(string key, long defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
         }

@@ -83,6 +83,8 @@
     <Compile Include="Config\DecisionApiConfigTests.cs" />
     <Compile Include="Config\FlagshipOptionsTests.cs" />
     <Compile Include="Decision\ApiManagerTests.cs" />
+    <Compile Include="FsFlag\FlagMetadataTest.cs" />
+    <Compile Include="FsFlag\FlagTests.cs" />
     <Compile Include="Model\Hits\ItemTest.cs" />
     <Compile Include="Model\Hits\TransactionTest.cs" />
     <Compile Include="Model\Hits\ScreenviewTest.cs" />

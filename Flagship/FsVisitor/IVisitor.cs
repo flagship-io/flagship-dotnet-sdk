@@ -26,7 +26,7 @@ namespace Flagship.FsVisitor
         IDictionary<string, object> Context { get; }
 
         IFlag<string> GetFlag(string key, string defaultValue);
-        IFlag<double> GetFlag(string key, double defaultValue);
+        IFlag<long> GetFlag(string key, long defaultValue);
         IFlag<bool> GetFlag(string key, bool defaultValue);
         IFlag<JObject> GetFlag(string key, JObject defaultValue);
         IFlag<JArray> GetFlag(string key, JArray defaultValue);

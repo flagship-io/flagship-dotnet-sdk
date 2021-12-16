@@ -90,7 +90,6 @@ namespace Flagship.FsVisitor
                     Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                     return defaultValue;
                 }
-
                 if (!flag.Value.GetType().Equals(defaultValue.GetType()))
                 {
                     Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);

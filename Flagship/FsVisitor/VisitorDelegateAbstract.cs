@@ -73,7 +73,7 @@ namespace Flagship.FsVisitor
         abstract public Task FetchFlags();
 
         abstract public IFlag<string> GetFlag(string key, string defaultValue);
-        abstract public IFlag<double> GetFlag(string key, double defaultValue); 
+        abstract public IFlag<long> GetFlag(string key, long defaultValue);
         abstract public IFlag<bool> GetFlag(string key, bool defaultValue);
         abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
         abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);

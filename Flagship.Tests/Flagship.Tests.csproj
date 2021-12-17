@@ -87,6 +87,12 @@
     <Compile Include="FsFlag\FlagMetadataTest.cs" />
     <Compile Include="FsFlag\FlagTests.cs" />
     <Compile Include="FsVisitor\DefaultStrategyTests.cs" />
+    <Compile Include="FsVisitor\NoConsentStrategyTests.cs" />
+    <Compile Include="FsVisitor\NotReadyStrategyTests.cs" />
+    <Compile Include="FsVisitor\PanicStrategyTests.cs" />
+    <Compile Include="FsVisitor\VisitorBuilderTests.cs" />
+    <Compile Include="FsVisitor\VisitorDelegateTests.cs" />
+    <Compile Include="FsVisitor\VisitorTests.cs" />
     <Compile Include="Model\Hits\ItemTest.cs" />
     <Compile Include="Model\Hits\TransactionTest.cs" />
     <Compile Include="Model\Hits\ScreenviewTest.cs" />

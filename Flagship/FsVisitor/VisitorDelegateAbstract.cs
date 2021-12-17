@@ -16,13 +16,13 @@ namespace Flagship.FsVisitor
         private readonly IDictionary<string, object> _context;
         private bool _hasConsented;
         protected string _anonymousId;
-        public string VisitorId { get; set; }
-        public ICollection<FlagDTO> Flags { get; set; }
-        public bool HasConsented => _hasConsented;
-        public FlagshipConfig Config => ConfigManager.Config;
-        public IConfigManager ConfigManager { get; set; }
-        public IDictionary<string, object> Context => _context;
-        public string AnonymousId => _anonymousId ;
+        virtual public string VisitorId { get; set; }
+        virtual public ICollection<FlagDTO> Flags { get; set; }
+        virtual public bool HasConsented => _hasConsented;
+        virtual public FlagshipConfig Config => ConfigManager.Config;
+        virtual public IConfigManager ConfigManager { get; set; }
+        virtual public IDictionary<string, object> Context => _context;
+        virtual public string AnonymousId => _anonymousId ;
 
         private VisitorStrategyAbstract _strategy;
 
@@ -88,10 +88,10 @@ namespace Flagship.FsVisitor
             return _strategy;
         }
 
-        public void SetConsent(bool hasConsented)
+        virtual public void SetConsent(bool hasConsented)
         {
             _hasConsented = hasConsented;
-            this.GetStrategy().SendConsentHitAsync(hasConsented);
+            _ = GetStrategy().SendConsentHitAsync(hasConsented);
         }
 
         abstract public void ClearContext();

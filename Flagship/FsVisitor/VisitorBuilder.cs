@@ -46,7 +46,10 @@ namespace Flagship.FsVisitor
         {
             if (context!=null)
             {
-                _context = (IDictionary<string, object>)context;
+                foreach (var item in context)
+                {
+                    _context[item.Key] = item.Value;
+                }
             }
             return this;
         }
@@ -55,7 +58,10 @@ namespace Flagship.FsVisitor
         {
             if (context != null)
             {
-                _context = (IDictionary<string, object>)context;
+                foreach (var item in context)
+                {
+                    _context[item.Key] = item.Value;
+                }
             }
             return this;
         }
@@ -64,7 +70,10 @@ namespace Flagship.FsVisitor
         {
             if (context != null)
             {
-                _context = (IDictionary<string, object>)context;
+                foreach (var item in context)
+                {
+                    _context[item.Key] = item.Value;
+                }
             }
             return this;
         }

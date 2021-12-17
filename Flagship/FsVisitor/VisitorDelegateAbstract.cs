@@ -30,6 +30,7 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
+            Flags = new HashSet<FlagDTO>();
             UpdateContexCommon(context);
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);

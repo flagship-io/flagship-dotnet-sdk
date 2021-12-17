@@ -16,9 +16,12 @@ namespace Flagship.FsVisitor
         {
         }
 
-        public override void SendConsentHitAsync(bool hasConsented)
+        public override Task SendConsentHitAsync(bool hasConsented)
         {
-            Log("SendConsentHitAsync");
+            return Task.Factory.StartNew(() =>
+            {
+                Log("SendConsentHitAsync");
+            });
         }
 
         public override void UpdateContexCommon(IDictionary<string, object> context)
@@ -41,7 +44,7 @@ namespace Flagship.FsVisitor
             return Task.Factory.StartNew(() =>
             {
                 Log("SendHit");
-            }) ;
+            });
         }
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)

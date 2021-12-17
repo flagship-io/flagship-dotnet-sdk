@@ -24,7 +24,7 @@ namespace Flagship.FsVisitor
                 return;
             }
 
-           Visitor.Context[key] = value;
+            Visitor.Context[key] = value;
         }
 
         public override void UpdateContexCommon(IDictionary<string, object> context)
@@ -61,7 +61,7 @@ namespace Flagship.FsVisitor
 
         public override void UpdateContex(string key, string value)
         {
-            UpdateContexKeyValue(key,value);
+            UpdateContexKeyValue(key, value);
         }
 
         public override void UpdateContex(string key, double value)
@@ -94,16 +94,20 @@ namespace Flagship.FsVisitor
 
         public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
-            const string functionName = "userExposed";
+            const string functionName = "UserExposed";
             if (flag == null)
             {
-                Utils.Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
-                return default;
+                return Task.Factory.StartNew(() =>
+                {
+                    Utils.Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
+                });
             }
             if (flag.Value != null && flag.Value.GetType() != defaultValue.GetType())
             {
-                Utils.Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
-                return default;
+                return Task.Factory.StartNew(() =>
+                {
+                    Utils.Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
+                });
             }
 
             return TrackingManager.SendActive(Visitor, flag);
@@ -111,49 +115,41 @@ namespace Flagship.FsVisitor
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
         {
-            const string functionName = "getFlag value";
-            try
+            const string functionName = "getFlag.value";
+
+            if (flag == null)
             {
-                if (flag == null)
-                {
-                    Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName);
-                    return defaultValue;
-                }
+                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName);
+                return defaultValue;
+            }
 
-                if (flag.Value == null)
-                {
-                    if (userExposed)
-                    {
-                        UserExposed(key, defaultValue, flag);
-                    }
-                    Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
-                    return defaultValue;
-                }
-                if (!flag.Value.GetType().Equals(defaultValue.GetType()))
-                {
-                    Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
-                    return defaultValue;
-                }
-
+            if (flag.Value == null)
+            {
                 if (userExposed)
                 {
                     UserExposed(key, defaultValue, flag);
                 }
-
-                return (T)flag.Value;
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.LogInfo(Config, ex.Message, functionName);
+                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;
             }
-           
+            if (!flag.Value.GetType().Equals(defaultValue.GetType()))
+            {
+                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
+                return defaultValue;
+            }
+
+            if (userExposed)
+            {
+                UserExposed(key, defaultValue, flag);
+            }
+
+            return (T)flag.Value;
         }
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
         {
             const string functionName = "flag.metadata";
-            if (!hasSameType && string.IsNullOrWhiteSpace(metadata.CampaignId))
+            if (!hasSameType && !string.IsNullOrWhiteSpace(metadata.CampaignId))
             {
                 Utils.Log.LogError(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), functionName);
                 return FlagMetadata.EmptyMetadata();
@@ -168,7 +164,10 @@ namespace Flagship.FsVisitor
             {
                 if (hit == null)
                 {
-                    return default;
+                    return Task.Factory.StartNew(() =>
+                    {
+                        Utils.Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
+                    });
                 }
 
                 hit.VisitorId = Visitor.VisitorId;
@@ -178,19 +177,20 @@ namespace Flagship.FsVisitor
 
                 if (!hit.IsReady())
                 {
-                    Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
-                    return default;
+                    return Task.Factory.StartNew(() =>
+                    {
+                        Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
+                    });
                 }
 
                 return TrackingManager.SendHit(hit);
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, functionName);
-                return default;
+                return Task.Factory.StartNew(() => { Utils.Log.LogError(Config, ex.Message, functionName); });
             }
         }
 
-       
+
     }
 }

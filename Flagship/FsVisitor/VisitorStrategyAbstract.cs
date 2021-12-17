@@ -29,9 +29,9 @@ namespace Flagship.FsVisitor
             Visitor = visitor;
         }
 
-        virtual public async void SendConsentHitAsync(bool hasConsented) 
+        virtual public async Task SendConsentHitAsync(bool hasConsented) 
         {
-            const string method = "setConsent";
+            const string method = "SendConsentHit";
             try
             {
                 var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, "fs_consent")

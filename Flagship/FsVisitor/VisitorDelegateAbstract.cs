@@ -39,6 +39,7 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
+            Flags = new HashSet<FlagDTO>();
             UpdateContex(context);
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
@@ -47,6 +48,7 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
+            Flags = new HashSet<FlagDTO>();
             UpdateContex(context);
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
@@ -56,6 +58,7 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
+            Flags = new HashSet<FlagDTO>();
             UpdateContex(context);
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
@@ -67,7 +70,7 @@ namespace Flagship.FsVisitor
             return $"{date.Year}{date.Month}{date.Day}{date.Hour}{date.Minute}{date.Second}{new Random().Next(10000, 99999)}";
         }
 
-        protected VisitorStrategyAbstract GetStrategy()
+        virtual protected VisitorStrategyAbstract GetStrategy()
         {
             if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.NOT_INITIALIZED)
             {

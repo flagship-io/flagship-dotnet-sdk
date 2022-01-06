@@ -26,7 +26,7 @@ namespace Flagship.Hit
             apiKeys[Constants.EVENT_CATEGORY_API_ITEM] = $"{Category}";
             apiKeys[Constants.EVENT_ACTION_API_ITEM] = Action;
 
-            if (string.IsNullOrWhiteSpace(Label))
+            if (!string.IsNullOrWhiteSpace(Label))
             {
                 apiKeys[Constants.EVENT_LABEL_API_ITEM] = Label;
             }

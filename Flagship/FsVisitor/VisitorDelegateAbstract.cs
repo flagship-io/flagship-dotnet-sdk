@@ -28,46 +28,43 @@ namespace Flagship.FsVisitor
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
-            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            Flags = new HashSet<FlagDTO>();
             UpdateContexCommon(context);
-            VisitorId = visitorID ?? CreateVisitorId();
-            SetConsent(hasConsented);
+            Init(visitorID, isAuthenticated, hasConsented, configManager);
         }
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, string> context, bool hasConsented, IConfigManager configManager)
         {
-            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            Flags = new HashSet<FlagDTO>();
             UpdateContex(context);
-            VisitorId = visitorID ?? CreateVisitorId();
-            SetConsent(hasConsented);
+            Init(visitorID, isAuthenticated, hasConsented, configManager);
         }
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, double> context, bool hasConsented, IConfigManager configManager)
         {
-            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            Flags = new HashSet<FlagDTO>();
             UpdateContex(context);
-            VisitorId = visitorID ?? CreateVisitorId();
-            SetConsent(hasConsented);
+            Init(visitorID, isAuthenticated, hasConsented, configManager);
         }
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, bool> context, bool hasConsented, IConfigManager configManager)
         {
-            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            Flags = new HashSet<FlagDTO>();
             UpdateContex(context);
+            Init(visitorID, isAuthenticated, hasConsented, configManager);
+        }
+
+        protected void Init(string visitorID, bool isAuthenticated,  bool hasConsented, IConfigManager configManager)
+        {
+            ConfigManager = configManager;
+            Flags = new HashSet<FlagDTO>();
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
         }
-
+       
         protected string CreateVisitorId()
         {
+            
             var date = DateTime.Now;
-            return $"{date.Year}{date.Month}{date.Day}{date.Hour}{date.Minute}{date.Second}{new Random().Next(10000, 99999)}";
+            return $"{date.Year}{Utils.Utils.TwoDigit(date.Month)}{Utils.Utils.TwoDigit(date.Day)}{Utils.Utils.TwoDigit(date.Hour)}{Utils.Utils.TwoDigit(date.Minute)}{Utils.Utils.TwoDigit(date.Second)}{new Random().Next(10000, 99999)}";
         }
 
         virtual protected VisitorStrategyAbstract GetStrategy()

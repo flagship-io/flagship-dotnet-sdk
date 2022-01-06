@@ -20,6 +20,7 @@ namespace Flagship.Config.Tests
                 EnvId = "envId"
             };
 
+            config.SetStatus(Enums.FlagshipStatus.NOT_INITIALIZED);
 
             config.StatusChange += Config_StatusChange;
 

@@ -18,7 +18,7 @@ namespace Flagship.Tests.Api
     public class TrackingManager
     {
         [TestMethod]
-        public async Task TestMethod1()
+        public async Task SendActive()
         {
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
@@ -36,9 +36,14 @@ namespace Flagship.Tests.Api
                   ItExpr.IsAny<CancellationToken>()
                 ).ReturnsAsync(httpResponse);
 
-         
 
-            var config = new Flagship.Config.DecisionApiConfig();
+            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+            };
+
             var httpClient = new HttpClient(mockHandler.Object);
             var trackingManager = new Flagship.Api.TrackingManager(config, httpClient);
 
@@ -53,10 +58,76 @@ namespace Flagship.Tests.Api
 
             await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
 
-            mockHandler.Protected().Verify("SendAsync", Times.Exactly(2), new object[] {  ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
+            var errorSendAsyn = new Exception("Error Send");
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                 ItExpr.IsAny<HttpRequestMessage>(),
+                 ItExpr.IsAny<CancellationToken>()
+               ).Throws(errorSendAsyn);
+
+            await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
+
+            mockHandler.Protected().Verify("SendAsync", Times.Exactly(3), new object[] {  ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
+            fsLogManagerMock.Verify(x => x.Error(errorSendAsyn.Message, "SendActive"), Times.Once());
 
             httpResponse.Dispose();
             httpClient.Dispose();
+        }
+
+        [TestMethod]
+        public async Task SendHit()
+        {
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse);
+
+
+            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            var httpClient = new HttpClient(mockHandler.Object);
+            var trackingManager = new Flagship.Api.TrackingManager(config, httpClient);
+
+
+            var hit = new Hit.Screen("Screen")
+            {
+                Config = config,
+            };
+
+            await trackingManager.SendHit(hit).ConfigureAwait(false);
+
+            var errorSendAsyn = new Exception("Error Send");
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                 ItExpr.IsAny<HttpRequestMessage>(),
+                 ItExpr.IsAny<CancellationToken>()
+               ).Throws(errorSendAsyn);
+
+            await trackingManager.SendHit(hit).ConfigureAwait(false);
+
+            mockHandler.Protected().Verify("SendAsync", Times.Exactly(2), new object[] { ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
+
+            fsLogManagerMock.Verify(x => x.Error(errorSendAsyn.Message, "SendHit"), Times.Once());
+
+            httpResponse.Dispose();
+            httpClient.Dispose();
+
         }
     }
 }

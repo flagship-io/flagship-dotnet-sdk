@@ -131,6 +131,51 @@ namespace Flagship.Decision.Tests
         }
 
         [TestMethod()]
+        public async Task GetCampaignsPanicMode2Test()
+        {
+            var config = new Flagship.Config.DecisionApiConfig()
+            {
+                EnvId = "envID"
+            };
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("{'visitorId':'anonymeId','campaigns':[],'panic':true}", Encoding.UTF8, "application/json")
+            };
+
+            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true&{Constants.SEND_CONTEXT_EVENT}=false";
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>();
+
+            var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var decisionManager = new Flagship.Decision.ApiManager(config, httpClient);
+
+
+            var campaigns = await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+
+            Assert.AreEqual(campaigns.Count, 0);
+
+            Assert.IsTrue(decisionManager.IsPanic);
+
+            httpClient.Dispose();
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
         public async Task GetCampaignsTestFailTest()
         {
             var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();

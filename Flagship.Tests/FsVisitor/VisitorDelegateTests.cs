@@ -36,6 +36,15 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
+        public void TestStrategy()
+        {
+            var flagship = new Mock<Flagship.Main.Flagship>();
+            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,string>(),false, configManager.Object);
+            var privateVisitor = new PrivateObject(visitorDelegate);
+            privateVisitor.Invoke("GetStrategy");
+        }
+
+        [TestMethod()]
         public void VisitorDelegateTest()
         {
             
@@ -46,6 +55,10 @@ namespace Flagship.FsVisitor.Tests
             Assert.IsFalse(visitor.HasConsented);
             Assert.AreEqual(visitor.Context.Count, 1);
             Assert.AreEqual(visitor.Flags.Count, 0);
+
+            visitor = new VisitorDelegate(null, false, context, false, configManager.Object);
+            Assert.AreNotEqual(visitorId, visitor.VisitorId);
+            Assert.AreEqual(visitor.VisitorId.Length, 19);
         }
 
         [TestMethod()]

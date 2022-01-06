@@ -54,7 +54,7 @@ namespace Flagship.Tests
 
             var test = visitor.GetModification<bool>("drone");
 
-            Assert.IsTrue(test);
+            Assert.IsFalse(test);
         }
 
         [TestMethod]

@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="Api\TrackingManager.cs" />
     <Compile Include="Bucketing\TargetingMatch.cs" />
+    <Compile Include="Config\BucketingConfigTests.cs" />
     <Compile Include="Config\DecisionApiConfigTests.cs" />
     <Compile Include="Config\FlagshipOptionsTests.cs" />
     <Compile Include="Data\CampaignsData.cs" />
@@ -93,6 +94,12 @@
     <Compile Include="FsVisitor\VisitorBuilderTests.cs" />
     <Compile Include="FsVisitor\VisitorDelegateTests.cs" />
     <Compile Include="FsVisitor\VisitorTests.cs" />
+    <Compile Include="Hit\EventTests.cs" />
+    <Compile Include="Hit\ItemTests.cs" />
+    <Compile Include="Hit\PageTests.cs" />
+    <Compile Include="Hit\ScreenTests.cs" />
+    <Compile Include="Hit\TransactionTests.cs" />
+    <Compile Include="Main\FlagshipTests.cs" />
     <Compile Include="Model\Hits\ItemTest.cs" />
     <Compile Include="Model\Hits\TransactionTest.cs" />
     <Compile Include="Model\Hits\ScreenviewTest.cs" />
@@ -104,7 +111,10 @@
     <Compile Include="FlagshipVisitorTest.cs" />
     <Compile Include="Services\HitSender\SenderTest.cs" />
     <Compile Include="Utils\CreateVisitor.cs" />
+    <Compile Include="Utils\FsLogManagerTests.cs" />
+    <Compile Include="Utils\LogTests.cs" />
     <Compile Include="Utils\TestHttpHandler.cs" />
+    <Compile Include="Utils\UtilsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig">

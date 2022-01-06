@@ -42,38 +42,11 @@ namespace Flagship.FsVisitor
             return this;
         }
 
-        public VisitorBuilder Context(IDictionary<string, string> context)
+        public VisitorBuilder Context(IDictionary<string, object> context)
         {
             if (context!=null)
             {
-                foreach (var item in context)
-                {
-                    _context[item.Key] = item.Value;
-                }
-            }
-            return this;
-        }
-
-        public VisitorBuilder Context(IDictionary<string, double> context)
-        {
-            if (context != null)
-            {
-                foreach (var item in context)
-                {
-                    _context[item.Key] = item.Value;
-                }
-            }
-            return this;
-        }
-
-        public VisitorBuilder Context(IDictionary<string, bool> context)
-        {
-            if (context != null)
-            {
-                foreach (var item in context)
-                {
-                    _context[item.Key] = item.Value;
-                }
+                _context = context;
             }
             return this;
         }

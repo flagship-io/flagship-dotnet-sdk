@@ -28,33 +28,36 @@ namespace Flagship.FsVisitor
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
+            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
             UpdateContexCommon(context);
-            Init(visitorID, isAuthenticated, hasConsented, configManager);
+            Init(visitorID, isAuthenticated, hasConsented);
         }
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, string> context, bool hasConsented, IConfigManager configManager)
         {
+            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
             UpdateContex(context);
-            Init(visitorID, isAuthenticated, hasConsented, configManager);
+            Init(visitorID, isAuthenticated, hasConsented);
         }
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, double> context, bool hasConsented, IConfigManager configManager)
         {
+            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
             UpdateContex(context);
-            Init(visitorID, isAuthenticated, hasConsented, configManager);
+            Init(visitorID, isAuthenticated, hasConsented);
         }
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, bool> context, bool hasConsented, IConfigManager configManager)
         {
+            ConfigManager = configManager;
             _context = new Dictionary<string, object>();
             UpdateContex(context);
-            Init(visitorID, isAuthenticated, hasConsented, configManager);
+            Init(visitorID, isAuthenticated, hasConsented);
         }
 
-        protected void Init(string visitorID, bool isAuthenticated,  bool hasConsented, IConfigManager configManager)
+        protected void Init(string visitorID, bool isAuthenticated,  bool hasConsented)
         {
-            ConfigManager = configManager;
             Flags = new HashSet<FlagDTO>();
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);

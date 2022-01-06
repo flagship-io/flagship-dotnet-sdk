@@ -14,20 +14,19 @@ namespace Flagship.FsVisitor.Tests
     {
         private string visitorId = "visitorId";
         private VisitorBuilder Builder;
-        public VisitorBuilderTests()
+     
+        [TestMethod()]
+        public void BuildTest()
         {
             var configManager = new Mock<Flagship.Config.IConfigManager>();
             Builder = VisitorBuilder.Builder(configManager.Object, visitorId);
-        }
-        [TestMethod()]
-        public void BuildTest()
-        { 
+
             var visitor = Builder.Build();
 
             Assert.AreEqual(visitor.VisitorId, visitorId);
             Assert.AreEqual(true, visitor.HasConsented);
 
-            var context = new Dictionary<string, string>()
+            var context = new Dictionary<string, object>()
             {
                 ["key1"] = "value1",
             };
@@ -38,16 +37,17 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(1, visitor.Context.Count);
             Assert.IsFalse(visitor.HasConsented);
 
-            var context2 = new Dictionary<string, bool>()
+            var context2 = new Dictionary<string, object>()
             {
                 ["key1"] = true,
+                ["key3"] = new object()
             };
 
             Builder.Context(context2);
             visitor = Builder.Build();
             Assert.AreEqual(1, visitor.Context.Count);
 
-            var context3 = new Dictionary<string, double>()
+            var context3 = new Dictionary<string, object>()
             {
                 ["key1"] = 1,
             };

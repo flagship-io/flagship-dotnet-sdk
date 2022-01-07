@@ -13,5 +13,18 @@ namespace Flagship.Utils
             var prefixValue = value < 10 ? "0" : null;
             return $"{prefixValue}{value}";
         }
+
+        public static bool HasSameType(object params1, object params2)
+        {
+            if (params1==null && params2==null)
+            {
+                return true;
+            }
+            if (params1==null || params2==null)
+            {
+                return false;
+            }
+            return params1.GetType() == params2.GetType();
+        }
     }
 }

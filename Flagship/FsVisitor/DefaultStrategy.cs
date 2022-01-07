@@ -102,7 +102,7 @@ namespace Flagship.FsVisitor
                     Utils.Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
                 });
             }
-            if (flag.Value != null && flag.Value.GetType() != defaultValue.GetType())
+            if (flag.Value != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
                 return Task.Factory.StartNew(() =>
                 {
@@ -123,7 +123,7 @@ namespace Flagship.FsVisitor
                 return defaultValue;
             }
 
-            if (flag.Value == null)
+            if (flag.Value == null && defaultValue!=null)
             {
                 if (userExposed)
                 {
@@ -132,7 +132,8 @@ namespace Flagship.FsVisitor
                 Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;
             }
-            if (!flag.Value.GetType().Equals(defaultValue.GetType()))
+
+            if (!Utils.Utils.HasSameType(flag.Value,defaultValue))
             {
                 Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;

@@ -35,7 +35,7 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public override void UpdateContex(IDictionary<string, string> context)
+        public override void UpdateContext(IDictionary<string, string> context)
         {
             foreach (var item in context)
             {
@@ -43,7 +43,7 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public override void UpdateContex(IDictionary<string, double> context)
+        public override void UpdateContext(IDictionary<string, double> context)
         {
             foreach (var item in context)
             {
@@ -51,7 +51,7 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public override void UpdateContex(IDictionary<string, bool> context)
+        public override void UpdateContext(IDictionary<string, bool> context)
         {
             foreach (var item in context)
             {
@@ -59,17 +59,17 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public override void UpdateContex(string key, string value)
+        public override void UpdateContext(string key, string value)
         {
             UpdateContexKeyValue(key, value);
         }
 
-        public override void UpdateContex(string key, double value)
+        public override void UpdateContext(string key, double value)
         {
             UpdateContexKeyValue(key, value);
         }
 
-        public override void UpdateContex(string key, bool value)
+        public override void UpdateContext(string key, bool value)
         {
             UpdateContexKeyValue(key, value);
         }

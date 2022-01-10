@@ -65,7 +65,7 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexKeyValue()
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
-            panicStrategy.UpdateContex("key","value");
+            panicStrategy.UpdateContext("key","value");
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
         }
 

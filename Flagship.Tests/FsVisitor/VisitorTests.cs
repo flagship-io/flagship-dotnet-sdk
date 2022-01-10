@@ -140,8 +140,8 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexTest()
         {
             var newContext = new Dictionary<string, string>();
-            visitorDelegateMock.Setup(x=>x.UpdateContex(newContext)).Verifiable();
-            Visitor.UpdateContex(newContext);
+            visitorDelegateMock.Setup(x=>x.UpdateContext(newContext)).Verifiable();
+            Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
         }
 
@@ -149,8 +149,8 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexTest1()
         {
             var newContext = new Dictionary<string, bool>();
-            visitorDelegateMock.Setup(x => x.UpdateContex(newContext)).Verifiable();
-            Visitor.UpdateContex(newContext);
+            visitorDelegateMock.Setup(x => x.UpdateContext(newContext)).Verifiable();
+            Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
         }
 
@@ -158,32 +158,32 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexTest2()
         {
             var newContext = new Dictionary<string, double>();
-            visitorDelegateMock.Setup(x => x.UpdateContex(newContext)).Verifiable();
-            Visitor.UpdateContex(newContext);
+            visitorDelegateMock.Setup(x => x.UpdateContext(newContext)).Verifiable();
+            Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
         }
 
         [TestMethod()]
         public void UpdateContexTest3()
         {
-            visitorDelegateMock.Setup(x => x.UpdateContex("key", "string")).Verifiable();
-            Visitor.UpdateContex("key", "string");
+            visitorDelegateMock.Setup(x => x.UpdateContext("key", "string")).Verifiable();
+            Visitor.UpdateContext("key", "string");
             visitorDelegateMock.Verify();
         }
 
         [TestMethod()]
         public void UpdateContexTest4()
         {
-            visitorDelegateMock.Setup(x => x.UpdateContex("key", true)).Verifiable();
-            Visitor.UpdateContex("key", true);
+            visitorDelegateMock.Setup(x => x.UpdateContext("key", true)).Verifiable();
+            Visitor.UpdateContext("key", true);
             visitorDelegateMock.Verify();
         }
 
         [TestMethod()]
         public void UpdateContexTest5()
         {
-            visitorDelegateMock.Setup(x => x.UpdateContex("key", 2)).Verifiable();
-            Visitor.UpdateContex("key", 2);
+            visitorDelegateMock.Setup(x => x.UpdateContext("key", 2)).Verifiable();
+            Visitor.UpdateContext("key", 2);
             visitorDelegateMock.Verify();
         }
     }

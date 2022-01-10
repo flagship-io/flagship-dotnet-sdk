@@ -60,7 +60,7 @@ namespace Flagship.FsVisitor.Tests
                 ["key2"] = "value2"
             };
 
-            defaultStrategy.UpdateContex(newContext);
+            defaultStrategy.UpdateContext(newContext);
 
             Assert.AreEqual(visitorDelegate.Context.Count, 3);
 
@@ -70,7 +70,7 @@ namespace Flagship.FsVisitor.Tests
                 ["key4"] = 1
             };
 
-            defaultStrategy.UpdateContex(newContext2);
+            defaultStrategy.UpdateContext(newContext2);
 
             Assert.AreEqual(visitorDelegate.Context.Count, 5);
 
@@ -80,17 +80,17 @@ namespace Flagship.FsVisitor.Tests
                 ["key6"] = false
             };
 
-            defaultStrategy.UpdateContex(newContext3);
+            defaultStrategy.UpdateContext(newContext3);
 
             Assert.AreEqual(visitorDelegate.Context.Count, 7);
 
-            defaultStrategy.UpdateContex("key1", "value3");
+            defaultStrategy.UpdateContext("key1", "value3");
             Assert.AreEqual(visitorDelegate.Context["key1"], "value3");
 
-            defaultStrategy.UpdateContex("key3", 10);
+            defaultStrategy.UpdateContext("key3", 10);
             Assert.AreEqual(10d, visitorDelegate.Context["key3"]);
 
-            defaultStrategy.UpdateContex("key5", false);
+            defaultStrategy.UpdateContext("key5", false);
             Assert.AreEqual(visitorDelegate.Context["key5"], false);
 
             var newContext4 = new Dictionary<string, object>()

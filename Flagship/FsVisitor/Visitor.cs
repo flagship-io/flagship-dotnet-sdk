@@ -77,34 +77,34 @@ namespace Flagship.FsVisitor
             return _visitorDelegate.SendHit(hit);
         }
 
-        public void UpdateContex(IDictionary<string, string> context)
+        public void UpdateContext(IDictionary<string, string> context)
         {
-            _visitorDelegate.UpdateContex(context);
+            _visitorDelegate.UpdateContext(context);
         }
 
-        public void UpdateContex(IDictionary<string, double> context)
+        public void UpdateContext(IDictionary<string, double> context)
         {
-            _visitorDelegate.UpdateContex(context);
+            _visitorDelegate.UpdateContext(context);
         }
 
-        public void UpdateContex(IDictionary<string, bool> context)
+        public void UpdateContext(IDictionary<string, bool> context)
         {
-            _visitorDelegate.UpdateContex(context);
+            _visitorDelegate.UpdateContext(context);
         }
 
-        public void UpdateContex(string key, string value)
+        public void UpdateContext(string key, string value)
         {
-            _visitorDelegate.UpdateContex(key, value);  
+            _visitorDelegate.UpdateContext(key, value);  
         }
 
-        public void UpdateContex(string key, double value)
+        public void UpdateContext(string key, double value)
         {
-            _visitorDelegate.UpdateContex(key, value);
+            _visitorDelegate.UpdateContext(key, value);
         }
 
-        public void UpdateContex(string key, bool value)
+        public void UpdateContext(string key, bool value)
         {
-            _visitorDelegate.UpdateContex(key, value);
+            _visitorDelegate.UpdateContext(key, value);
         }
     }
 }

@@ -87,34 +87,34 @@ namespace Flagship.FsVisitor
             return GetStrategy().SendHit(hit);
         }
 
-        public override void UpdateContex(IDictionary<string, string> context)
+        public override void UpdateContext(IDictionary<string, string> context)
         {
-            GetStrategy().UpdateContex(context);
+            GetStrategy().UpdateContext(context);
         }
 
-        public override void UpdateContex(IDictionary<string, double> context)
+        public override void UpdateContext(IDictionary<string, double> context)
         {
-            GetStrategy().UpdateContex(context);
+            GetStrategy().UpdateContext(context);
         }
 
-        public override void UpdateContex(IDictionary<string, bool> context)
+        public override void UpdateContext(IDictionary<string, bool> context)
         {
-            GetStrategy().UpdateContex(context);
+            GetStrategy().UpdateContext(context);
         }
 
-        public override void UpdateContex(string key, string value)
+        public override void UpdateContext(string key, string value)
         {
-            GetStrategy().UpdateContex(key, value);
+            GetStrategy().UpdateContext(key, value);
         }
 
-        public override void UpdateContex(string key, double value)
+        public override void UpdateContext(string key, double value)
         {
-            GetStrategy().UpdateContex(key, value);
+            GetStrategy().UpdateContext(key, value);
         }
 
-        public override void UpdateContex(string key, bool value)
+        public override void UpdateContext(string key, bool value)
         {
-            GetStrategy().UpdateContex(key, value);
+            GetStrategy().UpdateContext(key, value);
         }
 
         public override void UpdateContexCommon(IDictionary<string, object> context)

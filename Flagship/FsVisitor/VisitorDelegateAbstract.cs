@@ -37,14 +37,14 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            UpdateContex(context);
+            UpdateContext(context);
             Init(visitorID, isAuthenticated, hasConsented);
         }
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, double> context, bool hasConsented, IConfigManager configManager)
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            UpdateContex(context);
+            UpdateContext(context);
             Init(visitorID, isAuthenticated, hasConsented);
         }
 
@@ -52,7 +52,7 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            UpdateContex(context);
+            UpdateContext(context);
             Init(visitorID, isAuthenticated, hasConsented);
         }
 
@@ -113,13 +113,13 @@ namespace Flagship.FsVisitor
         abstract public Task SendHit(HitAbstract hit); 
 
         abstract public void UpdateContexCommon(IDictionary<string, object> context);
-        abstract public void UpdateContex(IDictionary<string, string> context);
-        abstract public void UpdateContex(IDictionary<string, double> context);
-        abstract public void UpdateContex(IDictionary<string, bool> context);
-        abstract public void UpdateContex(string key, string value);
+        abstract public void UpdateContext(IDictionary<string, string> context);
+        abstract public void UpdateContext(IDictionary<string, double> context);
+        abstract public void UpdateContext(IDictionary<string, bool> context);
+        abstract public void UpdateContext(string key, string value);
 
-        abstract public void UpdateContex(string key, double value);
+        abstract public void UpdateContext(string key, double value);
 
-        abstract public void UpdateContex(string key, bool value);
+        abstract public void UpdateContext(string key, bool value);
     }
 }

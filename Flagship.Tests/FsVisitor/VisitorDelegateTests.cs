@@ -219,9 +219,9 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexTest()
         {
             var context = new Dictionary<string, string>();
-            defaultStrategy.Setup(x => x.UpdateContex(context))
+            defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
-            visitorDelegateMock.Object.UpdateContex(context);
+            visitorDelegateMock.Object.UpdateContext(context);
             defaultStrategy.Verify();
         }
 
@@ -229,9 +229,9 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexTest1()
         {
             var context = new Dictionary<string, bool>();
-            defaultStrategy.Setup(x => x.UpdateContex(context))
+            defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
-            visitorDelegateMock.Object.UpdateContex(context);
+            visitorDelegateMock.Object.UpdateContext(context);
             defaultStrategy.Verify();
         }
 
@@ -239,36 +239,36 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexTest2()
         {
             var context = new Dictionary<string, double>();
-            defaultStrategy.Setup(x => x.UpdateContex(context))
+            defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
-            visitorDelegateMock.Object.UpdateContex(context);
+            visitorDelegateMock.Object.UpdateContext(context);
             defaultStrategy.Verify();
         }
 
         [TestMethod()]
         public void UpdateContexTest3()
         {
-            defaultStrategy.Setup(x => x.UpdateContex("key","string"))
+            defaultStrategy.Setup(x => x.UpdateContext("key","string"))
               .Verifiable();
-            visitorDelegateMock.Object.UpdateContex("key", "string");
+            visitorDelegateMock.Object.UpdateContext("key", "string");
             defaultStrategy.Verify();
         }
 
         [TestMethod()]
         public void UpdateContexTest4()
         {
-            defaultStrategy.Setup(x => x.UpdateContex("key", 1))
+            defaultStrategy.Setup(x => x.UpdateContext("key", 1))
              .Verifiable();
-            visitorDelegateMock.Object.UpdateContex("key", 1);
+            visitorDelegateMock.Object.UpdateContext("key", 1);
             defaultStrategy.Verify();
         }
 
         [TestMethod()]
         public void UpdateContexTest5()
         {
-            defaultStrategy.Setup(x => x.UpdateContex("key", true))
+            defaultStrategy.Setup(x => x.UpdateContext("key", true))
             .Verifiable();
-            visitorDelegateMock.Object.UpdateContex("key", true);
+            visitorDelegateMock.Object.UpdateContext("key", true);
             defaultStrategy.Verify();
         }
 

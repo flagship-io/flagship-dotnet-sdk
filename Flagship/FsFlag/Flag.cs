@@ -7,11 +7,11 @@ namespace Flagship.FsFlag
 {
     public class Flag<T> : IFlag<T>
     {
-        private string _key;
-        private VisitorDelegateAbstract _visitorDelegateAbstract;
-        private FlagDTO _flagDTO;
-        private object _defaultValue;
-        private IFlagMetadata _metadata;
+        private readonly string _key;
+        private readonly VisitorDelegateAbstract _visitorDelegateAbstract;
+        private readonly FlagDTO _flagDTO;
+        private readonly object _defaultValue;
+        private readonly IFlagMetadata _metadata;
         public bool HasSameType
         {
             get

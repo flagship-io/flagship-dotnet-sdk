@@ -55,6 +55,8 @@ namespace Flagship.Enums
 
         public const string METHOD_DEACTIVATED_CONSENT_ERROR = "Method {0} is deactivated for visitor {1} : visitor did not consent.";
 
+        public const string PREDEFINED_CONTEXT_TYPE_ERROR = "Predefined Context {0} must be type of {1}";
+
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
         public const string CUSTOMER_UID = "cuid";
         public const string ANONYMOUS_ID = "aid";

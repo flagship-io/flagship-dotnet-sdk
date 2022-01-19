@@ -31,7 +31,7 @@ namespace Flagship.FsVisitor.Tests
                 ["key1"] = "value1",
             };
 
-            Builder.HasConsented(false).IsAuthenticated(false).Context(context);
+            Builder.HasConsented(false).IsAuthenticated(false).WithContext(context);
             visitor = Builder.Build();
 
             Assert.AreEqual(1, visitor.Context.Count);
@@ -43,7 +43,7 @@ namespace Flagship.FsVisitor.Tests
                 ["key3"] = new object()
             };
 
-            Builder.Context(context2);
+            Builder.WithContext(context2);
             visitor = Builder.Build();
             Assert.AreEqual(1, visitor.Context.Count);
 
@@ -52,7 +52,7 @@ namespace Flagship.FsVisitor.Tests
                 ["key1"] = 1,
             };
 
-            Builder.Context(context3);
+            Builder.WithContext(context3);
             visitor = Builder.Build();
             Assert.AreEqual(1, visitor.Context.Count);
         }

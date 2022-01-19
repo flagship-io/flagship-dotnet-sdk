@@ -27,6 +27,7 @@ namespace Flagship.Main
         private FlagshipConfig _config;
 
         private IConfigManager _configManager;
+        private FsVisitor.Visitor _visitor;
 
         protected static Flagship GetInstance()
         {
@@ -56,6 +57,16 @@ namespace Flagship.Main
         {
             return GetInstance()._status == FlagshipStatus.READY;
         }
+
+        /// <summary>
+        /// will return any previous created visitor instance initialized with the SINGLE_INSTANCE
+        /// </summary>
+        public static FsVisitor.Visitor Visitor
+        {
+            get { return GetInstance()._visitor; }
+           internal set { GetInstance()._visitor = value; }
+        }
+
 
         public static void Start(string envId, string apiKey, FlagshipConfig config = null)
         {
@@ -120,13 +131,43 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProto
         /// </summary>
         /// <param name="visitorId"></param>
         /// <returns>VisitorBuilder | null</returns>
-        public static VisitorBuilder NewVisitor(string visitorId = null)
+        public static VisitorBuilder NewVisitor(string visitorId)
+        {
+            return NewVisitor(visitorId, InstanceType.NEW_INSTANCE);
+        }
+
+        /// <summary>
+        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
+        /// </summary>
+        /// <returns></returns>
+        public static VisitorBuilder NewVisitor()
+        {
+            return NewVisitor(null, InstanceType.NEW_INSTANCE);
+        }
+
+        /// <summary>
+        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
+        /// </summary>
+        /// <param name="visitorId"></param>
+        /// <param name="instanceType"></param>
+        /// <returns></returns>
+        public static VisitorBuilder NewVisitor(string visitorId, InstanceType instanceType)
         {
             if (!IsReady())
             {
                 return null;
             }
-            return VisitorBuilder.Builder(GetInstance()._configManager, visitorId);
+            return VisitorBuilder.Builder(GetInstance()._configManager, visitorId, instanceType);
+        }
+
+        /// <summary>
+        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
+        /// </summary>
+        /// <param name="instanceType"></param>
+        /// <returns></returns>
+        public static VisitorBuilder NewVisitor(InstanceType instanceType)
+        {
+            return NewVisitor(null, instanceType);
         }
     }
 }

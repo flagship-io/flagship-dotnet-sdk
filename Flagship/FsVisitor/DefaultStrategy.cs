@@ -18,6 +18,15 @@ namespace Flagship.FsVisitor
 
         virtual protected void UpdateContexKeyValue(string key, object value)
         {
+            if (FsPredefinedContext.IsPredefinedContext(key) && !FsPredefinedContext.CheckType(key, value))
+            {
+                Utils.Log.LogError(
+                    Config,
+                    string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR, key, FsPredefinedContext.GetPredefinedType(key)),
+                    "UpdateContex");
+                return;
+            }
+
             if (!(value is string) && !(value is bool) && !(value is double) && !(value is long) && !(value is int))
             {
                 Utils.Log.LogError(Config, string.Format(Constants.CONTEXT_PARAM_ERROR, key), "UpdateContex");
@@ -123,7 +132,7 @@ namespace Flagship.FsVisitor
                 return defaultValue;
             }
 
-            if (flag.Value == null && defaultValue!=null)
+            if (flag.Value == null && defaultValue != null)
             {
                 if (userExposed)
                 {
@@ -133,7 +142,7 @@ namespace Flagship.FsVisitor
                 return defaultValue;
             }
 
-            if (!Utils.Utils.HasSameType(flag.Value,defaultValue))
+            if (!Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
                 Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;

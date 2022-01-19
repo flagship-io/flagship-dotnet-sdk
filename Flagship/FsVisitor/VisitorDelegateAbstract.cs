@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Flagship.Enums;
 
 namespace Flagship.FsVisitor
 { 
@@ -61,6 +62,7 @@ namespace Flagship.FsVisitor
             Flags = new HashSet<FlagDTO>();
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
+            LoadPredefinedContext();
         }
        
         protected string CreateVisitorId()
@@ -68,6 +70,13 @@ namespace Flagship.FsVisitor
             
             var date = DateTime.Now;
             return $"{date.Year}{Utils.Utils.TwoDigit(date.Month)}{Utils.Utils.TwoDigit(date.Day)}{Utils.Utils.TwoDigit(date.Hour)}{Utils.Utils.TwoDigit(date.Minute)}{Utils.Utils.TwoDigit(date.Second)}{new Random().Next(10000, 99999)}";
+        }
+
+        protected void LoadPredefinedContext()
+        {
+            Context[FsPredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
+            Context[FsPredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
+            //Context[FsPredefinedContext.FLAGSHIP_VISITOR] = VisitorId; 
         }
 
         virtual protected VisitorStrategyAbstract GetStrategy()

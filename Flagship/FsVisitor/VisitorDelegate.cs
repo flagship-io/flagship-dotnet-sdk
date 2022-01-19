@@ -28,6 +28,7 @@ namespace Flagship.FsVisitor
         public override void ClearContext()
         {
             GetStrategy().ClearContext();
+            LoadPredefinedContext();
         }
 
         public override Task FetchFlags()

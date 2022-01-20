@@ -18,6 +18,10 @@ namespace Flagship.Enums
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 
+        public const string BUCKETING_API_URL = "https://cdn.flagship.io/{0}/bucketing.json";
+
+        public const string BUCKETING_API_CONTEXT_URL = "https://decision.flagship.io/v2/{0}/events";
+
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
         public const string SDK_VERSION = "V1";

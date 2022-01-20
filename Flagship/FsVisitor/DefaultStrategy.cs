@@ -23,7 +23,7 @@ namespace Flagship.FsVisitor
                 Utils.Log.LogError(
                     Config,
                     string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR, key, FsPredefinedContext.GetPredefinedType(key)),
-                    "UpdateContex");
+                    "UpdateContext");
                 return;
             }
 

@@ -85,6 +85,7 @@
     <Compile Include="Config\FlagshipOptionsTests.cs" />
     <Compile Include="Data\CampaignsData.cs" />
     <Compile Include="Decision\ApiManagerTests.cs" />
+    <Compile Include="Enum\FsPredefinedContextTest.cs" />
     <Compile Include="FsFlag\FlagMetadataTest.cs" />
     <Compile Include="FsFlag\FlagTests.cs" />
     <Compile Include="FsVisitor\DefaultStrategyTests.cs" />

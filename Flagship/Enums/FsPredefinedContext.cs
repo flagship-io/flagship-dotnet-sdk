@@ -159,7 +159,7 @@ namespace Flagship.Enums
 
             var type =  FLAGSHIP_CONTEXT[predefinedContext];
 
-            bool check;
+            bool check = false;
 
             switch (type)
             {
@@ -168,12 +168,6 @@ namespace Flagship.Enums
                     break;
                 case "number":
                     check = value is long || value is int || value is double;
-                    break;
-                case "boolean": 
-                    check=value is bool;
-                    break;
-                default:
-                    check = false;
                     break;
             }
 

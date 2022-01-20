@@ -108,6 +108,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitorDelegate.Context.Count, 0);
         }
 
+        [TestMethod()]
         public void PredefinedContextTest()
         {
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
@@ -115,12 +116,26 @@ namespace Flagship.FsVisitor.Tests
             var newContext = new Dictionary<string, object>()
             {
                 ["key1"] = "value1",
-                ["key2"] = "value2"
+                [FsPredefinedContext.LOCATION_CITY] = "London",
+                [FsPredefinedContext.OS_VERSION_CODE] = 1,
+                [FsPredefinedContext.APP_VERSION_CODE] = "1",
+                [FsPredefinedContext.DEVICE_LOCALE] = Array.Empty<string>(),
+                [FsPredefinedContext.DEVICE_MODEL] = null,
             };
 
             defaultStrategy.UpdateContext(newContext);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 5);
+            Assert.AreEqual(visitorDelegate.Context.Count, 6);
+            Assert.AreEqual(visitorDelegate.Context[FsPredefinedContext.LOCATION_CITY], "London");
+
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
+                FsPredefinedContext.APP_VERSION_CODE, "number"), "UpdateContext"), Times.Once());
+
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
+                FsPredefinedContext.DEVICE_LOCALE, "string"), "UpdateContext"), Times.Once());
+
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
+                FsPredefinedContext.DEVICE_MODEL, "string"), "UpdateContext"), Times.Once());
         }
 
         [TestMethod()]

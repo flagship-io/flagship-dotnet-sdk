@@ -53,7 +53,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitor.AnonymousId, null);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
+            Assert.AreEqual(visitor.Context.Count, 3);
             Assert.AreEqual(visitor.Flags.Count, 0);
 
             visitor = new VisitorDelegate(null, false, context, false, configManager.Object);
@@ -66,7 +66,9 @@ namespace Flagship.FsVisitor.Tests
         {
             var context = new Dictionary<string, object>()
             {
-                ["key"] = "value"
+                ["key"] = "value",
+                ["key2"] = 4,
+                ["key3"] = true
             };
 
             var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object);
@@ -74,41 +76,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitor.AnonymousId, null);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
-            Assert.AreEqual(visitor.Flags.Count, 0);
-        }
-
-        [TestMethod()]
-        public void VisitorDelegateTest2()
-        {
-            var context = new Dictionary<string, object>()
-            {
-                ["key"] = 4
-            };
-
-            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object);
-
-            Assert.AreEqual(visitor.AnonymousId, null);
-            Assert.AreEqual(visitorId, visitor.VisitorId);
-            Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
-            Assert.AreEqual(visitor.Flags.Count, 0);
-        }
-
-        [TestMethod()]
-        public void VisitorDelegateTest3()
-        {
-            var context = new Dictionary<string, object>()
-            {
-                ["key"] = true
-            };
-
-            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object);
-
-            Assert.AreEqual(visitor.AnonymousId, null);
-            Assert.AreEqual(visitorId, visitor.VisitorId);
-            Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
+            Assert.AreEqual(visitor.Context.Count, 5);
             Assert.AreEqual(visitor.Flags.Count, 0);
         }
 

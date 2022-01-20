@@ -19,7 +19,7 @@ namespace Flagship.FsVisitor.Tests
         public void BuildTest()
         {
             var configManager = new Mock<Flagship.Config.IConfigManager>();
-            Builder = VisitorBuilder.Builder(configManager.Object, visitorId);
+            Builder = VisitorBuilder.Builder(configManager.Object, visitorId, Enums.InstanceType.NEW_INSTANCE);
 
             var visitor = Builder.Build();
 

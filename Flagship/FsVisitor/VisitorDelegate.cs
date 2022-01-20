@@ -15,15 +15,6 @@ namespace Flagship.FsVisitor
         public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
         {
         }
-        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, string> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
-        {
-        }
-        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, double> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
-        {
-        }
-        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, bool> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
-        {
-        }
 
         public override void ClearContext()
         {
@@ -88,17 +79,7 @@ namespace Flagship.FsVisitor
             return GetStrategy().SendHit(hit);
         }
 
-        public override void UpdateContext(IDictionary<string, string> context)
-        {
-            GetStrategy().UpdateContext(context);
-        }
-
-        public override void UpdateContext(IDictionary<string, double> context)
-        {
-            GetStrategy().UpdateContext(context);
-        }
-
-        public override void UpdateContext(IDictionary<string, bool> context)
+        public override void UpdateContext(IDictionary<string, object> context)
         {
             GetStrategy().UpdateContext(context);
         }
@@ -116,11 +97,6 @@ namespace Flagship.FsVisitor
         public override void UpdateContext(string key, bool value)
         {
             GetStrategy().UpdateContext(key, value);
-        }
-
-        public override void UpdateContexCommon(IDictionary<string, object> context)
-        {
-            GetStrategy().UpdateContexCommon(context); 
         }
     }
 }

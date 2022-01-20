@@ -54,10 +54,10 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
-        public void UpdateContexCommonTest()
+        public void UpdateContextTest() 
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
-            panicStrategy.UpdateContexCommon(new Dictionary<string, object>());
+            panicStrategy.UpdateContext(new Dictionary<string, object>());
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
         }
 

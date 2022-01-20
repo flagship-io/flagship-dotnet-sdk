@@ -39,7 +39,7 @@ namespace Flagship.FsVisitor.Tests
         public void TestStrategy()
         {
             var flagship = new Mock<Flagship.Main.Flagship>();
-            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,string>(),false, configManager.Object);
+            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object);
             var privateVisitor = new PrivateObject(visitorDelegate);
             privateVisitor.Invoke("GetStrategy");
         }
@@ -64,7 +64,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void VisitorDelegateTest1()
         {
-            var context = new Dictionary<string, string>()
+            var context = new Dictionary<string, object>()
             {
                 ["key"] = "value"
             };
@@ -81,7 +81,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void VisitorDelegateTest2()
         {
-            var context = new Dictionary<string, double>()
+            var context = new Dictionary<string, object>()
             {
                 ["key"] = 4
             };
@@ -98,7 +98,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void VisitorDelegateTest3()
         {
-            var context = new Dictionary<string, bool>()
+            var context = new Dictionary<string, object>()
             {
                 ["key"] = true
             };
@@ -218,7 +218,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest()
         {
-            var context = new Dictionary<string, string>();
+            var context = new Dictionary<string, object>();
             defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
             visitorDelegateMock.Object.UpdateContext(context);
@@ -228,7 +228,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest1()
         {
-            var context = new Dictionary<string, bool>();
+            var context = new Dictionary<string, object>();
             defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
             visitorDelegateMock.Object.UpdateContext(context);
@@ -238,7 +238,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest2()
         {
-            var context = new Dictionary<string, double>();
+            var context = new Dictionary<string, object>();
             defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
             visitorDelegateMock.Object.UpdateContext(context);
@@ -276,9 +276,9 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexCommonTest()
         {
             var context = new Dictionary<string, object>();
-            defaultStrategy.Setup(x => x.UpdateContexCommon(context))
+            defaultStrategy.Setup(x => x.UpdateContext(context))
             .Verifiable();
-            visitorDelegateMock.Object.UpdateContexCommon(context);
+            visitorDelegateMock.Object.UpdateContext(context);
             defaultStrategy.Verify();
         }
     }

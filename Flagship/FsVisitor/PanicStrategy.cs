@@ -24,9 +24,9 @@ namespace Flagship.FsVisitor
             });
         }
 
-        public override void UpdateContexCommon(IDictionary<string, object> context)
+        public override void UpdateContext(IDictionary<string, object> context)
         {
-            Log("UpdateContex");
+            Log("UpdateContex");    
         }
 
         protected override void UpdateContexKeyValue(string key, object value)

@@ -60,12 +60,7 @@ namespace Flagship.FsVisitor
 
         abstract public Task SendHit(HitAbstract hit);
 
-        abstract public void UpdateContexCommon(IDictionary<string, object> context);
-        abstract public void UpdateContext(IDictionary<string, string> context);
-
-        abstract public void UpdateContext(IDictionary<string, double> context);
-
-        abstract public void UpdateContext(IDictionary<string, bool> context);
+        abstract public void UpdateContext(IDictionary<string, object> context);
 
         abstract public void UpdateContext(string key, string value);
 

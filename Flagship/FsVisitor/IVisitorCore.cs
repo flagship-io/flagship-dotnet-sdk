@@ -9,9 +9,7 @@ namespace Flagship.FsVisitor
 {
     public interface IVisitorCore
     {
-        void UpdateContext(IDictionary<string, string> context);
-        void UpdateContext(IDictionary<string, double> context);
-        void UpdateContext(IDictionary<string, bool> context);
+        void UpdateContext(IDictionary<string, object> context);
         void UpdateContext(string key, string value);
         void UpdateContext(string key, double value);
         void UpdateContext(string key, bool value);

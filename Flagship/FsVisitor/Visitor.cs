@@ -77,17 +77,7 @@ namespace Flagship.FsVisitor
             return _visitorDelegate.SendHit(hit);
         }
 
-        public void UpdateContext(IDictionary<string, string> context)
-        {
-            _visitorDelegate.UpdateContext(context);
-        }
-
-        public void UpdateContext(IDictionary<string, double> context)
-        {
-            _visitorDelegate.UpdateContext(context);
-        }
-
-        public void UpdateContext(IDictionary<string, bool> context)
+        public void UpdateContext(IDictionary<string, object> context)
         {
             _visitorDelegate.UpdateContext(context);
         }

@@ -54,7 +54,7 @@ namespace Flagship.FsVisitor.Tests
 
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
-            var newContext = new Dictionary<string, string>()
+            var newContext = new Dictionary<string, object>()
             {
                 ["key1"] = "value1",
                 ["key2"] = "value2"
@@ -62,9 +62,9 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.UpdateContext(newContext);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 3);
+            Assert.AreEqual(visitorDelegate.Context.Count, 5);
 
-            var newContext2 = new Dictionary<string, double>()
+            var newContext2 = new Dictionary<string, object>()
             {
                 ["key3"] = 5,
                 ["key4"] = 1
@@ -72,9 +72,9 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.UpdateContext(newContext2);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 5);
+            Assert.AreEqual(visitorDelegate.Context.Count, 7);
 
-            var newContext3 = new Dictionary<string, bool>()
+            var newContext3 = new Dictionary<string, object>()
             {
                 ["key5"] = true,
                 ["key6"] = false
@@ -82,7 +82,7 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.UpdateContext(newContext3);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 7);
+            Assert.AreEqual(visitorDelegate.Context.Count, 9);
 
             defaultStrategy.UpdateContext("key1", "value3");
             Assert.AreEqual(visitorDelegate.Context["key1"], "value3");
@@ -98,14 +98,29 @@ namespace Flagship.FsVisitor.Tests
                 ["key6"] = new object(),
             };
 
-            defaultStrategy.UpdateContexCommon(newContext4);
-            Assert.AreEqual(visitorDelegate.Context.Count, 7);
+            defaultStrategy.UpdateContext(newContext4);
+            Assert.AreEqual(visitorDelegate.Context.Count, 9);
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.CONTEXT_PARAM_ERROR, "key6"), "UpdateContex"), Times.Once());
 
             //Test clearContext
 
             defaultStrategy.ClearContext();
             Assert.AreEqual(visitorDelegate.Context.Count, 0);
+        }
+
+        public void PredefinedContextTest()
+        {
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            var newContext = new Dictionary<string, object>()
+            {
+                ["key1"] = "value1",
+                ["key2"] = "value2"
+            };
+
+            defaultStrategy.UpdateContext(newContext);
+
+            Assert.AreEqual(visitorDelegate.Context.Count, 5);
         }
 
         [TestMethod()]

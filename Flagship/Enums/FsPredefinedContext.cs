@@ -159,13 +159,25 @@ namespace Flagship.Enums
 
             var type =  FLAGSHIP_CONTEXT[predefinedContext];
 
-            return type switch
+            bool check;
+
+            switch (type)
             {
-                "string" => value is string,
-                "number" => value is long || value is int || value is double,
-                "boolean" => value is bool,
-                _ => false,
-            };
+                case "string": 
+                    check=value is string;
+                    break;
+                case "number":
+                    check = value is long || value is int || value is double;
+                    break;
+                case "boolean": 
+                    check=value is bool;
+                    break;
+                default:
+                    check = false;
+                    break;
+            }
+
+            return check;
         }
     }
 }

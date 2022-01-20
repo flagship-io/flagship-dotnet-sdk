@@ -139,7 +139,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest()
         {
-            var newContext = new Dictionary<string, string>();
+            var newContext = new Dictionary<string, object>();
             visitorDelegateMock.Setup(x=>x.UpdateContext(newContext)).Verifiable();
             Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
@@ -148,7 +148,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest1()
         {
-            var newContext = new Dictionary<string, bool>();
+            var newContext = new Dictionary<string, object>();
             visitorDelegateMock.Setup(x => x.UpdateContext(newContext)).Verifiable();
             Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
@@ -157,7 +157,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest2()
         {
-            var newContext = new Dictionary<string, double>();
+            var newContext = new Dictionary<string, object>();
             visitorDelegateMock.Setup(x => x.UpdateContext(newContext)).Verifiable();
             Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();

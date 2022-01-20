@@ -31,34 +31,7 @@ namespace Flagship.FsVisitor
         {
             ConfigManager = configManager;
             _context = new Dictionary<string, object>();
-            UpdateContexCommon(context);
-            Init(visitorID, isAuthenticated, hasConsented);
-        }
-        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, string> context, bool hasConsented, IConfigManager configManager)
-        {
-            ConfigManager = configManager;
-            _context = new Dictionary<string, object>();
             UpdateContext(context);
-            Init(visitorID, isAuthenticated, hasConsented);
-        }
-        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, double> context, bool hasConsented, IConfigManager configManager)
-        {
-            ConfigManager = configManager;
-            _context = new Dictionary<string, object>();
-            UpdateContext(context);
-            Init(visitorID, isAuthenticated, hasConsented);
-        }
-
-        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, bool> context, bool hasConsented, IConfigManager configManager)
-        {
-            ConfigManager = configManager;
-            _context = new Dictionary<string, object>();
-            UpdateContext(context);
-            Init(visitorID, isAuthenticated, hasConsented);
-        }
-
-        protected void Init(string visitorID, bool isAuthenticated,  bool hasConsented)
-        {
             Flags = new HashSet<FlagDTO>();
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
@@ -74,9 +47,9 @@ namespace Flagship.FsVisitor
 
         protected void LoadPredefinedContext()
         {
-            Context[FsPredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
-            Context[FsPredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
-            //Context[FsPredefinedContext.FLAGSHIP_VISITOR] = VisitorId; 
+            _context[FsPredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
+            _context[FsPredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
+            //_context[FsPredefinedContext.FLAGSHIP_VISITOR] = VisitorId; 
         }
 
         virtual protected VisitorStrategyAbstract GetStrategy()
@@ -121,10 +94,7 @@ namespace Flagship.FsVisitor
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
         abstract public Task SendHit(HitAbstract hit); 
 
-        abstract public void UpdateContexCommon(IDictionary<string, object> context);
-        abstract public void UpdateContext(IDictionary<string, string> context);
-        abstract public void UpdateContext(IDictionary<string, double> context);
-        abstract public void UpdateContext(IDictionary<string, bool> context);
+        abstract public void UpdateContext(IDictionary<string, object> context); 
         abstract public void UpdateContext(string key, string value);
 
         abstract public void UpdateContext(string key, double value);

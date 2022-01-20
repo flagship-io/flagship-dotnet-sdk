@@ -36,31 +36,7 @@ namespace Flagship.FsVisitor
             Visitor.Context[key] = value;
         }
 
-        public override void UpdateContexCommon(IDictionary<string, object> context)
-        {
-            foreach (var item in context)
-            {
-                UpdateContexKeyValue(item.Key, item.Value);
-            }
-        }
-
-        public override void UpdateContext(IDictionary<string, string> context)
-        {
-            foreach (var item in context)
-            {
-                UpdateContexKeyValue(item.Key, item.Value);
-            }
-        }
-
-        public override void UpdateContext(IDictionary<string, double> context)
-        {
-            foreach (var item in context)
-            {
-                UpdateContexKeyValue(item.Key, item.Value);
-            }
-        }
-
-        public override void UpdateContext(IDictionary<string, bool> context)
+        public override void UpdateContext(IDictionary<string, object> context)
         {
             foreach (var item in context)
             {

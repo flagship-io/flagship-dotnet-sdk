@@ -6,6 +6,7 @@ using Flagship.Model;
 using Flagship.Model.Bucketing;
 using Murmur;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,13 +23,16 @@ namespace Flagship.Decision
     internal class BucketingManager : DecisionManager
     {
         new public event StatusChangeDelegate StatusChange;
-        Murmur32 _murmur32;
-        bool _isPolling;
-        string _lastModified;
-        BucketingDTO _bucketingContent;
-        bool _isFirstPooling;
+
+        protected Murmur32 _murmur32;
+        protected bool _isPolling;
+        protected string _lastModified;
+        private BucketingDTO bucketingContent;
+        protected bool _isFirstPooling;
         new public BucketingConfig Config { get; set; }
-        Timer _timer;
+        protected BucketingDTO BucketingContent { get => bucketingContent; set => bucketingContent = value; }
+
+        protected Timer _timer;
 
         public BucketingManager(BucketingConfig config, HttpClient httpClient, Murmur32 murmur32) : base(config, httpClient)
         {
@@ -100,7 +104,7 @@ namespace Flagship.Decision
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
-                    _bucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
+                    BucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
                 }
 
                 if (response.Headers.TryGetValues(HttpResponseHeader.LastModified.ToString(), out IEnumerable<string> lastModified))
@@ -124,7 +128,7 @@ namespace Flagship.Decision
                 {
                     StatusChange?.Invoke(FlagshipStatus.NOT_INITIALIZED);
                 }
-                Utils.Log.LogError(Config, ex.Message, "StartPolling");
+                Utils.Log.LogError(Config, ex.Message, "Polling");
             }
         }
 
@@ -135,7 +139,7 @@ namespace Flagship.Decision
             Utils.Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
         }
 
-        public async void SendContext(VisitorDelegateAbstract visitor)
+        virtual public async void SendContext(VisitorDelegateAbstract visitor)
         {
             try
             {
@@ -178,16 +182,17 @@ namespace Flagship.Decision
         {
             SendContext(visitor);
 
-            return Task.Factory.StartNew<ICollection<Model.Campaign>>(() =>
+            return Task.Factory.StartNew(() =>
             {
                 ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
 
-                if (_bucketingContent == null)
+                if (BucketingContent == null)
                 {
                     return campaigns;
                 }
 
-                if (_bucketingContent.Panic.HasValue && _bucketingContent.Panic.Value)
+
+                if (BucketingContent.Panic.HasValue && BucketingContent.Panic.Value)
                 {
                     IsPanic = true;
                     return campaigns;
@@ -195,120 +200,161 @@ namespace Flagship.Decision
 
                 IsPanic = false;
 
-                foreach (var item in _bucketingContent.Campaigns)
+                foreach (var item in BucketingContent.Campaigns)
                 {
-
+                    var campaign = GetVisitorCampaigns(item.VariationGroups, visitor, item.Id);
+                    if (campaign != null)
+                    {
+                        campaigns.Add(campaign);
+                    }
                 }
 
+                return campaigns;
             });
 
         }
 
-        protected bool MatchOperator(string operatorName, object contextValue, object targetingValue)
+        protected Model.Campaign GetVisitorCampaigns(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId)
+        {
+            foreach (var item in variationGroups)
+            {
+                var check = IsMatchedTargeting(item, visitor);
+                if (check)
+                {
+                    var variation = GetVariation(item, visitor);
+                    if (variation==null)
+                    {
+                        return null;
+                    }
+                    return new Model.Campaign
+                    {
+                        Id = campaignId,
+                        Variation = variation,
+                        VariationGroupId= item.Id,
+                    };
+                }
+            }
+            return null;
+        }
+
+        protected Model.Variation GetVariation(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
+        {
+            var hashBytes = _murmur32.ComputeHash(Encoding.UTF8.GetBytes(variationGroup.Id + visitor.VisitorId));
+            var hash = BitConverter.ToUInt32(hashBytes, 0);
+            var hashAllocation = hash % 100;
+            var totalAllocation = 0;
+
+            foreach (var item in variationGroup.Variations)
+            {
+                totalAllocation += item.Allocation;
+                if (hashAllocation<= totalAllocation)
+                {
+                    return new Model.Variation { 
+                        Id = item.Id,
+                        Modifications = item.Modifications,
+                        Reference = item.Reference,
+                    } ;
+                }
+            }
+            return null;
+        }
+
+        protected bool IsMatchedTargeting(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
         {
             bool check = false;
-            switch (targetingValue)
+
+            if (variationGroup == null || variationGroup.Targeting == null || variationGroup.Targeting.TargetingGroups == null)
             {
-                case string value:
-                    if (contextValue is string contextString)
-                    {
-                        return MatchOperator(operatorName, contextString, value);
-                    }
+                return check;
+            }
+
+            foreach (var item in variationGroup.Targeting.TargetingGroups)
+            {
+                 check = CheckAndTargeting(item.Targetings, visitor);
+                if (check)
+                {
                     break;
-                case double value:
-                    if (contextValue is double contextNumber)
-                    {
-                        return MatchOperator(operatorName, contextNumber, value );
-                    }
-                    break;
+                }
             }
             return check;
         }
 
-        protected bool MatchOperator(string operatorName, string contextValue, string targetingValue)
+        protected bool CheckAndTargeting(IEnumerable<Targeting> targetings, VisitorDelegateAbstract visitor)
         {
-            bool check;
-            switch (operatorName)
+            object contextValue;
+            var check = false;
+
+            foreach (var item in targetings)
             {
-                case "GREATER_THAN":
-                    check = contextValue.CompareTo(targetingValue)>0;
+                if (item.Key == "fs_all_users")
+                {
+                    check = true;
+                    continue;
+                }
+                if (item.Key == "fs_users")
+                {
+                    contextValue = visitor.VisitorId;
+                }
+                else 
+                {
+                    if (!(visitor.Context.ContainsKey(item.Key)))
+                    {
+                         check = false;
+                        break;
+                    }
+                    contextValue = visitor.Context[item.Key];
+                }
+
+                check = TestOperator(item.Operator, contextValue, item.Value);
+                if (!check)
+                {
                     break;
-                case "LOWER_THAN":
-                    check = contextValue.CompareTo(targetingValue)<0;
-                    break;
-                case "GREATER_THAN_OR_EQUALS":
-                    check = contextValue.CompareTo(targetingValue)>=0;
-                    break;
-                case "LOWER_THAN_OR_EQUALS":
-                    check = contextValue.CompareTo(targetingValue)<=0;
-                    break;
-                default:
-                    check = false;
-                    break;
+                }
             }
             return check;
         }
 
-        protected bool MatchOperator(string operatorName, double contextValue, double targetingValue)
-        {
-            bool check;
-            switch (operatorName)
-            {
-                case "GREATER_THAN":
-                    check = contextValue.CompareTo(targetingValue) > 0;
-                    break;
-                case "LOWER_THAN":
-                    check = contextValue.CompareTo(targetingValue) < 0;
-                    break;
-                case "GREATER_THAN_OR_EQUALS":
-                    check = contextValue.CompareTo(targetingValue) >= 0;
-                    break;
-                case "LOWER_THAN_OR_EQUALS":
-                    check = contextValue.CompareTo(targetingValue) <= 0;
-                    break;
-                default:
-                    check = false;
-                    break;
-            }
-            return check;
-        }
-
-        protected bool TestOperator(string operatorName, object contextValue, object targetingValue)
+        protected bool TestOperator(TargetingOperator operatorName, object contextValue, object targetingValue)
         {
             bool check = false;
             try
             {
 
+                if (targetingValue is JArray targetingValueArray)
+                {
+                    return TestListOperator(operatorName, contextValue, targetingValueArray);
+                }
+
                 switch (operatorName)
                 {
-                    case "EQUALS":
+                    case TargetingOperator.EQUALS:
                         check = contextValue.Equals(targetingValue);
                         break;
-                    case "NOT_EQUALS":
+                    case TargetingOperator.NOT_EQUALS:
                         check = !contextValue.Equals(targetingValue);
                         break;
-                    case "CONTAINS":
+                    case TargetingOperator.CONTAINS:
                         check = contextValue.ToString().Contains(targetingValue.ToString());
                         break;
-                    case "NOT_CONTAINS":
+                    case TargetingOperator.NOT_CONTAINS:
                         check = !contextValue.ToString().Contains(targetingValue.ToString());
                         break;
-                    case "GREATER_THAN":
-                        check = contextValue > targetingValue;
+                    case TargetingOperator.GREATER_THAN:
+                        check = MatchOperator(operatorName,contextValue,targetingValue);
                         break;
-                    case "LOWER_THAN":
-                        check = contextValue < targetingValue;
+                    case TargetingOperator.LOWER_THAN:
+                        check = MatchOperator(operatorName, contextValue, targetingValue);
                         break;
-                    case "GREATER_THAN_OR_EQUALS":
-                        check = contextValue >= targetingValue;
+                    case TargetingOperator.GREATER_THAN_OR_EQUALS:
+                        check = MatchOperator(operatorName, contextValue, targetingValue);
                         break;
-                    case "LOWER_THAN_OR_EQUALS":
-                        check = contextValue <= targetingValue;
+                    case TargetingOperator.LOWER_THAN_OR_EQUALS:
+                        check = MatchOperator(operatorName, contextValue, targetingValue);
                         break;
-                    case "STARTS_WITH":
+                    case TargetingOperator.STARTS_WITH:
                         check = contextValue.ToString().StartsWith(targetingValue.ToString());
                         break;
-                    case "ENDS_WITH":
+                    case TargetingOperator.ENDS_WITH:
                         check = contextValue.ToString().EndsWith(targetingValue.ToString());
                         break;
                     default:
@@ -322,6 +368,103 @@ namespace Flagship.Decision
             }
             
 
+            return check;
+        }
+
+        protected bool TestListOperatorLoop(TargetingOperator operatorName, object contextValue, JArray targetingValue, bool initialCheck)
+        {
+            var check = initialCheck;
+            foreach (var item in targetingValue)
+            {
+                check = TestOperator(operatorName, contextValue, item);
+                if (check != initialCheck)
+                {
+                    break;
+                }
+            }
+            return check;
+        }
+
+        protected bool TestListOperator(TargetingOperator operatorName, object contextValue, JArray targetingValue)
+        {
+            if (operatorName == TargetingOperator.NOT_EQUALS || operatorName == TargetingOperator.NOT_CONTAINS)
+            {
+                return TestListOperatorLoop(operatorName, contextValue, targetingValue, true);
+            }
+            return TestListOperatorLoop(operatorName, contextValue, targetingValue, false);
+        }
+
+        protected bool MatchOperator(TargetingOperator operatorName, object contextValue, object targetingValue)
+        {
+            bool check = false;
+
+            switch (targetingValue)
+            {
+                case string value:
+                    if (contextValue is string contextString)
+                    {
+                        return MatchOperator(operatorName, contextString, value);
+                    }
+                    break;
+                case double value:
+                    if (contextValue is int || contextValue is long || contextValue is double)
+                    {
+                        return MatchOperator(operatorName, Convert.ToDouble(contextValue), value);
+                    }
+                    if (contextValue is int contextInt)
+                    {
+                        return MatchOperator(operatorName, contextInt, value);
+                    }
+                    break;
+            }
+            return check;
+        }
+
+        protected bool MatchOperator(TargetingOperator operatorName, string contextValue, string targetingValue)
+        {
+            bool check;
+            switch (operatorName)
+            {
+                case TargetingOperator.GREATER_THAN:
+                    check = contextValue.CompareTo(targetingValue) > 0;
+                    break;
+                case TargetingOperator.LOWER_THAN:
+                    check = contextValue.CompareTo(targetingValue) < 0;
+                    break;
+                case TargetingOperator.GREATER_THAN_OR_EQUALS:
+                    check = contextValue.CompareTo(targetingValue) >= 0;
+                    break;
+                case TargetingOperator.LOWER_THAN_OR_EQUALS:
+                    check = contextValue.CompareTo(targetingValue) <= 0;
+                    break;
+                default:
+                    check = false;
+                    break;
+            }
+            return check;
+        }
+
+        protected bool MatchOperator(TargetingOperator operatorName, double contextValue, double targetingValue)
+        {
+            bool check;
+            switch (operatorName)
+            {
+                case TargetingOperator.GREATER_THAN:
+                    check = contextValue.CompareTo(targetingValue) > 0;
+                    break;
+                case TargetingOperator.LOWER_THAN:
+                    check = contextValue.CompareTo(targetingValue) < 0;
+                    break;
+                case TargetingOperator.GREATER_THAN_OR_EQUALS:
+                    check = contextValue.CompareTo(targetingValue) >= 0;
+                    break;
+                case TargetingOperator.LOWER_THAN_OR_EQUALS:
+                    check = contextValue.CompareTo(targetingValue) <= 0;
+                    break;
+                default:
+                    check = false;
+                    break;
+            }
             return check;
         }
     }

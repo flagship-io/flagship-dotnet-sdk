@@ -50,7 +50,7 @@ namespace Flagship.Api
                     [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config.EnvId
                 };
 
-                if (!string.IsNullOrWhiteSpace(visitor.VisitorId) && !string.IsNullOrWhiteSpace(visitor.AnonymousId))
+                if (!string.IsNullOrWhiteSpace(visitor.AnonymousId) && !string.IsNullOrWhiteSpace(visitor.VisitorId))
                 {
                     postData[Constants.VISITOR_ID_API_ITEM] = visitor.VisitorId;
                     postData[Constants.ANONYMOUS_ID] = visitor.AnonymousId;

@@ -80,6 +80,32 @@ namespace Flagship.Main.Tests
         }
 
         [TestMethod()]
+        public void Start3Test()
+        {
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            var envId = "envId";
+            var apiKey = "apiKey";
+
+            var config = new Config.BucketingConfig();
+
+            Flagship.Start(envId, apiKey, config);
+
+            Assert.IsNotNull(Flagship.Config);
+            Assert.IsInstanceOfType(Flagship.Config, typeof(Config.BucketingConfig));
+            Assert.IsInstanceOfType(Flagship.Config.LogManager, typeof(FsLogManager));
+
+            Assert.AreEqual(envId, Flagship.Config.EnvId);
+            Assert.AreEqual(apiKey, Flagship.Config.ApiKey);
+
+            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION)));
+            Assert.IsTrue(stringWriter.ToString().Contains("Bucketing polling starts"));
+
+            stringWriter.Dispose();
+        }
+
+        [TestMethod()]
         public void NewVisitorTest()
         {
             var visitorBuilder = Flagship.NewVisitor();
@@ -98,6 +124,19 @@ namespace Flagship.Main.Tests
             visitorBuilder = Flagship.NewVisitor();
 
             Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+
+            var visitorId = "visitorId";
+            visitorBuilder = Flagship.NewVisitor(visitorId);
+            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
+
+            visitorBuilder = Flagship.NewVisitor(visitorId, InstanceType.SINGLE_INSTANCE);
+            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
+
+            visitorBuilder = Flagship.NewVisitor(InstanceType.SINGLE_INSTANCE);
+            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+
         }
     }
 }

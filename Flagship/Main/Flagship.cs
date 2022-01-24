@@ -101,7 +101,24 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProto
 
             fsInstance.SetStatus(FlagshipStatus.STARTING);
             var httpClient = new HttpClient();
-            var decisionManager = new ApiManager(config, httpClient);
+
+            IDecisionManager decisionManager = fsInstance._configManager?.DecisionManager;
+
+            if (decisionManager != null && decisionManager is BucketingManager bucketingManager)
+            {
+                bucketingManager.StopPolling();
+            }
+
+            if (config.DecisionMode== DecisionMode.BUCKETING)
+            {
+                decisionManager = new BucketingManager((BucketingConfig)config, httpClient, Murmur.MurmurHash.Create32());
+                _ = ((BucketingManager)decisionManager).StartPolling();
+            }
+            else
+            {
+                decisionManager = new ApiManager(config, httpClient);
+            }
+
             var trackingManager = new TrackingManager(config, httpClient);
 
             decisionManager.StatusChange += DecisionManager_StatusChange;

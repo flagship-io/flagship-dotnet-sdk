@@ -23,7 +23,7 @@ namespace Flagship.FsVisitor
         virtual public FlagshipConfig Config => ConfigManager.Config;
         virtual public IConfigManager ConfigManager { get; set; }
         virtual public IDictionary<string, object> Context => _context;
-        virtual public string AnonymousId => _anonymousId ;
+        virtual public string AnonymousId { get => _anonymousId; internal set { _anonymousId = value; } }
 
         private VisitorStrategyAbstract _strategy;
 
@@ -36,6 +36,11 @@ namespace Flagship.FsVisitor
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
             LoadPredefinedContext();
+
+            if (isAuthenticated && configManager.Config.DecisionMode== DecisionMode.DECISION_API)
+            {
+                _anonymousId = Guid.NewGuid().ToString();
+            }
         }
        
         protected string CreateVisitorId()
@@ -100,5 +105,15 @@ namespace Flagship.FsVisitor
         abstract public void UpdateContext(string key, double value);
 
         abstract public void UpdateContext(string key, bool value);
+
+        virtual public void Authenticate(string visitorId)
+        {
+            GetStrategy().Authenticate(visitorId);
+        }
+
+        virtual public void Unauthenticate()
+        {
+            GetStrategy().Unauthenticate();
+        }
     }
 }

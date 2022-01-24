@@ -25,15 +25,20 @@ namespace Flagship.FsVisitor.Tests
         Mock<Flagship.Config.IConfigManager> configManager;
         Mock<VisitorStrategyAbstract> defaultStrategy;
 
+
         public VisitorDelegateTests()
         {
+            var config = new Flagship.Config.DecisionApiConfig();
             configManager = new Mock<Flagship.Config.IConfigManager>();
+            configManager.SetupGet(x=>x.Config).Returns(config);
+
             visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object });
             defaultStrategy = new Mock<VisitorStrategyAbstract>(visitorDelegateMock.Object);
 
             visitorDelegateMock.Protected().Setup<VisitorStrategyAbstract>("GetStrategy").Returns(defaultStrategy.Object);
             visitorDelegateMock.CallBase = true;
         }
+
 
         [TestMethod()]
         public void TestStrategy()
@@ -50,15 +55,21 @@ namespace Flagship.FsVisitor.Tests
             
             var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object );
 
-            Assert.AreEqual(visitor.AnonymousId, null);
+            Assert.IsNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.IsFalse(visitor.HasConsented);
             Assert.AreEqual(visitor.Context.Count, 3);
             Assert.AreEqual(visitor.Flags.Count, 0);
 
             visitor = new VisitorDelegate(null, false, context, false, configManager.Object);
-            Assert.AreNotEqual(visitorId, visitor.VisitorId);
+            Assert.IsNotNull(visitor.VisitorId);
             Assert.AreEqual(visitor.VisitorId.Length, 19);
+
+            visitor = new VisitorDelegate(visitorId, true, context, false, configManager.Object);
+            Assert.IsNotNull(visitor.AnonymousId);
+            Assert.AreEqual(visitorId, visitor.VisitorId);
+            Assert.AreEqual(36,visitor.AnonymousId.Length);
+
         }
 
         [TestMethod()]
@@ -248,6 +259,27 @@ namespace Flagship.FsVisitor.Tests
             .Verifiable();
             visitorDelegateMock.Object.UpdateContext(context);
             defaultStrategy.Verify();
+        }
+
+        [TestMethod()]
+        public void AuthenticateTest()
+        {
+            var visitorId = "newVisitorID";
+            defaultStrategy.Setup(x => x.Authenticate(visitorId))
+            .Verifiable();
+            visitorDelegateMock.Object.Authenticate(visitorId);
+
+            defaultStrategy.Verify(x=>x.Authenticate(visitorId),Times.Once());
+        }
+
+        [TestMethod()]
+        public void UnauthenticateTest()
+        {
+            defaultStrategy.Setup(x => x.Unauthenticate())
+            .Verifiable();
+            visitorDelegateMock.Object.Unauthenticate();
+
+            defaultStrategy.Verify(x => x.Unauthenticate(), Times.Once());
         }
     }
 }

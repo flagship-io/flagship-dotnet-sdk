@@ -41,6 +41,10 @@ namespace Flagship.Enums
 
         public const string PROCESS_INITIALIZATION = "INITIALIZATION";
 
+        public const string VISITOR_ID_ERROR = "visitorId must not be null or empty";
+
+        public const string FLAGSHIP_VISITOR_NOT_AUTHENTICATE = "Visitor is not authenticated yet";
+
         public const string SDK_STARTED_INFO = "Flagship SDK (version: {0}) READY";
 
         public const string METHOD_DEACTIVATED_ERROR = "Method {0} is deactivated while SDK status is: {1}.";
@@ -60,6 +64,8 @@ namespace Flagship.Enums
         public const string METHOD_DEACTIVATED_CONSENT_ERROR = "Method {0} is deactivated for visitor {1} : visitor did not consent.";
 
         public const string PREDEFINED_CONTEXT_TYPE_ERROR = "Predefined Context {0} must be type of {1}";
+
+        public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
 
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
         public const string CUSTOMER_UID = "cuid";

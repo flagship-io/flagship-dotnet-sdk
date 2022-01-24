@@ -177,6 +177,48 @@ namespace Flagship.FsVisitor
             }
         }
 
+        public override void Authenticate(string visitorId)
+        {
+            const string methodName = "Authenticate";
+            if (Config.DecisionMode== DecisionMode.BUCKETING)
+            {
+                LogDeactivateOnBucketingMode(methodName);
+                return;
+            }
 
+            if (string.IsNullOrWhiteSpace(visitorId))
+            {
+                Utils.Log.LogError(Config, string.Format(Constants.VISITOR_ID_ERROR, methodName), methodName);
+                return;
+            }
+
+            Visitor.AnonymousId = Visitor.VisitorId;
+            Visitor.VisitorId = visitorId;
+        }
+
+        public override void Unauthenticate()
+        {
+            const string methodName = "Unauthenticate";
+            if (Config.DecisionMode == DecisionMode.BUCKETING)
+            {
+                LogDeactivateOnBucketingMode(methodName);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(Visitor.AnonymousId))
+            {
+                Utils.Log.LogError(Config, string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName), methodName);
+                return;
+            }
+
+            Visitor.VisitorId= Visitor.AnonymousId;
+            Visitor.AnonymousId = null;
+
+        }
+
+        protected void LogDeactivateOnBucketingMode(string methodName)
+        {
+            Utils.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName);
+        }
     }
 }

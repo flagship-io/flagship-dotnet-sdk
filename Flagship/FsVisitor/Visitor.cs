@@ -96,5 +96,15 @@ namespace Flagship.FsVisitor
         {
             _visitorDelegate.UpdateContext(key, value);
         }
+
+        public void Authenticate(string visitorId)
+        {
+            _visitorDelegate.Authenticate(visitorId);
+        }
+
+        public void Unauthenticate()
+        {
+            _visitorDelegate.Unauthenticate();  
+        }
     }
 }

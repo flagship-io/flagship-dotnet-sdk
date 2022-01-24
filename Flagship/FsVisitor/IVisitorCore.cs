@@ -18,5 +18,8 @@ namespace Flagship.FsVisitor
         Task FetchFlags();
 
         Task SendHit(HitAbstract hit);
+
+        void Authenticate(string visitorId);
+        void Unauthenticate();
     }
 }

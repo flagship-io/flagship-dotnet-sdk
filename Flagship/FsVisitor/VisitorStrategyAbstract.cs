@@ -67,5 +67,9 @@ namespace Flagship.FsVisitor
         abstract public void UpdateContext(string key, double value);
 
         abstract public void UpdateContext(string key, bool value);
+
+        abstract public void Authenticate(string visitorId);
+
+        abstract public void Unauthenticate();
     }
 }

@@ -186,5 +186,22 @@ namespace Flagship.FsVisitor.Tests
             Visitor.UpdateContext("key", 2);
             visitorDelegateMock.Verify();
         }
+
+        [TestMethod()]
+        public void AuthenticateTest()
+        {
+            var visitorId = "visitorID";
+            visitorDelegateMock.Setup(x => x.Authenticate(visitorId)).Verifiable();
+            Visitor.Authenticate(visitorId);
+            visitorDelegateMock.Verify(x=>x.Authenticate(visitorId), Times.Once());
+        }
+
+        [TestMethod()]
+        public void UnauthenticateTest()
+        { 
+            visitorDelegateMock.Setup(x => x.Unauthenticate()).Verifiable();
+            Visitor.Unauthenticate();
+            visitorDelegateMock.Verify(x => x.Unauthenticate(), Times.Once());
+        }
     }
 }

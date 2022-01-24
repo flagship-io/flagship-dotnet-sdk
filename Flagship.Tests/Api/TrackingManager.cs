@@ -69,6 +69,7 @@ namespace Flagship.Tests.Api
             await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
 
             mockHandler.Protected().Verify("SendAsync", Times.Exactly(3), new object[] {  ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
+
             fsLogManagerMock.Verify(x => x.Error(errorSendAsyn.Message, "SendActive"), Times.Once());
 
             httpResponse.Dispose();

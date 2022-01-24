@@ -355,5 +355,75 @@ namespace Flagship.FsVisitor.Tests
 
             fsLogManagerMock.Verify(x => x.Error(errorMessage, functionName), Times.Once());
         }
+
+        [TestMethod]
+        public void ExperienceContinuityTest()
+        {
+            var visitorId = visitorDelegate.VisitorId;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            var newVisitorId = "newVisitorId";  
+
+            defaultStrategy.Authenticate(newVisitorId);
+
+            Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
+            Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
+
+            defaultStrategy.Authenticate(null);
+
+            Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
+            Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
+
+            string methodName = "Authenticate";
+
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.VISITOR_ID_ERROR, methodName), methodName), Times.Once());
+
+            // Bucketing mode test
+            var config = new Flagship.Config.BucketingConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            visitorDelegate.ConfigManager.Config = config;
+
+
+            defaultStrategy.Authenticate("newVisitor2");
+
+            Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
+            Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
+
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName), Times.Once());
+
+            // Unauthenticate bucketing mode test
+
+            defaultStrategy.Unauthenticate();
+
+
+            Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
+            Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
+
+            methodName = "Unauthenticate";
+
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName), Times.Once());
+
+
+            visitorDelegate.ConfigManager.Config = new Flagship.Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            defaultStrategy.Unauthenticate();
+
+            Assert.IsNull(visitorDelegate.AnonymousId);
+            Assert.AreEqual(visitorId, visitorDelegate.VisitorId);
+
+            defaultStrategy.Unauthenticate();
+
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName), methodName), Times.Once());
+
+        }
     }
 }

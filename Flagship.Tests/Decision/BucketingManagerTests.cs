@@ -190,6 +190,22 @@ namespace Flagship.Decision.Tests
 
             Assert.AreEqual(variations[0].Id, variationResult.Id);
 
+            // Test null variation
+
+            variationResult = (Model.Variation)decisionManagerPrivate.Invoke("GetVariation", new object[] { null, visitorDelegate });
+
+            Assert.IsNull(variationResult);
+
+            VariationGroup = new VariationGroup
+            {
+                Id = "9273BKSDJtoto",
+                Variations = null
+            };
+            variationResult = (Model.Variation)decisionManagerPrivate.Invoke("GetVariation", new object[] { VariationGroup, visitorDelegate });
+
+            Assert.IsNull(variationResult);
+
+
             // test isMatchTargeting with empty VariationGroupDTO
 
             var IsMatchedTargeting = (bool)decisionManagerPrivate.Invoke("IsMatchedTargeting", new object[] { new VariationGroup(), visitorDelegate });
@@ -464,7 +480,7 @@ namespace Flagship.Decision.Tests
 
             testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, "abcd", new JArray { "e", "f" } });
 
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperator);
 
             // test testOperator NOT_CONTAINS Test contextValue not contains targetingValue
 
@@ -588,7 +604,7 @@ namespace Flagship.Decision.Tests
 
             testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN_OR_EQUALS, 8, 6 });
 
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperator);
 
             // test testOperator LOWER_THAN_OR_EQUALS Test contextValue EQUALS targetingValue
 
@@ -618,7 +634,7 @@ namespace Flagship.Decision.Tests
 
             testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.STARTS_WITH, "abcd", "AB" });
 
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperator);
 
             // test testOperator STARTS_WITH Test contextValue STARTS_WITH targetingValue
 
@@ -636,7 +652,7 @@ namespace Flagship.Decision.Tests
 
             testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.ENDS_WITH, "abcd", "CD" });
 
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperator);
 
             // test testOperator ENDS_WITH Test contextValue ENDS_WITH targetingValue
 
@@ -687,7 +703,8 @@ namespace Flagship.Decision.Tests
                 CallBase = true
             };
 
-            decisionManagerMock.Setup(x => x.SendContext(It.IsAny<FsVisitor.VisitorDelegateAbstract>()));
+            decisionManagerMock.Setup(x => x.SendContext(It.IsAny<FsVisitor.VisitorDelegateAbstract>()))
+                .Returns(Task.CompletedTask);
 
             var decisionManager = decisionManagerMock.Object;
 
@@ -741,15 +758,134 @@ namespace Flagship.Decision.Tests
 
 
         [TestMethod()]
-        public void StopPollingTest()
+        public async Task StopPollingTest()
         {
+            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
 
+            var config = new Config.BucketingConfig()
+            {
+                EnvId = "envID",
+                ApiKey = "spi",
+                PollingInterval = TimeSpan.FromMilliseconds(500),
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            HttpResponseMessage httpResponsePanicMode = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent("{ \"panic\": true }", Encoding.UTF8, "application/json"),
+            };
+
+            httpResponsePanicMode.Headers.Add(HttpResponseHeader.LastModified.ToString(), "2022-01-20");
+
+            var url = string.Format(Constants.BUCKETING_API_URL, config.EnvId);
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+
+            mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponsePanicMode);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var decisionManagerMock = new Mock<BucketingManager>(config, httpClient, null)
+            {
+                CallBase = true
+            };
+
+            decisionManagerMock.Setup(x => x.SendContext(It.IsAny<FsVisitor.VisitorDelegateAbstract>()))
+                .Returns(Task.CompletedTask);
+
+            var decisionManager = decisionManagerMock.Object;
+
+            _ = decisionManager.StartPolling().ConfigureAwait(false);
+
+            await Task.Delay(1000).ConfigureAwait(false);
+
+            decisionManager.StopPolling();
+
+            mockHandler.Protected().Verify(
+                 "SendAsync",
+                 Times.AtLeast(2),
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>()
+                );
+
+            httpResponsePanicMode.Dispose();
+            httpClient.Dispose();
         }
 
         [TestMethod()]
-        public void SendContextTest()
+        public async Task SendContextTest()
         {
+            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
 
+            var config = new Config.BucketingConfig()
+            {
+                EnvId = "envID",
+                ApiKey = "spi",
+                PollingInterval = TimeSpan.FromSeconds(0),
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json"),
+            };
+
+            HttpResponseMessage httpResponseError = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.BadRequest,
+                Content = new StringContent("Error", Encoding.UTF8, "application/json"),
+            };
+
+            var url = string.Format(Constants.BUCKETING_API_CONTEXT_URL, config.EnvId);
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+
+            mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).ReturnsAsync(httpResponseError);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var decisionManagerMock = new BucketingManager(config, httpClient, null);
+
+            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var decisionManagerMock2 = new Mock<Flagship.Decision.IDecisionManager>();
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock2.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["age"] = 20
+            };
+
+            var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitor_1", false, context, false, configManager);
+
+            await decisionManagerMock.SendContext(visitorDelegate).ConfigureAwait(false);
+
+            mockHandler.Protected().Verify("SendAsync", Times.Exactly(1),
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>());
+
+            await decisionManagerMock.SendContext(visitorDelegate).ConfigureAwait(false);
+
+
+            mockHandler.Protected().Verify("SendAsync", Times.Exactly(2),
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>());
+
+            fsLogManagerMock.Verify(x => x.Error("Bad Request", "SendContext"), Times.Once());
+
+            httpResponse.Dispose();
+            httpResponseError.Dispose();
         }
 
         [TestMethod()]

@@ -139,7 +139,7 @@ namespace Flagship.Decision
             Utils.Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
         }
 
-        virtual public async void SendContext(VisitorDelegateAbstract visitor)
+        virtual public async Task SendContext(VisitorDelegateAbstract visitor)
         {
             try
             {
@@ -180,7 +180,7 @@ namespace Flagship.Decision
         }
         public override Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
         {
-            SendContext(visitor);
+            _ = SendContext(visitor);
 
             return Task.Factory.StartNew(() =>
             {
@@ -222,7 +222,7 @@ namespace Flagship.Decision
                 if (check)
                 {
                     var variation = GetVariation(item, visitor);
-                    if (variation==null)
+                    if (variation == null)
                     {
                         return null;
                     }
@@ -230,7 +230,7 @@ namespace Flagship.Decision
                     {
                         Id = campaignId,
                         Variation = variation,
-                        VariationGroupId= item.Id,
+                        VariationGroupId = item.Id,
                     };
                 }
             }
@@ -239,21 +239,31 @@ namespace Flagship.Decision
 
         protected Model.Variation GetVariation(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
         {
+            if (variationGroup == null)
+            {
+                return null;
+            }
             var hashBytes = _murmur32.ComputeHash(Encoding.UTF8.GetBytes(variationGroup.Id + visitor.VisitorId));
             var hash = BitConverter.ToUInt32(hashBytes, 0);
             var hashAllocation = hash % 100;
             var totalAllocation = 0;
 
+            if (variationGroup.Variations == null)
+            {
+                return null;
+            }
+
             foreach (var item in variationGroup.Variations)
             {
                 totalAllocation += item.Allocation;
-                if (hashAllocation<= totalAllocation)
+                if (hashAllocation <= totalAllocation)
                 {
-                    return new Model.Variation { 
+                    return new Model.Variation
+                    {
                         Id = item.Id,
                         Modifications = item.Modifications,
                         Reference = item.Reference,
-                    } ;
+                    };
                 }
             }
             return null;
@@ -270,7 +280,7 @@ namespace Flagship.Decision
 
             foreach (var item in variationGroup.Targeting.TargetingGroups)
             {
-                 check = CheckAndTargeting(item.Targetings, visitor);
+                check = CheckAndTargeting(item.Targetings, visitor);
                 if (check)
                 {
                     break;
@@ -295,11 +305,11 @@ namespace Flagship.Decision
                 {
                     contextValue = visitor.VisitorId;
                 }
-                else 
+                else
                 {
                     if (!(visitor.Context.ContainsKey(item.Key)))
                     {
-                         check = false;
+                        check = false;
                         break;
                     }
                     contextValue = visitor.Context[item.Key];
@@ -340,7 +350,7 @@ namespace Flagship.Decision
                         check = !contextValue.ToString().Contains(targetingValue.ToString());
                         break;
                     case TargetingOperator.GREATER_THAN:
-                        check = MatchOperator(operatorName,contextValue,targetingValue);
+                        check = MatchOperator(operatorName, contextValue, targetingValue);
                         break;
                     case TargetingOperator.LOWER_THAN:
                         check = MatchOperator(operatorName, contextValue, targetingValue);
@@ -366,7 +376,7 @@ namespace Flagship.Decision
             {
                 Utils.Log.LogError(Config, ex.Message, "TestOperator");
             }
-            
+
 
             return check;
         }
@@ -376,7 +386,15 @@ namespace Flagship.Decision
             var check = initialCheck;
             foreach (var item in targetingValue)
             {
-                check = TestOperator(operatorName, contextValue, item);
+                if (item.Type.ToString() == "Double")
+                {
+                    check = TestOperator(operatorName, contextValue, item.Value<double>());
+                }
+                else
+                {
+                    check = TestOperator(operatorName, contextValue, item.Value<string>());
+                }
+
                 if (check != initialCheck)
                 {
                     break;
@@ -397,26 +415,17 @@ namespace Flagship.Decision
         protected bool MatchOperator(TargetingOperator operatorName, object contextValue, object targetingValue)
         {
             bool check = false;
-
-            switch (targetingValue)
+            if (targetingValue is string value && contextValue is string contextString)
             {
-                case string value:
-                    if (contextValue is string contextString)
-                    {
-                        return MatchOperator(operatorName, contextString, value);
-                    }
-                    break;
-                case double value:
-                    if (contextValue is int || contextValue is long || contextValue is double)
-                    {
-                        return MatchOperator(operatorName, Convert.ToDouble(contextValue), value);
-                    }
-                    if (contextValue is int contextInt)
-                    {
-                        return MatchOperator(operatorName, contextInt, value);
-                    }
-                    break;
+                return MatchOperator(operatorName, contextString, value);
+
             }
+            if ((targetingValue is int || targetingValue is long || targetingValue is double) 
+                && (contextValue is int || contextValue is long || contextValue is double))
+            {
+                return MatchOperator(operatorName, Convert.ToDouble(contextValue), Convert.ToDouble(targetingValue));
+            }
+
             return check;
         }
 

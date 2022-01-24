@@ -16,5 +16,8 @@
         /// The variation assigned for the visitor
         /// </summary>
         public Variation Variation { get; set; }
+            
+        public string CampaignType { get; set; }
+
     }
 }

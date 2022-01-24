@@ -26,7 +26,7 @@ namespace Flagship.FsFlag
             _visitorDelegateAbstract = visitorDelegate;
             _flagDTO = flag;
             _defaultValue = DefaultValue;
-            _metadata = new FlagMetadata(flag?.CampaignId ?? "", flag?.VariationGroupId ?? "", flag?.VariationId ?? "", flag?.IsReference ?? false, "");
+            _metadata = new FlagMetadata(flag?.CampaignId ?? "", flag?.VariationGroupId ?? "", flag?.VariationId ?? "", flag?.IsReference ?? false, flag?.CampaignType ?? "");
         }
 
 

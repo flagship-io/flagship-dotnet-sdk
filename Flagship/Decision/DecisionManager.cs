@@ -53,7 +53,8 @@ namespace Flagship.Decision
                                 VariationGroupId = campaign.VariationGroupId,
                                 VariationId = campaign.Variation.Id,
                                 IsReference = campaign.Variation.Reference,
-                                Value = item.Value
+                                Value = item.Value,
+                                CampaignType = campaign.CampaignType
                             };
                             flags.Add(flag);
                         }

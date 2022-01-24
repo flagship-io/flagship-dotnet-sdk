@@ -17,7 +17,8 @@ namespace Flagship.Model
 
         public bool IsReference { get; set; }
 
-        public object Value { get; set; }
+        public object Value { get; set; } 
 
+        public string CampaignType { get; set; }
     }
 }

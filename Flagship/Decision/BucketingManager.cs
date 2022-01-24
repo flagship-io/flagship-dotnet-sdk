@@ -134,7 +134,10 @@ namespace Flagship.Decision
 
         public void StopPolling()
         {
-            _timer.Dispose();
+            if (_timer!=null)
+            {
+                _timer.Dispose();
+            }
             _isPolling = false;
             Utils.Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
         }
@@ -167,7 +170,7 @@ namespace Flagship.Decision
 
                 var response = await HttpClient.SendAsync(requestMessage);
 
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                if (response.StatusCode >= HttpStatusCode.BadRequest)
                 {
                     throw new Exception(response.ReasonPhrase);
                 }
@@ -202,7 +205,7 @@ namespace Flagship.Decision
 
                 foreach (var item in BucketingContent.Campaigns)
                 {
-                    var campaign = GetVisitorCampaigns(item.VariationGroups, visitor, item.Id);
+                    var campaign = GetVisitorCampaigns(item.VariationGroups, visitor, item.Id,item.Type);
                     if (campaign != null)
                     {
                         campaigns.Add(campaign);
@@ -214,7 +217,7 @@ namespace Flagship.Decision
 
         }
 
-        protected Model.Campaign GetVisitorCampaigns(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId)
+        protected Model.Campaign GetVisitorCampaigns(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId, string campaignType)
         {
             foreach (var item in variationGroups)
             {
@@ -231,6 +234,7 @@ namespace Flagship.Decision
                         Id = campaignId,
                         Variation = variation,
                         VariationGroupId = item.Id,
+                        CampaignType = campaignType
                     };
                 }
             }

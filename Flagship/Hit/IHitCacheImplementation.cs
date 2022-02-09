@@ -1,0 +1,32 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Flagship.Hit
+{
+    public interface IHitCacheImplementation
+    {
+        /// <summary>
+        /// This method will be called to cache visitor hits when a hit has failed to be sent if there is no internet, there has been a timeout or if the request responded with something > 2XX.
+        /// </summary>
+        /// <param name="visitorId">visitor ID</param>
+        /// <param name="data"></param>
+        void CacheHit(string visitorId, string data);
+
+        /// <summary>
+        /// This method will be called to load hits corresponding to visitor ID from your database and trying to send them again in the background.
+        /// Note: Hits older than 4H will be ignored
+        /// </summary>
+        /// <param name="visitorId">visitor ID</param>
+        /// <returns></returns>
+        string LookupHits(string visitorId);
+
+        /// <summary>
+        /// This method will be called to erase the visitor hits cache corresponding to visitor ID from your database.
+        /// </summary>
+        /// <param name="visitorId">visitor ID</param>
+        void FlushHits(string visitorId);
+    }
+}

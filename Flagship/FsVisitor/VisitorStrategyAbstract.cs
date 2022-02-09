@@ -50,6 +50,31 @@ namespace Flagship.FsVisitor
             }
         }
 
+        public async Task LookupVisitor()
+        {
+            try
+            {
+                var visitorCacheInstance = Config.VisitorCacheImplementation;
+                if (Config.DisableCache && visitorCacheInstance == null)
+                {
+                    return;
+                }
+
+                var visitorCacheStringData = await visitorCacheInstance.LookupVisitor(Visitor.VisitorId);
+                if (visitorCacheStringData == null)
+                {
+                    return;
+                }
+
+                var visitorCache = Newtonsoft.Json.JsonConvert.DeserializeObject<VisitorCacheDTO>(visitorCacheStringData);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "LookupVisitor");
+            }
+            
+
+        }
         abstract public void ClearContext();
 
         abstract public Task FetchFlags();

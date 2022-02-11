@@ -11,7 +11,7 @@ namespace Flagship.Cache
         /// <summary>
         /// 
         /// </summary>
-        TimeSpan? HitCacheLookupTimeout { get; set; }
+        TimeSpan? LookupTimeout { get; set; }
         /// <summary>
         /// This method will be called to cache visitor hits when a hit has failed to be sent if there is no internet, there has been a timeout or if the request responded with something > 2XX.
         /// </summary>

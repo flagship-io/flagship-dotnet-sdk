@@ -4,6 +4,7 @@ using Flagship.Hit;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -64,12 +65,55 @@ namespace Flagship.FsVisitor
             Visitor.Context.Clear();
         }
 
+        protected virtual ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
+        {
+            var campaigns = new Collection<Campaign>();
+            if (visitor.VisitorCache == null || visitor.VisitorCache.Data ==null)
+            {
+                return campaigns;
+            }
+            if (visitor.VisitorCache.Version == 1)
+            {
+                  var data= (VisitorCacheDTOV1)visitor.VisitorCache.Data;
+                visitor.UpdateContext(data.Data.Context);
+                
+                foreach (var item in data.Data.Campaigns)
+                {
+                    campaigns.Add(new Campaign
+                    {
+                        Id = item.CampaignId,
+                        VariationGroupId = item.VariationGroupId,
+                        Variation = new Variation
+                        {
+                            Id = item.VariationId,
+                            Reference = item.IsReference ?? false,
+                            Modifications = new Modifications
+                            {
+                                Type = item.Type,
+                                Value = item.Flags
+                            }
+                        }
+                    });
+                }
+
+                return campaigns;
+            }
+
+            return campaigns;
+        }
+
         async public override Task FetchFlags()
         {
             try
             {
                 var campaigns = await DecisionManager.GetCampaigns(Visitor);
+                if (campaigns.Count == 0)
+                {
+                    campaigns = FetchVisitorCacheCampaigns(Visitor);
+                }
+                Visitor.Campaigns = campaigns;
                 Visitor.Flags = await DecisionManager.GetFlags(campaigns);
+                CacheVisitorAsync();
             }
             catch (Exception ex)
             {

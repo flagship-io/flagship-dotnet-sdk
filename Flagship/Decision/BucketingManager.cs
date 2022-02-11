@@ -241,6 +241,32 @@ namespace Flagship.Decision
             return null;
         }
 
+        protected Model.Variation CheckAndGetVisitorCache(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
+        {
+            if (visitor.VisitorCache==null)
+            {
+                return null;
+            }
+            if (visitor.VisitorCache.Version == 1)
+            {
+                var visitorCache = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
+                var cacheVariation = visitorCache.Data.Campaigns.FirstOrDefault(x=> x.VariationGroupId  == variationGroup.Id);
+                if (cacheVariation != null)
+                {
+                    return null;
+                }
+                var newVariation = variationGroup.Variations.FirstOrDefault(x => x.Id == cacheVariation.VariationId);
+                return new Model.Variation
+                {
+                    Id = newVariation.Id,
+                    Modifications = newVariation.Modifications,
+                    Reference = newVariation.Reference,
+                };
+            }
+
+            return null;
+        }
+
         protected Model.Variation GetVariation(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
         {
             if (variationGroup == null)
@@ -259,6 +285,13 @@ namespace Flagship.Decision
 
             foreach (var item in variationGroup.Variations)
             {
+                var cacheVariation = CheckAndGetVisitorCache(variationGroup, visitor);
+
+                if (cacheVariation!=null)
+                {
+                    return cacheVariation;
+                }
+
                 totalAllocation += item.Allocation;
                 if (hashAllocation <= totalAllocation)
                 {

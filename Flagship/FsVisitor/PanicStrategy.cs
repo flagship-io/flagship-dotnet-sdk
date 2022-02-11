@@ -4,6 +4,7 @@ using Flagship.Hit;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,21 @@ namespace Flagship.FsVisitor
     {
         public PanicStrategy(VisitorDelegateAbstract visitor) : base(visitor)
         {
+        }
+
+        public override void LookupVisitor()
+        {
+            //
+        }
+
+        public override void CacheVisitorAsync()
+        {
+            //
+        }
+
+        protected override ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
+        {
+            return new Collection<Campaign>();
         }
 
         public override Task SendConsentHitAsync(bool hasConsented)

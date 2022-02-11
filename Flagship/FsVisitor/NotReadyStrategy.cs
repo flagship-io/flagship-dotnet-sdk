@@ -16,6 +16,16 @@ namespace Flagship.FsVisitor
         {
         }
 
+        public override void LookupVisitor()
+        {
+            //
+        }
+
+        public override void CacheVisitorAsync()
+        {
+            //
+        }
+
         public override Task FetchFlags()
         {
             return Task.Factory.StartNew(() => { Log("FetchFlags"); });

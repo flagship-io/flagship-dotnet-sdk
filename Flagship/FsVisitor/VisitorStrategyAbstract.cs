@@ -6,10 +6,13 @@ using Flagship.FsFlag;
 using Flagship.FsVisitor;
 using Flagship.Hit;
 using Flagship.Model;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
@@ -50,7 +53,115 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public async Task LookupVisitor()
+        protected virtual void MigrateVisitorCacheData(string visitorDataString)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(visitorDataString))
+                {
+                    return;
+                }
+                var parseData = JObject.Parse(visitorDataString);
+                if (!parseData.ContainsKey("Version"))
+                {
+                    throw new Exception("JSON DATA must fit the type VisitorCacheDTO, property version is required");
+                }
+
+                var version = parseData["Version"];
+                if (version.ToString() == "1")
+                {
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<VisitorCacheDTOV1>(visitorDataString);
+                    Visitor.VisitorCache = new VisitorCache
+                    {
+                        Version = 1,
+                        Data = data
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "LookupVisitor");
+            }
+        }
+
+        public virtual void LookupVisitor()
+        {
+            try
+            {
+                var visitorCacheInstance = Config.VisitorCacheImplementation;
+                if (Config.DisableCache || visitorCacheInstance == null)
+                {
+                    return;
+                }
+
+                var timeout = visitorCacheInstance?.LookupTimeout;
+
+                var cts = new CancellationTokenSource();
+
+                cts.CancelAfter(timeout ?? TimeSpan.FromMilliseconds(1));
+                
+                var lookupTask = visitorCacheInstance.LookupVisitor(Visitor.VisitorId);
+                lookupTask.Wait(cts.Token);
+
+                var visitorCacheStringData = lookupTask.Result;
+
+                MigrateVisitorCacheData(visitorCacheStringData);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "LookupVisitor");
+            }
+        }
+
+        public virtual async void CacheVisitorAsync()
+        {
+            try
+            {
+                var visitorCacheInstance = Config.VisitorCacheImplementation;
+                if (Config.DisableCache || visitorCacheInstance==null)
+                {
+                    return;
+                }
+
+                var Campaigns = new Collection<VisitorCacheCampaign>();
+
+                foreach (var item in Visitor.Campaigns)
+                {
+                    Campaigns.Add(new VisitorCacheCampaign { 
+                        CampaignId = item.Id,
+                        VariationGroupId = item.VariationGroupId,
+                        VariationId = item.Variation.Id,
+                        IsReference = item.Variation.Reference,
+                        Type = item.Variation.Modifications.Type,
+                        Activated = false,
+                        Flags = item.Variation.Modifications.Value
+                    });
+                }
+
+                var data = new VisitorCacheDTOV1
+                {
+                    Version = 1,
+                    Data = new VisitorCacheData
+                    {
+                        VisitorId = Visitor.VisitorId,
+                        AnonymousId = Visitor.AnonymousId,
+                        Consent = Visitor.HasConsented,
+                        Context = Visitor.Context,
+                        Campaigns = Campaigns
+                    }
+                };
+
+                var dataString = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+
+                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataString);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "CacheVisitor");
+            }
+        }
+
+        public virtual async void FlushVisitorAsync() 
         {
             try
             {
@@ -59,21 +170,12 @@ namespace Flagship.FsVisitor
                 {
                     return;
                 }
-
-                var visitorCacheStringData = await visitorCacheInstance.LookupVisitor(Visitor.VisitorId);
-                if (visitorCacheStringData == null)
-                {
-                    return;
-                }
-
-                var visitorCache = Newtonsoft.Json.JsonConvert.DeserializeObject<VisitorCacheDTO>(visitorCacheStringData);
+                await visitorCacheInstance.FlushVisitor(Visitor.VisitorId);
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "LookupVisitor");
+                Utils.Log.LogError(Config, ex.Message, "FlushVisitor");
             }
-            
-
         }
         abstract public void ClearContext();
 

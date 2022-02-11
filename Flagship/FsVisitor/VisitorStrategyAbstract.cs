@@ -166,7 +166,7 @@ namespace Flagship.FsVisitor
             try
             {
                 var visitorCacheInstance = Config.VisitorCacheImplementation;
-                if (Config.DisableCache && visitorCacheInstance == null)
+                if (Config.DisableCache || visitorCacheInstance == null)
                 {
                     return;
                 }
@@ -175,6 +175,73 @@ namespace Flagship.FsVisitor
             catch (Exception ex)
             {
                 Utils.Log.LogError(Config, ex.Message, "FlushVisitor");
+            }
+        }
+
+        public virtual void LookupHits()
+        {
+            var hitCacheInstance = Config.HitCacheImplementation;
+            if (Config.DisableCache || hitCacheInstance == null)
+            {
+                return;
+            }
+
+        }
+
+        protected virtual string BuildHitCacheData(object data, HitCacheType type)
+        {
+            var hitData = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = Visitor.VisitorId,
+                    AnonymousId = Visitor.AnonymousId,
+                    Type = type,
+                    Content = data,
+                    Time = DateTime.Now
+                }
+            };
+
+            return Newtonsoft.Json.JsonConvert.SerializeObject(hitData);
+        }
+        public virtual async void CacheHit(HitAbstract hit)
+        {
+            try
+            {
+                var hitCacheInstance = Config.HitCacheImplementation;
+                if (Config.DisableCache || hitCacheInstance == null)
+                {
+                    return;
+                }
+
+                var hitDataString = BuildHitCacheData(hit.ToApiKeys(), (HitCacheType)hit.Type);
+
+                await hitCacheInstance.CacheHit(Visitor.VisitorId, hitDataString);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "CacheHit");
+            }
+        }
+
+        public virtual async void CacheHit(FlagDTO flagDTO)
+        {
+            try
+            {
+                var hitCacheInstance = Config.HitCacheImplementation;
+                if (Config.DisableCache || hitCacheInstance == null)
+                {
+                    return;
+                }
+
+                var hitDataString = BuildHitCacheData(flagDTO, HitCacheType.ACTIVATE);
+
+                await hitCacheInstance.CacheHit(Visitor.VisitorId, hitDataString);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "CacheHit");
             }
         }
         abstract public void ClearContext();

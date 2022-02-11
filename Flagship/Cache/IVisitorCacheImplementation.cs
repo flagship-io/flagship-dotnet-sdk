@@ -4,10 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flagship.FsVisitor
+namespace Flagship.Cache 
 {
     public interface IVisitorCacheImplementation
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        TimeSpan? LookupTimeout { get; set; }
+
         /// <summary>
         /// This method is called when the SDK needs to cache visitor information in your database.
         /// </summary>

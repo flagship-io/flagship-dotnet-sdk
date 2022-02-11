@@ -16,11 +16,11 @@ namespace Flagship.Model
 
         public bool? IsReference { get; set; }
 
-        public string Type { get; set; }
+        public ModificationType Type { get; set; }
 
         public bool? Activated { get; set; }
 
-        public object Flags { get; set; }
+        public IDictionary<string,object> Flags { get; set; }
 
     }
     internal class VisitorCacheData
@@ -31,12 +31,12 @@ namespace Flagship.Model
 
         public bool? Consent { get; set; }
 
-        public Dictionary<string,object> Context { get; set; }
+        public IDictionary<string,object> Context { get; set; }
 
         public IEnumerable<VisitorCacheCampaign> Campaigns { get; set; }
     }
      
-    internal class VisitorCacheDTO
+    internal class VisitorCacheDTOV1
     {
         public int Version { get; set; }
 

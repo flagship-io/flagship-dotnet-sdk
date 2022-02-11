@@ -19,11 +19,14 @@ namespace Flagship.FsVisitor
         protected string _anonymousId;
         virtual public string VisitorId { get; set; }
         virtual public ICollection<FlagDTO> Flags { get; set; }
+
+        virtual public ICollection<Campaign> Campaigns { get; set; } 
         virtual public bool HasConsented => _hasConsented;
         virtual public FlagshipConfig Config => ConfigManager.Config;
         virtual public IConfigManager ConfigManager { get; set; }
         virtual public IDictionary<string, object> Context => _context;
         virtual public string AnonymousId { get => _anonymousId; internal set { _anonymousId = value; } }
+        virtual public VisitorCache VisitorCache { get; set; }
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
@@ -39,6 +42,8 @@ namespace Flagship.FsVisitor
             {
                 _anonymousId = Guid.NewGuid().ToString();
             }
+
+            GetStrategy().LookupVisitor();
         }
        
         protected string CreateVisitorId()

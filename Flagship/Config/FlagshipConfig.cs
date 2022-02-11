@@ -1,4 +1,5 @@
-﻿using Flagship.Delegate;
+﻿using Flagship.Cache;
+using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
 using Flagship.Hit;

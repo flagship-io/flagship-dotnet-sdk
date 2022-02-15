@@ -121,25 +121,33 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
+        protected override async Task SendActivate(FlagDTO flag)
+        {
+            try
+            {
+                await TrackingManager.SendActive(Visitor, flag);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "SendActive");
+                CacheHit(flag);
+            }
+        }
+        public override async Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
             const string functionName = "UserExposed";
             if (flag == null)
             {
-                return Task.Factory.StartNew(() =>
-                {
-                    Utils.Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
-                });
+                Utils.Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
+                return;
             }
             if (flag.Value != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
-                return Task.Factory.StartNew(() =>
-                {
-                    Utils.Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
-                });
+                Utils.Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
+                return;
             }
 
-            return TrackingManager.SendActive(Visitor, flag);
+            await SendActivate(flag);
         }
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
@@ -156,7 +164,7 @@ namespace Flagship.FsVisitor
             {
                 if (userExposed)
                 {
-                    UserExposed(key, defaultValue, flag);
+                    _ = UserExposed(key, defaultValue, flag);
                 }
                 Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;
@@ -170,7 +178,7 @@ namespace Flagship.FsVisitor
 
             if (userExposed)
             {
-                UserExposed(key, defaultValue, flag);
+                _ = UserExposed(key, defaultValue, flag);
             }
 
             return (T)flag.Value;
@@ -187,17 +195,21 @@ namespace Flagship.FsVisitor
             return metadata;
         }
 
-        public override Task SendHit(HitAbstract hit)
+        protected override async Task SendHit(IEnumerable<HitAbstract> hits)
+        {
+            foreach (var item in hits)
+            { 
+                 await SendHit(item);
+            }
+        }
+        public override async Task SendHit(HitAbstract hit)
         {
             const string functionName = "SendHit";
             try
             {
                 if (hit == null)
                 {
-                    return Task.Factory.StartNew(() =>
-                    {
-                        Utils.Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
-                    });
+                    Utils.Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
                 }
 
                 hit.VisitorId = Visitor.VisitorId;
@@ -207,17 +219,15 @@ namespace Flagship.FsVisitor
 
                 if (!hit.IsReady())
                 {
-                    return Task.Factory.StartNew(() =>
-                    {
-                        Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
-                    });
+                    Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
                 }
 
-                return TrackingManager.SendHit(hit);
+                await TrackingManager.SendHit(hit);
             }
             catch (Exception ex)
             {
-                return Task.Factory.StartNew(() => { Utils.Log.LogError(Config, ex.Message, functionName); });
+                CacheHit(hit);
+                Utils.Log.LogError(Config, ex.Message, functionName);
             }
         }
 

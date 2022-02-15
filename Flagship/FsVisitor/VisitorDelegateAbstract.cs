@@ -43,6 +43,7 @@ namespace Flagship.FsVisitor
                 _anonymousId = Guid.NewGuid().ToString();
             }
 
+            GetStrategy().LookupHits();
             GetStrategy().LookupVisitor();
         }
        

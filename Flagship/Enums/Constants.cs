@@ -9,6 +9,8 @@ namespace Flagship.Enums
     internal static class Constants
     {
         public const int DEFAULT_POLLING_INTERVAL = 2000;
+
+        public const int DEFAULT_HIT_CACHE_TIME = 14400000;
         /// <summary>
         /// Default request timeout in second
         /// </summary>

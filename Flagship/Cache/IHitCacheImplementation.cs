@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,7 @@ namespace Flagship.Cache
         /// </summary>
         /// <param name="visitorId">visitor ID</param>
         /// <param name="data"></param>
-        Task CacheHit(string visitorId, string data);
+        Task CacheHit(string visitorId, JObject data);
 
         /// <summary>
         /// This method will be called to load hits corresponding to visitor ID from your database and trying to send them again in the background.
@@ -25,7 +26,7 @@ namespace Flagship.Cache
         /// </summary>
         /// <param name="visitorId">visitor ID</param>
         /// <returns></returns>
-        Task<string> LookupHits(string visitorId);
+        Task<JArray> LookupHits(string visitorId);
 
         /// <summary>
         /// This method will be called to erase the visitor hits cache corresponding to visitor ID from your database.

@@ -10,10 +10,17 @@ namespace Flagship.Hit
 {
     public abstract class HitAbstract
     {
+        [Newtonsoft.Json.JsonProperty("VisitorId")]
         internal string VisitorId { get; set; }
         internal FlagshipConfig Config { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("Type")]
         internal HitType Type { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("DS")]
         internal string DS { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("AnonymousId")]
         internal string AnonymousId { get; set; }
         public string UserIp { get; set; }
         public string ScreenResolution { get; set; }

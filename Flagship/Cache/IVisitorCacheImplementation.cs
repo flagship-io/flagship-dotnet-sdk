@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,14 +19,14 @@ namespace Flagship.Cache
         /// </summary>
         /// <param name="visitorId">Visitor ID</param>
         /// <param name="data">Visitor data JSON</param>
-        Task CacheVisitor(string visitorId, string data);
+        Task CacheVisitor(string visitorId, JObject data);
 
         /// <summary>
         /// This method is called when the SDK needs to get the visitor information corresponding to visitor ID from your database.
         /// </summary>
         /// <param name="visitorId">Visitor ID</param>
         /// <returns></returns>
-        Task<string> LookupVisitor(string visitorId);
+        Task<JObject> LookupVisitor(string visitorId);
 
         /// <summary>
         /// This method is called when the SDK needs to erase the visitor information corresponding to visitor ID in your database.

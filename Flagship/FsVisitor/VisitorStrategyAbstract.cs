@@ -54,24 +54,24 @@ namespace Flagship.FsVisitor
             }
         }
 
-        protected virtual void MigrateVisitorCacheData(string visitorDataString)
+        protected virtual void MigrateVisitorCacheData(JObject visitorData)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(visitorDataString))
+                if (visitorData == null)
                 {
                     return;
                 }
-                var parseData = JObject.Parse(visitorDataString);
-                if (!parseData.ContainsKey("Version"))
+                
+                if (!visitorData.ContainsKey("Version"))
                 {
                     throw new Exception("JSON DATA must fit the type VisitorCacheDTO, property version is required");
                 }
 
-                var version = parseData["Version"];
+                var version = visitorData["Version"];
                 if (version.ToString() == "1")
                 {
-                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<VisitorCacheDTOV1>(visitorDataString);
+                    var data = visitorData.ToObject<VisitorCacheDTOV1>();
                     Visitor.VisitorCache = new VisitorCache
                     {
                         Version = 1,
@@ -89,8 +89,8 @@ namespace Flagship.FsVisitor
         {
             try
             {
-                var visitorCacheInstance = Config.VisitorCacheImplementation;
-                if (Config.DisableCache || visitorCacheInstance == null)
+                var visitorCacheInstance = Config?.VisitorCacheImplementation;
+                if (visitorCacheInstance == null || Config.DisableCache)
                 {
                     return;
                 }
@@ -118,8 +118,8 @@ namespace Flagship.FsVisitor
         {
             try
             {
-                var visitorCacheInstance = Config.VisitorCacheImplementation;
-                if (Config.DisableCache || visitorCacheInstance == null)
+                var visitorCacheInstance = Config?.VisitorCacheImplementation;
+                if (visitorCacheInstance == null || Config.DisableCache)
                 {
                     return;
                 }
@@ -153,9 +153,9 @@ namespace Flagship.FsVisitor
                     }
                 };
 
-                var dataString = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                var dataJson = JObject.FromObject(data);
 
-                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataString);
+                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson);
             }
             catch (Exception ex)
             {
@@ -167,8 +167,8 @@ namespace Flagship.FsVisitor
         {
             try
             {
-                var visitorCacheInstance = Config.VisitorCacheImplementation;
-                if (Config.DisableCache || visitorCacheInstance == null)
+                var visitorCacheInstance = Config?.VisitorCacheImplementation;
+                if (visitorCacheInstance == null || Config.DisableCache)
                 {
                     return;
                 }
@@ -223,8 +223,8 @@ namespace Flagship.FsVisitor
 
         public virtual async void LookupHits()
         {
-            var hitCacheInstance = Config.HitCacheImplementation;
-            if (Config.DisableCache || hitCacheInstance == null)
+            var hitCacheInstance = Config?.HitCacheImplementation;
+            if (hitCacheInstance == null || Config.DisableCache )
             {
                 return;
             }
@@ -316,8 +316,8 @@ namespace Flagship.FsVisitor
         {
             try
             {
-                var hitCacheInstance = Config.HitCacheImplementation;
-                if (Config.DisableCache || hitCacheInstance == null)
+                var hitCacheInstance = Config?.HitCacheImplementation;
+                if (hitCacheInstance == null || Config.DisableCache)
                 {
                     return;
                 }
@@ -336,8 +336,8 @@ namespace Flagship.FsVisitor
         {
             try
             {
-                var hitCacheInstance = Config.HitCacheImplementation;
-                if (Config.DisableCache || hitCacheInstance == null)
+                var hitCacheInstance = Config?.HitCacheImplementation;
+                if (hitCacheInstance == null || Config.DisableCache)
                 {
                     return;
                 }
@@ -363,7 +363,7 @@ namespace Flagship.FsVisitor
 
         abstract public Task SendHit(HitAbstract hit);
 
-        abstract protected Task SendHit(IEnumerable<HitAbstract> hit);
+        abstract public Task SendHit(IEnumerable<HitAbstract> hit);
 
         abstract public void UpdateContext(IDictionary<string, object> context);
 

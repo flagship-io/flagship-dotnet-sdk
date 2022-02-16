@@ -39,6 +39,10 @@ namespace Flagship.FsVisitor
 
         public override void UpdateContext(IDictionary<string, object> context)
         {
+            if (context == null)
+            {
+                return;
+            }
             foreach (var item in context)
             {
                 UpdateContexKeyValue(item.Key, item.Value);
@@ -129,7 +133,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "SendActive");
+                Utils.Log.LogError(Config, ex.Message, "UserExposed");
                 CacheHit(flag);
             }
         }
@@ -195,7 +199,7 @@ namespace Flagship.FsVisitor
             return metadata;
         }
 
-        protected override async Task SendHit(IEnumerable<HitAbstract> hits)
+        public override async Task SendHit(IEnumerable<HitAbstract> hits)
         {
             foreach (var item in hits)
             { 

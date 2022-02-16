@@ -1,4 +1,5 @@
 ﻿using Flagship.Enums;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,14 +12,16 @@ namespace Flagship.Hit
     internal class Batch : HitAbstract
     {
         public const string ERROR_MESSAGE = "Please check required fields";
+
+        [JsonConverter(typeof(BatchConverter))]
         public ICollection<HitAbstract> Hits { get; set; } 
         public Batch() : base(HitType.BATCH)
         {
         }
 
-        internal override bool IsReady()
+        internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady() && Hits!=null && Hits.Count> 0 && Hits.All(hit=> hit.IsReady());
+            return base.IsReady() && Hits!=null && Hits.Count> 0 && Hits.All(hit=> hit.IsReady(false));
         }
 
         internal override IDictionary<string, object> ToApiKeys()

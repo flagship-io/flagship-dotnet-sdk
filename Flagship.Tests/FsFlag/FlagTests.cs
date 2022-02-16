@@ -48,6 +48,8 @@ namespace Flagship.FsFlag.Tests
             var context = new Dictionary<string, object>();
             var visitorMock = new Mock<FsVisitor.VisitorDelegateAbstract>(new object[] { "visitorId", false, context, false, configManager });
 
+            visitorMock.Protected().Setup("GetStrategy").CallBase();
+
             var defaultValue = "defaultString";
             var flag = new Flag<string>(flagDTO.Key, visitorMock.Object, flagDTO, defaultValue);
 
@@ -90,6 +92,7 @@ namespace Flagship.FsFlag.Tests
             var context = new Dictionary<string, object>();
             var visitorMock = new Mock<FsVisitor.VisitorDelegateAbstract>(new object[] { "visitorId", false, context, false, configManager });
 
+            visitorMock.Protected().Setup("GetStrategy").CallBase();
 
             var defaultValue = "defaultString";
             var flag = new Flag<string>("key", visitorMock.Object, null, defaultValue);

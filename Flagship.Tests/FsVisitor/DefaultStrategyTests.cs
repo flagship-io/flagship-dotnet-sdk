@@ -10,6 +10,9 @@ using Flagship.Enums;
 using Newtonsoft.Json.Linq;
 using Flagship.Tests.Data;
 using Newtonsoft.Json;
+using Flagship.Cache;
+using Flagship.Model;
+using System.Collections.ObjectModel;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -167,6 +170,96 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
+        async public Task FetchFlagsWithCacheTest()
+        {
+            ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+            decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
+                .Returns(Task.FromResult(campaigns));
+
+            visitorDelegate.VisitorCache = new Model.VisitorCache
+            {
+                Version = 1,
+                Data = new VisitorCacheDTOV1()
+                {
+                    Version = 1,
+                    Data = new VisitorCacheData
+                    {
+                        VisitorId = "visitorID",
+                        Consent = true,
+                        Campaigns = new List<VisitorCacheCampaign>
+                        {
+                            new VisitorCacheCampaign
+                            {
+                                Activated = true,
+                                CampaignId = "campaignID",
+                                IsReference = true,
+                                Type= ModificationType.FLAG,
+                                VariationGroupId = "variationGbId",
+                                VariationId = "variationID",
+                                Flags = new Dictionary<string, object>
+                                {
+                                    ["key"] = "value"
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 1);
+        }
+
+        [TestMethod()]
+        async public Task FetchFlagsWithCacheV2Test()
+        {
+            ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+            decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
+                .Returns(Task.FromResult(campaigns));
+
+            visitorDelegate.VisitorCache = new Model.VisitorCache
+            {
+                Version = 2,
+                Data = new VisitorCacheDTOV1()
+                {
+                    Version = 2,
+                    Data = new VisitorCacheData
+                    {
+                    }
+                }
+            };
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 0);
+
+            visitorDelegate.VisitorCache = new Model.VisitorCache
+            {
+                Version = 1,
+                Data = new VisitorCacheDTOV1()
+                {
+                    Version = 1
+                }
+            };
+            defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 0);
+
+            visitorDelegate.VisitorCache = null;
+
+            defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 0);
+        }
+
+        [TestMethod()]
         public async Task UserExposedTest()
         {
             const string functionName = "UserExposed";
@@ -191,6 +284,13 @@ namespace Flagship.FsVisitor.Tests
             await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
             trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDtoValueNull), Times.Once());
+
+            var error = new Exception("userExposed error");
+
+            trackingManagerMock.Setup(x => x.SendActive(visitorDelegate, flagDto)).Throws(error);
+            await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, functionName), Times.Once());
         }
 
         [TestMethod()]
@@ -288,7 +388,7 @@ namespace Flagship.FsVisitor.Tests
         {
             const string functionName = "SendHit";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
-            await defaultStrategy.SendHit(null).ConfigureAwait(false);
+            await defaultStrategy.SendHit(hit:null).ConfigureAwait(false);
             fsLogManagerMock.Verify(x => x.Error(Constants.HIT_NOT_NULL, functionName), Times.Once());
         }
 
@@ -324,6 +424,17 @@ namespace Flagship.FsVisitor.Tests
             var hit = new Flagship.Hit.Screen("HomeView");
             await defaultStrategy.SendHit(hit).ConfigureAwait(false);
             trackingManagerMock.Verify(x => x.SendHit(hit), Times.Once());
+        }
+
+        [TestMethod()]
+        public async Task SendHitsTest() 
+        {
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            var screen = new Flagship.Hit.Screen("HomeView");
+            var page = new Flagship.Hit.Page("HomePage");
+            await defaultStrategy.SendHit(new List<Hit.HitAbstract>() { screen, page }).ConfigureAwait(false);
+            trackingManagerMock.Verify(x => x.SendHit(screen), Times.Once());
+            trackingManagerMock.Verify(x => x.SendHit(page), Times.Once());
         }
 
         [TestMethod()]
@@ -425,5 +536,84 @@ namespace Flagship.FsVisitor.Tests
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName), methodName), Times.Once());
 
         }
+
+        [TestMethod]
+        public void LookupVisitorTest()
+        {
+
+        }
+
+        [TestMethod]
+        public void VisitorCacheTest()
+        {
+            ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>()
+            {
+                new Flagship.Model.Campaign()
+                {
+                    Id = "id",
+                    Variation = new Variation
+                    {
+                        Id = "varID",
+                        Modifications = new Modifications
+                        {
+                            Type = ModificationType.FLAG,
+                            Value = new Dictionary<string, object>
+                            {
+                                ["key"] = "value"
+                            }
+                        },
+                        Reference = false
+                    },
+                    CampaignType = "ab",
+                    VariationGroupId = "varGroupId"
+                }
+            };
+
+            var VisitorCacheCampaigns = new Collection<VisitorCacheCampaign>();
+
+            foreach (var item in campaigns)
+            {
+                VisitorCacheCampaigns.Add(new VisitorCacheCampaign
+                {
+                    CampaignId = item.Id,
+                    VariationGroupId = item.VariationGroupId,
+                    VariationId = item.Variation.Id,
+                    IsReference = item.Variation.Reference,
+                    Type = item.Variation.Modifications.Type,
+                    Activated = false,
+                    Flags = item.Variation.Modifications.Value
+                });
+            }
+
+            
+
+            var data = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = VisitorCacheCampaigns
+                }
+            };
+
+            var dataJson = JObject.FromObject(data);
+
+            var visitorCache = new Mock<IVisitorCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.Config.VisitorCacheImplementation = visitorCache.Object;
+
+            visitorDelegate.Campaigns = campaigns;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            defaultStrategy.CacheVisitorAsync();
+
+            visitorCache.Verify(x=> x.CacheVisitor(visitorId, It.Is<JObject>(y=> y.ToString() == dataJson.ToString()) ), Times.Once);
+        }
+
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Moq;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
+using Moq.Protected;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -20,6 +21,8 @@ namespace Flagship.FsVisitor.Tests
         {
             var configManager = new Mock<Flagship.Config.IConfigManager>();
             visitorDelegateMock = new Mock<VisitorDelegateAbstract>(new object[] { "visitor_id", false, new Dictionary<string, object>(), false, configManager.Object });
+
+            visitorDelegateMock.Protected().Setup("GetStrategy").CallBase();
             Visitor = new Visitor(visitorDelegateMock.Object);
         }
 

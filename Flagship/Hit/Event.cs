@@ -39,9 +39,9 @@ namespace Flagship.Hit
             return apiKeys;
         }
 
-        internal override bool IsReady()
+        internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady() && !string.IsNullOrWhiteSpace(Action);
+            return (!checkParent || base.IsReady()) && !string.IsNullOrWhiteSpace(Action);
         }
 
         internal override string GetErrorMessage()

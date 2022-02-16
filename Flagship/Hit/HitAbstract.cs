@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.Enums;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace Flagship.Hit
 {
+    
     public abstract class HitAbstract
     {
-        [Newtonsoft.Json.JsonProperty("VisitorId")]
+        [JsonProperty("VisitorId")]
         internal string VisitorId { get; set; }
         internal FlagshipConfig Config { get; set; }
 
@@ -38,7 +40,7 @@ namespace Flagship.Hit
             {
                 [Constants.VISITOR_ID_API_ITEM] = VisitorId,
                 [Constants.DS_API_ITEM] = DS,
-                [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config.EnvId,
+                [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config?.EnvId,
                 [Constants.T_API_ITEM] = $"{Type}"
             };
 
@@ -75,7 +77,7 @@ namespace Flagship.Hit
             return apiKeys;
         }
 
-        internal virtual  bool IsReady()
+        internal virtual  bool IsReady(bool checkParent = true)
         {
             return !string.IsNullOrWhiteSpace(VisitorId) && 
                 !string.IsNullOrWhiteSpace(DS) && 

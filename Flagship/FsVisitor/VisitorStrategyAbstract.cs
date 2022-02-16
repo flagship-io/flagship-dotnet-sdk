@@ -245,34 +245,38 @@ namespace Flagship.FsVisitor
             };
 
             var count = 0;
-
-            for (int i = 0; i < hitsCache.Count; i++)
+            foreach (var item in hitsCache) 
             {
-                var item = hitsCache[i];
-
                 if (ChecKLookupHitData1(item) && CheckHitTime(item["Data"]["Time"].Value<DateTime>()))
                 {
                     var hitCache = item.ToObject<HitCacheDTOV1>();
 
-                    //if (hitCache.Data.Type == HitCacheType.ACTIVATE)
-                    //{
-                    //    var content = (JObject)hitCache.Data.Content;
-                    //    var flagDTO = content.ToObject<FlagDTO>();
-                    //    SendActivate(flagDTO);
-                    //    return;
-                    //}
+                    if (hitCache.Data.Type == HitCacheType.ACTIVATE)
+                    {
+                        var content = (JObject)hitCache.Data.Content;
+                        var flagDTO = content.ToObject<FlagDTO>();
+                        _ = SendActivate(flagDTO);
+                        continue;
+                    }
+
+                    if (hitCache.Data.Type == HitCacheType.BATCH)
+                    {
+                        var content = (JObject)hitCache.Data.Content;
+                        var batche = content.ToObject<Batch>();
+                        _ = SendHit(batche);
+                        continue;
+                    }
 
                     var batchSize = Newtonsoft.Json.JsonConvert.SerializeObject(batches[count]).Length;
                     if (batchSize > 2500)
                     {
                         count++;
 
-
                         batches[count] = new Batch
                         {
                             Hits = new Collection<HitAbstract>
                             {
-                                //GetHitFromContent((JObject)hitCache.Data.Content)
+                                GetHitFromContent((JObject)hitCache.Data.Content)
                             }
                         };
                     }
@@ -288,8 +292,7 @@ namespace Flagship.FsVisitor
                 return;
             }
 
-
-            SendHit(batches);
+            _ = SendHit(batches);
         }
 
         protected virtual JObject BuildHitCacheData(object data, HitCacheType type)

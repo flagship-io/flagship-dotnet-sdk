@@ -210,6 +210,7 @@ namespace Flagship.FsVisitor
                 if (hit == null)
                 {
                     Utils.Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
+                    return;
                 }
 
                 hit.VisitorId = Visitor.VisitorId;
@@ -220,6 +221,7 @@ namespace Flagship.FsVisitor
                 if (!hit.IsReady())
                 {
                     Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
+                    return;
                 }
 
                 await TrackingManager.SendHit(hit);

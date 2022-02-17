@@ -45,9 +45,6 @@ namespace Flagship.Hit
                     case HitType.EVENT:
                         hit = jobj.ToObject<Event>(serializer);
                         break;
-                    case HitType.BATCH:
-                        hit = jobj.ToObject<Batch>(serializer);
-                        break;
                 }
                 Hits.Add(hit);
             }

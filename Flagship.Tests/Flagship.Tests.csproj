@@ -96,6 +96,8 @@
     <Compile Include="FsVisitor\VisitorBuilderTests.cs" />
     <Compile Include="FsVisitor\VisitorDelegateTests.cs" />
     <Compile Include="FsVisitor\VisitorTests.cs" />
+    <Compile Include="Hit\BatchConverterTests.cs" />
+    <Compile Include="Hit\BatchTests.cs" />
     <Compile Include="Hit\EventTests.cs" />
     <Compile Include="Hit\ItemTests.cs" />
     <Compile Include="Hit\PageTests.cs" />

@@ -33,7 +33,7 @@ namespace Flagship.Model
 
         public IDictionary<string,object> Context { get; set; }
 
-        public IEnumerable<VisitorCacheCampaign> Campaigns { get; set; }
+        public ICollection<VisitorCacheCampaign> Campaigns { get; set; }
     }
      
     internal class VisitorCacheDTOV1

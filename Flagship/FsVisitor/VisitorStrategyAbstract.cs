@@ -20,6 +20,8 @@ namespace Flagship.FsVisitor
     internal abstract class VisitorStrategyAbstract : IVisitorCore
     {
         public const string LOOKUP_HITS_JSON_OBJECT_ERROR = "JSON DATA must fit the type HitCacheDTO";
+        public const string LOOKUP_VISITOR_JSON_OBJECT_ERROR = "JSON DATA must fit the type VisitorCacheDTO, property version is required";
+
         protected VisitorDelegateAbstract Visitor { get; set; }
 
         protected FlagshipConfig Config => Visitor.Config;
@@ -38,6 +40,12 @@ namespace Flagship.FsVisitor
             const string method = "SendConsentHit";
             try
             {
+                if (!hasConsented)
+                {
+                    FlushHitAsync();
+                    FlushVisitorAsync();
+                }
+
                 var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, "fs_consent")
                 {
                     Label = $"{Constants.SDK_LANGUAGE}:{hasConsented}",
@@ -47,6 +55,8 @@ namespace Flagship.FsVisitor
                     AnonymousId = Visitor.AnonymousId
                 };
                 await TrackingManager.SendHit(hitEvent);
+
+                
             }
             catch (Exception ex)
             {
@@ -65,7 +75,7 @@ namespace Flagship.FsVisitor
                 
                 if (!visitorData.ContainsKey("Version"))
                 {
-                    throw new Exception("JSON DATA must fit the type VisitorCacheDTO, property version is required");
+                    throw new Exception(LOOKUP_VISITOR_JSON_OBJECT_ERROR);
                 }
 
                 var version = visitorData["Version"];
@@ -153,9 +163,22 @@ namespace Flagship.FsVisitor
                     }
                 };
 
+                var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
+
+                if (visitorCacheData != null && visitorCacheData.Data != null && visitorCacheData.Data.Campaigns != null)
+                {
+                    foreach (var item in visitorCacheData.Data.Campaigns)
+                    {
+                        if (!data.Data.Campaigns.Any(x => x.CampaignId == item.CampaignId))
+                        {
+                            data.Data.Campaigns.Add(item);
+                        }
+                    }
+                }
+
                 var dataJson = JObject.FromObject(data);
 
-                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson);
+                await visitorCacheInstance .CacheVisitor(Visitor.VisitorId, dataJson);
             }
             catch (Exception ex)
             {
@@ -182,12 +205,6 @@ namespace Flagship.FsVisitor
 
         protected virtual bool CheckHitTime(DateTime time) => (DateTime.Now - time).TotalSeconds <= Constants.DEFAULT_HIT_CACHE_TIME;
 
-        protected virtual void BuildBash(HitCacheDTOV1 hitCache)
-        {
-
-        }
-
-
         protected virtual bool ChecKLookupHitData1(JToken item)
         {
             return item != null && item["Version"].ToObject<int>() == 1 && item["Data"] != null && item["Data"]["Type"] != null;
@@ -212,9 +229,6 @@ namespace Flagship.FsVisitor
                     break;
                 case HitType.TRANSACTION:
                     hit = content.ToObject<Transaction>();
-                    break;
-                case HitType.BATCH:
-                    hit = content.ToObject<Batch>();
                     break;
             }
 
@@ -272,13 +286,13 @@ namespace Flagship.FsVisitor
                     {
                         count++;
 
-                        batches[count] = new Batch
+                        batches.Add(new Batch
                         {
                             Hits = new Collection<HitAbstract>
                             {
                                 GetHitFromContent((JObject)hitCache.Data.Content)
                             }
-                        };
+                        });
                     }
                     else
                     {
@@ -334,7 +348,7 @@ namespace Flagship.FsVisitor
 
         public virtual async void CacheHit(FlagDTO flagDTO)
         {
-            try
+            try 
             {
                 var hitCacheInstance = Config?.HitCacheImplementation;
                 if (hitCacheInstance == null || Config.DisableCache)
@@ -349,6 +363,23 @@ namespace Flagship.FsVisitor
             catch (Exception ex)
             {
                 Utils.Log.LogError(Config, ex.Message, "CacheHit");
+            }
+        }
+
+        public virtual async void FlushHitAsync() 
+        {
+            try
+            {
+                var hitCacheInstance = Config?.HitCacheImplementation;
+                if (hitCacheInstance == null || Config.DisableCache)
+                {
+                    return;
+                }
+                await hitCacheInstance.FlushHits(Visitor.VisitorId);
+            }
+            catch (Exception ex)
+            {
+                Utils.Log.LogError(Config, ex.Message, "FlushHits");
             }
         }
         abstract public void ClearContext();

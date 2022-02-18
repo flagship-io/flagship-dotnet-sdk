@@ -109,7 +109,7 @@ namespace Flagship.FsVisitor
 
                 var cts = new CancellationTokenSource();
 
-                cts.CancelAfter(timeout ?? TimeSpan.FromMilliseconds(1));
+                cts.CancelAfter(timeout ?? TimeSpan.FromMilliseconds(10));
 
                 var lookupTask = visitorCacheInstance.LookupVisitor(Visitor.VisitorId);
                 lookupTask.Wait(cts.Token);

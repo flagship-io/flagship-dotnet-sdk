@@ -566,7 +566,7 @@ namespace Flagship.FsVisitor.Tests
                         },
                         Reference = false
                     },
-                    CampaignType = "ab",
+                    Type = "ab",
                     VariationGroupId = "varGroupId"
                 }
             };
@@ -652,7 +652,7 @@ namespace Flagship.FsVisitor.Tests
                         },
                         Reference = false
                     },
-                    CampaignType = "ab",
+                    Type = "ab",
                     VariationGroupId = "varGroupId"
                 }
             };

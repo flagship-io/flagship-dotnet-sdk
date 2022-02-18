@@ -125,6 +125,12 @@
       <Link>.editorconfig</Link>
     </None>
     <None Include="app.config" />
+    <None Include="Bucketing_removed_variation.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Bucketing_realloc.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Bucketing.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

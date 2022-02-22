@@ -588,6 +588,26 @@ namespace Flagship.FsVisitor.Tests
             }
 
 
+            var failedData = new VisitorCacheDTOV1 
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = "any",
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = VisitorCacheCampaigns
+                }
+            };
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(JObject.FromObject(failedData)));
+
+            defaultStrategy.LookupVisitor();
+
+            fsLogManagerMock.Verify(x => x.Info(string.Format(VisitorStrategyAbstract.VISITOR_ID_MISMATCH_ERROR, "any", visitorId), "LookupVisitor"), Times.Once());
+
+            Assert.IsNull(visitorDelegate.VisitorCache);
 
             var data = new VisitorCacheDTOV1
             {

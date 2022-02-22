@@ -21,7 +21,7 @@ namespace Flagship.FsVisitor
     {
         public const string LOOKUP_HITS_JSON_OBJECT_ERROR = "JSON DATA must fit the type HitCacheDTO";
         public const string LOOKUP_VISITOR_JSON_OBJECT_ERROR = "JSON DATA must fit the type VisitorCacheDTO, property version is required";
-
+        public const string VISITOR_ID_MISMATCH_ERROR = "Visitor ID mismatch: %s vs %s";
         protected VisitorDelegateAbstract Visitor { get; set; }
 
         protected FlagshipConfig Config => Visitor.Config;
@@ -82,6 +82,11 @@ namespace Flagship.FsVisitor
                 if (version.ToString() == "1")
                 {
                     var data = visitorData.ToObject<VisitorCacheDTOV1>();
+                    if (data.Data.VisitorId != Visitor.VisitorId)
+                    {
+                        Utils.Log.LogInfo(Config, string.Format(VISITOR_ID_MISMATCH_ERROR, data.Data.VisitorId, Visitor.VisitorId), "LookupVisitor");
+                        return;
+                    }
                     Visitor.VisitorCache = new VisitorCache
                     {
                         Version = 1,

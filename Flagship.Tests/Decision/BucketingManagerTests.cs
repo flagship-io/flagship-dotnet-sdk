@@ -971,19 +971,9 @@ namespace Flagship.Decision.Tests
                     {
                         VisitorId = "visitor_1",
                         Consent = true,
-                        Campaigns = new List<VisitorCacheCampaign>
+                        VariationHistory = new Dictionary<string, string>
                         {
-                            new VisitorCacheCampaign
-                            {
-                               CampaignId = "c20j8bk3fk9hdphqtd1g",
-                               VariationGroupId = "c20j8bk3fk9hdphqtd2g",
-                               VariationId = "c20j8bk3fk9hdphqtd3g",
-                               Type = ModificationType.HTML,
-                               Flags = new Dictionary<string, object>()
-                               {
-                                   ["my_html"] = "value"
-                               }
-                            }
+                            ["c20j8bk3fk9hdphqtd2g"] = "c20j8bk3fk9hdphqtd3g"
                         }
                     }
                 }

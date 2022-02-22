@@ -659,8 +659,15 @@ namespace Flagship.FsVisitor.Tests
 
             var VisitorCacheCampaigns = new Collection<VisitorCacheCampaign>();
 
+            var variationHistory = new Dictionary<string, string>
+            {
+                ["varGrID"] = "varID"
+            };
+
             foreach (var item in campaigns)
             {
+                variationHistory[item.VariationGroupId] = item.Variation.Id;
+
                 VisitorCacheCampaigns.Add(new VisitorCacheCampaign
                 {
                     CampaignId = item.Id,
@@ -684,23 +691,12 @@ namespace Flagship.FsVisitor.Tests
                     AnonymousId = visitorDelegate.AnonymousId,
                     Consent = visitorDelegate.HasConsented,
                     Context = visitorDelegate.Context,
-                    Campaigns = VisitorCacheCampaigns
+                    Campaigns = VisitorCacheCampaigns,
+                    VariationHistory= variationHistory
                 }
             };
 
-            var cacheCampaign = new VisitorCacheCampaign
-            {
-                CampaignId = "campaignID",
-                VariationGroupId = "varGrID",
-                VariationId = "varID",
-                IsReference = true,
-                Type = ModificationType.FLAG,
-                Activated = false,
-                Flags = new Dictionary<string, object>
-                {
-                    ["key"] = "value"
-                }
-            };
+
 
             visitorDelegate.VisitorCache = new VisitorCache
             {
@@ -714,15 +710,13 @@ namespace Flagship.FsVisitor.Tests
                         AnonymousId = visitorDelegate.AnonymousId,
                         Consent = visitorDelegate.HasConsented,
                         Context = visitorDelegate.Context,
-                        Campaigns = new Collection<VisitorCacheCampaign>
+                        VariationHistory = new Dictionary<string, string>
                         {
-                            cacheCampaign
+                            ["varGrID"] = "varID"
                         }
                     }
                 }
             };
-
-            data.Data.Campaigns.Add(cacheCampaign);
 
             var dataJson = JObject.FromObject(data);
 

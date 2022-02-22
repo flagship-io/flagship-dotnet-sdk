@@ -262,10 +262,13 @@ namespace Flagship.Decision
                 if (visitor.VisitorCache?.Version == 1)
                 {
                     var visitorCache = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
-                    var cacheVariation = visitorCache.Data.Campaigns.FirstOrDefault(x => x.VariationGroupId == variationGroup.Id);
-                    if (cacheVariation != null)
+                    var variationHistory = visitorCache?.Data?.VariationHistory;
+
+                    var cacheVariationId = variationHistory!=null && variationHistory.ContainsKey(variationGroup.Id) ? variationHistory[variationGroup.Id] : null;
+                   
+                    if (cacheVariationId != null)
                     {
-                        var newVariation = variationGroup.Variations.FirstOrDefault(x => x.Id == cacheVariation.VariationId);
+                        var newVariation = variationGroup.Variations.FirstOrDefault(x => x.Id == cacheVariationId);
                         if (newVariation == null)
                         {
                             continue;

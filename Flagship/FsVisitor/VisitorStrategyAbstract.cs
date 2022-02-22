@@ -135,9 +135,21 @@ namespace Flagship.FsVisitor
                 }
 
                 var Campaigns = new Collection<VisitorCacheCampaign>();
+                var variationHistory = new Dictionary<string, string>();
+
+                var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
+                if (visitorCacheData != null)
+                {
+                    foreach (var item in visitorCacheData.Data.VariationHistory)
+                    {
+                        variationHistory[item.Key] = item.Value;
+                    }
+                }
 
                 foreach (var item in Visitor.Campaigns)
                 {
+                    variationHistory[item.VariationGroupId] = item.Variation.Id;
+
                     Campaigns.Add(new VisitorCacheCampaign
                     {
                         CampaignId = item.Id,
@@ -159,26 +171,20 @@ namespace Flagship.FsVisitor
                         AnonymousId = Visitor.AnonymousId,
                         Consent = Visitor.HasConsented,
                         Context = Visitor.Context,
-                        Campaigns = Campaigns
+                        Campaigns = Campaigns,
+                        VariationHistory = variationHistory,
                     }
                 };
 
-                var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
-
-                if (visitorCacheData != null && visitorCacheData.Data != null && visitorCacheData.Data.Campaigns != null)
-                {
-                    foreach (var item in visitorCacheData.Data.Campaigns)
-                    {
-                        if (!data.Data.Campaigns.Any(x => x.CampaignId == item.CampaignId))
-                        {
-                            data.Data.Campaigns.Add(item);
-                        }
-                    }
-                }
-
                 var dataJson = JObject.FromObject(data);
 
-                await visitorCacheInstance .CacheVisitor(Visitor.VisitorId, dataJson);
+                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson);
+
+                Visitor.VisitorCache = new VisitorCache
+                {
+                    Version = 1,
+                    Data = data
+                };
             }
             catch (Exception ex)
             {

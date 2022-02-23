@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
@@ -31,6 +32,11 @@ namespace Flagship.FsVisitor
             if (!(value is string) && !(value is bool) && !(value is double) && !(value is long) && !(value is int))
             {
                 Utils.Log.LogError(Config, string.Format(Constants.CONTEXT_PARAM_ERROR, key), "UpdateContex");
+                return;
+            }
+
+            if (Regex.IsMatch(key, @"^fs_", RegexOptions.IgnoreCase))
+            {
                 return;
             }
 

@@ -125,6 +125,7 @@ namespace Flagship.FsVisitor.Tests
                 [FsPredefinedContext.APP_VERSION_CODE] = "1",
                 [FsPredefinedContext.DEVICE_LOCALE] = Array.Empty<string>(),
                 [FsPredefinedContext.DEVICE_MODEL] = null,
+                [FsPredefinedContext.FLAGSHIP_CLIENT] = "custom client"
             };
 
             defaultStrategy.UpdateContext(newContext);

@@ -971,7 +971,7 @@ namespace Flagship.Decision.Tests
                     {
                         VisitorId = "visitor_1",
                         Consent = true,
-                        VariationHistory = new Dictionary<string, string>
+                        AssignmentsHistory = new Dictionary<string, string>
                         {
                             ["c20j8bk3fk9hdphqtd2g"] = "c20j8bk3fk9hdphqtd3g"
                         }

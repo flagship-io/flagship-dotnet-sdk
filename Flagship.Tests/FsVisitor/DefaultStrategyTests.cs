@@ -713,7 +713,7 @@ namespace Flagship.FsVisitor.Tests
                     Consent = visitorDelegate.HasConsented,
                     Context = visitorDelegate.Context,
                     Campaigns = VisitorCacheCampaigns,
-                    VariationHistory= variationHistory
+                    AssignmentsHistory= variationHistory
                 }
             };
 
@@ -731,7 +731,7 @@ namespace Flagship.FsVisitor.Tests
                         AnonymousId = visitorDelegate.AnonymousId,
                         Consent = visitorDelegate.HasConsented,
                         Context = visitorDelegate.Context,
-                        VariationHistory = new Dictionary<string, string>
+                        AssignmentsHistory = new Dictionary<string, string>
                         {
                             ["varGrID"] = "varID"
                         }

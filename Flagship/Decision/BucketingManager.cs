@@ -262,7 +262,7 @@ namespace Flagship.Decision
                 if (visitor.VisitorCache?.Version == 1)
                 {
                     var visitorCache = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
-                    var variationHistory = visitorCache?.Data?.VariationHistory;
+                    var variationHistory = visitorCache?.Data?.AssignmentsHistory;
 
                     var cacheVariationId = variationHistory!=null && variationHistory.ContainsKey(variationGroup.Id) ? variationHistory[variationGroup.Id] : null;
                    

@@ -140,20 +140,20 @@ namespace Flagship.FsVisitor
                 }
 
                 var Campaigns = new Collection<VisitorCacheCampaign>();
-                var variationHistory = new Dictionary<string, string>();
+                var assignmentsHistory = new Dictionary<string, string>();
 
                 var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
                 if (visitorCacheData != null)
                 {
-                    foreach (var item in visitorCacheData.Data.VariationHistory)
+                    foreach (var item in visitorCacheData.Data.AssignmentsHistory)
                     {
-                        variationHistory[item.Key] = item.Value;
+                        assignmentsHistory[item.Key] = item.Value;
                     }
                 }
 
                 foreach (var item in Visitor.Campaigns)
                 {
-                    variationHistory[item.VariationGroupId] = item.Variation.Id;
+                    assignmentsHistory[item.VariationGroupId] = item.Variation.Id;
 
                     Campaigns.Add(new VisitorCacheCampaign
                     {
@@ -177,7 +177,7 @@ namespace Flagship.FsVisitor
                         Consent = Visitor.HasConsented,
                         Context = Visitor.Context,
                         Campaigns = Campaigns,
-                        VariationHistory = variationHistory,
+                        AssignmentsHistory = assignmentsHistory,
                     }
                 };
 

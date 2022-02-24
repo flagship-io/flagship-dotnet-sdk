@@ -81,7 +81,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest()
         {
-            var flag = new FsFlag.Flag<string>("key", visitorDelegateMock.Object, null, "string");
+            var flag = new FsFlag.Flag<string>("key", visitorDelegateMock.Object, "string");
             visitorDelegateMock.Setup(x => x.GetFlag("key", "string")).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", "string");
             Assert.AreEqual(flag, resultFlag);
@@ -91,7 +91,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest1()
         {
-            var flag = new FsFlag.Flag<long>("key", visitorDelegateMock.Object, null, 2);
+            var flag = new FsFlag.Flag<long>("key", visitorDelegateMock.Object, 2);
             visitorDelegateMock.Setup(x => x.GetFlag("key", 2)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", 2);
             Assert.AreEqual(flag, resultFlag);
@@ -101,7 +101,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest2()
         {
-            var flag = new FsFlag.Flag<bool>("key", visitorDelegateMock.Object, null, true);
+            var flag = new FsFlag.Flag<bool>("key", visitorDelegateMock.Object, true);
             visitorDelegateMock.Setup(x => x.GetFlag("key", true)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", true);
             Assert.AreEqual(flag, resultFlag);
@@ -112,7 +112,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest3()
         {
             var defaultValue = new JArray(new object[] { "a", "b" });
-            var flag = new FsFlag.Flag<JArray>("key", visitorDelegateMock.Object, null, defaultValue);
+            var flag = new FsFlag.Flag<JArray>("key", visitorDelegateMock.Object, defaultValue);
             visitorDelegateMock.Setup(x => x.GetFlag("key", defaultValue)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", defaultValue);
             Assert.AreEqual(flag, resultFlag);
@@ -123,7 +123,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest4()
         {
             var defaultValue = new JObject();
-            var flag = new FsFlag.Flag<JObject>("key", visitorDelegateMock.Object, null, defaultValue);
+            var flag = new FsFlag.Flag<JObject>("key", visitorDelegateMock.Object, defaultValue);
             visitorDelegateMock.Setup(x => x.GetFlag("key", defaultValue)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", defaultValue);
             Assert.AreEqual(flag, resultFlag);

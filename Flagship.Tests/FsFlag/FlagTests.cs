@@ -50,8 +50,15 @@ namespace Flagship.FsFlag.Tests
 
             visitorMock.Protected().Setup("GetStrategy").CallBase();
 
+            var flags = new List<Flagship.Model.FlagDTO>
+            {
+                flagDTO
+            };
+
+            visitorMock.SetupGet(x => x.Flags).Returns(flags);
+
             var defaultValue = "defaultString";
-            var flag = new Flag<string>(flagDTO.Key, visitorMock.Object, flagDTO, defaultValue);
+            var flag = new Flag<string>(flagDTO.Key, visitorMock.Object, defaultValue);
 
             visitorMock.Setup(x => x.GetFlagValue(flagDTO.Key, defaultValue, flagDTO, true)).Returns((string)flagDTO.Value);
             visitorMock.Setup(x => x.UserExposed(flagDTO.Key, defaultValue, flagDTO)).Returns(Task.CompletedTask);
@@ -95,7 +102,7 @@ namespace Flagship.FsFlag.Tests
             visitorMock.Protected().Setup("GetStrategy").CallBase();
 
             var defaultValue = "defaultString";
-            var flag = new Flag<string>("key", visitorMock.Object, null, defaultValue);
+            var flag = new Flag<string>("key", visitorMock.Object, defaultValue);
 
             var metadata = new FlagMetadata("", "", "", false, "");
 

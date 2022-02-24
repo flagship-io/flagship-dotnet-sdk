@@ -35,7 +35,7 @@ namespace Flagship.Model
 
         public ICollection<VisitorCacheCampaign> Campaigns { get; set; }
 
-        public IDictionary<string, string> VariationHistory { get; set; } 
+        public IDictionary<string, string> AssignmentsHistory { get; set; } 
     }
      
     internal class VisitorCacheDTOV1

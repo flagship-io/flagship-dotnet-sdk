@@ -2,6 +2,7 @@
 using Flagship.Enums;
 using Flagship.FsVisitor;
 using Flagship.Hit;
+using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json;
 using System;
@@ -71,7 +72,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "SendActive");
+                Log.LogError(Config, ex.Message, "SendActive");
             }
 
         }
@@ -91,7 +92,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "SendHit");
+                Log.LogError(Config, ex.Message, "SendHit");
             }
 
 

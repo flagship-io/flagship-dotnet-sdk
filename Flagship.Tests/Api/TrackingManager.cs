@@ -1,4 +1,5 @@
 ﻿using Flagship.Enums;
+using Flagship.Logger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
@@ -36,7 +37,7 @@ namespace Flagship.Tests.Api
                 ).ReturnsAsync(httpResponse);
 
 
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
             var config = new Flagship.Config.DecisionApiConfig
             {
@@ -149,7 +150,7 @@ namespace Flagship.Tests.Api
                 ).ReturnsAsync(httpResponse);
 
 
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
             var config = new Flagship.Config.DecisionApiConfig
             {

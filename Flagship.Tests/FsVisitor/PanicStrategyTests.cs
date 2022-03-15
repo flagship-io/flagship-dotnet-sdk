@@ -8,19 +8,20 @@ using System.Threading.Tasks;
 using Moq;
 using Flagship.Enums;
 using Newtonsoft.Json;
+using Flagship.Logger;
 
 namespace Flagship.FsVisitor.Tests
 {
     [TestClass()]
     public class PanicStrategyTests
     {
-        private Mock<Flagship.Utils.IFsLogManager> fsLogManagerMock;
+        private Mock<IFsLogManager> fsLogManagerMock;
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
         public PanicStrategyTests() 
         {
-            fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            fsLogManagerMock = new Mock<IFsLogManager>();
             var config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",

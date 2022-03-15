@@ -2,6 +2,7 @@
 using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
+using Flagship.Logger;
 using Flagship.Model;
 using Flagship.Model.Bucketing;
 using Murmur;
@@ -47,7 +48,7 @@ namespace Flagship.Decision
         {
 
             var pollingInterval = Config.PollingInterval.Value;
-            Utils.Log.LogInfo(Config, "Bucketing polling starts", "StartPolling");
+            Log.LogInfo(Config, "Bucketing polling starts", "StartPolling");
             await Polling();
             if (pollingInterval.TotalMilliseconds == 0)
             {
@@ -128,7 +129,7 @@ namespace Flagship.Decision
                 {
                     StatusChange?.Invoke(FlagshipStatus.NOT_INITIALIZED);
                 }
-                Utils.Log.LogError(Config, ex.Message, "Polling");
+                Log.LogError(Config, ex.Message, "Polling");
             }
         }
 
@@ -139,10 +140,10 @@ namespace Flagship.Decision
                 _timer.Dispose();
             }
             _isPolling = false;
-            Utils.Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
+            Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
         }
 
-        virtual public async Task SendContext(VisitorDelegateAbstract visitor)
+        virtual public async void SendContextAsync(VisitorDelegateAbstract visitor)
         {
             try
             {
@@ -178,13 +179,11 @@ namespace Flagship.Decision
             catch (Exception ex)
             {
 
-                Utils.Log.LogError(Config, ex.Message, "SendContext");
+                Log.LogError(Config, ex.Message, "SendContext");
             }
         }
         public override Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
         {
-            _ = SendContext(visitor);
-
             return Task.Factory.StartNew(() =>
             {
                 ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
@@ -203,9 +202,11 @@ namespace Flagship.Decision
 
                 IsPanic = false;
 
+                SendContextAsync(visitor);
+
                 foreach (var item in BucketingContent.Campaigns)
                 {
-                    var campaign = GetVisitorCampaigns(item.VariationGroups, visitor, item.Id,item.Type);
+                    var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id,item.Type);
                     if (campaign != null)
                     {
                         campaigns.Add(campaign);
@@ -217,7 +218,7 @@ namespace Flagship.Decision
 
         }
 
-        protected Model.Campaign GetVisitorCampaigns(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId, string campaignType)
+        protected Model.Campaign GetMatchingVisitorVariationGroup(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId, string campaignType)
         {
             foreach (var item in variationGroups)
             {
@@ -243,19 +244,16 @@ namespace Flagship.Decision
 
         protected Model.Variation GetVariation(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
         {
-            if (variationGroup == null)
+
+            if (variationGroup?.Variations == null)
             {
                 return null;
             }
+
             var hashBytes = _murmur32.ComputeHash(Encoding.UTF8.GetBytes(variationGroup.Id + visitor.VisitorId));
             var hash = BitConverter.ToUInt32(hashBytes, 0);
             var hashAllocation = hash % 100;
             var totalAllocation = 0;
-
-            if (variationGroup.Variations == null)
-            {
-                return null;
-            }
 
             foreach (var item in variationGroup.Variations)
             {
@@ -277,7 +275,7 @@ namespace Flagship.Decision
         {
             bool check = false;
 
-            if (variationGroup == null || variationGroup.Targeting == null || variationGroup.Targeting.TargetingGroups == null)
+            if (variationGroup?.Targeting?.TargetingGroups == null)
             {
                 return check;
             }
@@ -378,7 +376,7 @@ namespace Flagship.Decision
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "TestOperator");
+                Log.LogError(Config, ex.Message, "TestOperator");
             }
 
 

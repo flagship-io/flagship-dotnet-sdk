@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Enums
 {
-    public static class FsPredefinedContext
+    public static class PredefinedContext
     { 
         /// <summary>
         /// Current device locale

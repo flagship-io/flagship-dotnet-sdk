@@ -7,19 +7,20 @@ using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using Flagship.Enums;
+using Flagship.Logger;
 
 namespace Flagship.FsVisitor.Tests
 {
     [TestClass()]
     public class NoConsentStrategyTests
     {
-        private Mock<Flagship.Utils.IFsLogManager> fsLogManagerMock;
+        private Mock<IFsLogManager> fsLogManagerMock;
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
         public NoConsentStrategyTests() 
         {
-            fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            fsLogManagerMock = new Mock<IFsLogManager>();
             var config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",

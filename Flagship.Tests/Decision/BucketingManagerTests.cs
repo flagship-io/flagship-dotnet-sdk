@@ -18,6 +18,7 @@ using Flagship.Model.Bucketing;
 using System.Collections.ObjectModel;
 using Newtonsoft.Json.Linq;
 using Flagship.Model;
+using Flagship.Logger;
 
 namespace Flagship.Decision.Tests
 {
@@ -666,7 +667,7 @@ namespace Flagship.Decision.Tests
         [TestMethod()]
         public async Task PollingTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
             var config = new Config.BucketingConfig()
             {
@@ -703,8 +704,7 @@ namespace Flagship.Decision.Tests
                 CallBase = true
             };
 
-            decisionManagerMock.Setup(x => x.SendContext(It.IsAny<FsVisitor.VisitorDelegateAbstract>()))
-                .Returns(Task.CompletedTask);
+            decisionManagerMock.Setup(x => x.SendContextAsync(It.IsAny<FsVisitor.VisitorDelegateAbstract>()));
 
             var decisionManager = decisionManagerMock.Object;
 
@@ -760,7 +760,7 @@ namespace Flagship.Decision.Tests
         [TestMethod()]
         public async Task StopPollingTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
             var config = new Config.BucketingConfig()
             {
@@ -796,8 +796,8 @@ namespace Flagship.Decision.Tests
                 CallBase = true
             };
 
-            decisionManagerMock.Setup(x => x.SendContext(It.IsAny<FsVisitor.VisitorDelegateAbstract>()))
-                .Returns(Task.CompletedTask);
+            decisionManagerMock.Setup(x => x.SendContextAsync(It.IsAny<FsVisitor.VisitorDelegateAbstract>()))
+                ;
 
             var decisionManager = decisionManagerMock.Object;
 
@@ -821,7 +821,7 @@ namespace Flagship.Decision.Tests
         [TestMethod()]
         public async Task SendContextTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
             var config = new Config.BucketingConfig()
             {
@@ -869,13 +869,13 @@ namespace Flagship.Decision.Tests
 
             var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitor_1", false, context, false, configManager);
 
-            await decisionManagerMock.SendContext(visitorDelegate).ConfigureAwait(false);
+            decisionManagerMock.SendContextAsync(visitorDelegate);
 
             mockHandler.Protected().Verify("SendAsync", Times.Exactly(1),
                   ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
                   ItExpr.IsAny<CancellationToken>());
 
-            await decisionManagerMock.SendContext(visitorDelegate).ConfigureAwait(false);
+            decisionManagerMock.SendContextAsync(visitorDelegate);
 
 
             mockHandler.Protected().Verify("SendAsync", Times.Exactly(2),

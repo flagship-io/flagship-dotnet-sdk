@@ -1,5 +1,6 @@
 ﻿using Flagship.Delegate;
 using Flagship.Enums;
+using Flagship.Logger;
 using Flagship.Utils;
 using System;
 using System.Collections.Generic;

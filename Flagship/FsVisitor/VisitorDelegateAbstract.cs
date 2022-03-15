@@ -52,8 +52,8 @@ namespace Flagship.FsVisitor
 
         protected void LoadPredefinedContext()
         {
-            _context[FsPredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
-            _context[FsPredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
+            _context[PredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
+            _context[PredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
             //_context[FsPredefinedContext.FLAGSHIP_VISITOR] = VisitorId; 
         }
 

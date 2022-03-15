@@ -1,6 +1,7 @@
 ﻿using Flagship.Config;
 using Flagship.Enums;
 using Flagship.FsVisitor;
+using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json;
 using System;
@@ -73,7 +74,7 @@ namespace Flagship.Decision
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "GetCampaigns");
+                Log.LogError(Config, ex.Message, "GetCampaigns");
                 return new Collection<Campaign>();
             }
         }

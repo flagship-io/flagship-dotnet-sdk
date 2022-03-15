@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Flagship.Utils;
 using System.IO;
 using Flagship.Enums;
+using Flagship.Logger;
 
 namespace Flagship.Main.Tests
 {

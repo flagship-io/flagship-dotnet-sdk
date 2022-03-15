@@ -46,7 +46,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, method);
+                Logger.Log.LogError(Config, ex.Message, method);
             }
         }
 

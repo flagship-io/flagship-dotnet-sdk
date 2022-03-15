@@ -1,6 +1,7 @@
 ﻿using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
+using Flagship.Logger;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
@@ -18,18 +19,18 @@ namespace Flagship.FsVisitor
 
         virtual protected void UpdateContexKeyValue(string key, object value)
         {
-            if (FsPredefinedContext.IsPredefinedContext(key) && !FsPredefinedContext.CheckType(key, value))
+            if (PredefinedContext.IsPredefinedContext(key) && !PredefinedContext.CheckType(key, value))
             {
-                Utils.Log.LogError(
+                Log.LogError(
                     Config,
-                    string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR, key, FsPredefinedContext.GetPredefinedType(key)),
+                    string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR, key, PredefinedContext.GetPredefinedType(key)),
                     "UpdateContext");
                 return;
             }
 
             if (!(value is string) && !(value is bool) && !(value is double) && !(value is long) && !(value is int))
             {
-                Utils.Log.LogError(Config, string.Format(Constants.CONTEXT_PARAM_ERROR, key), "UpdateContex");
+                Log.LogError(Config, string.Format(Constants.CONTEXT_PARAM_ERROR, key), "UpdateContex");
                 return;
             }
 
@@ -73,7 +74,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "FetchFlags");
+                Log.LogError(Config, ex.Message, "FetchFlags");
             }
         }
 
@@ -84,14 +85,14 @@ namespace Flagship.FsVisitor
             {
                 return Task.Factory.StartNew(() =>
                 {
-                    Utils.Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
+                    Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
                 });
             }
             if (flag.Value != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
                 return Task.Factory.StartNew(() =>
                 {
-                    Utils.Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
+                    Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
                 });
             }
 
@@ -104,7 +105,7 @@ namespace Flagship.FsVisitor
 
             if (flag == null)
             {
-                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName);
+                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName);
                 return defaultValue;
             }
 
@@ -114,13 +115,13 @@ namespace Flagship.FsVisitor
                 {
                     UserExposed(key, defaultValue, flag);
                 }
-                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
+                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;
             }
 
             if (!Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
-                Utils.Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
+                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;
             }
 
@@ -137,7 +138,7 @@ namespace Flagship.FsVisitor
             const string functionName = "flag.metadata";
             if (!hasSameType && !string.IsNullOrWhiteSpace(metadata.CampaignId))
             {
-                Utils.Log.LogError(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), functionName);
+                Log.LogError(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), functionName);
                 return FlagMetadata.EmptyMetadata();
             }
             return metadata;
@@ -152,7 +153,7 @@ namespace Flagship.FsVisitor
                 {
                     return Task.Factory.StartNew(() =>
                     {
-                        Utils.Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
+                        Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
                     });
                 }
 
@@ -165,7 +166,7 @@ namespace Flagship.FsVisitor
                 {
                     return Task.Factory.StartNew(() =>
                     {
-                        Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
+                        Log.LogError(Config, hit.GetErrorMessage(), functionName);
                     });
                 }
 
@@ -173,7 +174,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                return Task.Factory.StartNew(() => { Utils.Log.LogError(Config, ex.Message, functionName); });
+                return Task.Factory.StartNew(() => { Log.LogError(Config, ex.Message, functionName); });
             }
         }
 
@@ -188,7 +189,7 @@ namespace Flagship.FsVisitor
 
             if (string.IsNullOrWhiteSpace(visitorId))
             {
-                Utils.Log.LogError(Config, string.Format(Constants.VISITOR_ID_ERROR, methodName), methodName);
+                Log.LogError(Config, string.Format(Constants.VISITOR_ID_ERROR, methodName), methodName);
                 return;
             }
 
@@ -207,7 +208,7 @@ namespace Flagship.FsVisitor
 
             if (string.IsNullOrWhiteSpace(Visitor.AnonymousId))
             {
-                Utils.Log.LogError(Config, string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName), methodName);
+                Log.LogError(Config, string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName), methodName);
                 return;
             }
 
@@ -218,7 +219,7 @@ namespace Flagship.FsVisitor
 
         protected void LogDeactivateOnBucketingMode(string methodName)
         {
-            Utils.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName);
+            Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName);
         }
     }
 }

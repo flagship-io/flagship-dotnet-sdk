@@ -36,7 +36,7 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Utils.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, methodName, Visitor.VisitorId), methodName);
+            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, methodName, Visitor.VisitorId), methodName);
         }
     }
 }

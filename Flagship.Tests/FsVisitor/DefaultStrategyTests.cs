@@ -10,19 +10,20 @@ using Flagship.Enums;
 using Newtonsoft.Json.Linq;
 using Flagship.Tests.Data;
 using Newtonsoft.Json;
+using Flagship.Logger;
 
 namespace Flagship.FsVisitor.Tests
 {
     [TestClass()]
     public class DefaultStrategyTests
     {
-        private Mock<Flagship.Utils.IFsLogManager> fsLogManagerMock;
+        private Mock<IFsLogManager> fsLogManagerMock;
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
         public DefaultStrategyTests()
         {
-            fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            fsLogManagerMock = new Mock<IFsLogManager>();
             var config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",
@@ -116,26 +117,26 @@ namespace Flagship.FsVisitor.Tests
             var newContext = new Dictionary<string, object>()
             {
                 ["key1"] = "value1",
-                [FsPredefinedContext.LOCATION_CITY] = "London",
-                [FsPredefinedContext.OS_VERSION_CODE] = 1,
-                [FsPredefinedContext.APP_VERSION_CODE] = "1",
-                [FsPredefinedContext.DEVICE_LOCALE] = Array.Empty<string>(),
-                [FsPredefinedContext.DEVICE_MODEL] = null,
+                [PredefinedContext.LOCATION_CITY] = "London",
+                [PredefinedContext.OS_VERSION_CODE] = 1,
+                [PredefinedContext.APP_VERSION_CODE] = "1",
+                [PredefinedContext.DEVICE_LOCALE] = Array.Empty<string>(),
+                [PredefinedContext.DEVICE_MODEL] = null,
             };
 
             defaultStrategy.UpdateContext(newContext);
 
             Assert.AreEqual(visitorDelegate.Context.Count, 6);
-            Assert.AreEqual(visitorDelegate.Context[FsPredefinedContext.LOCATION_CITY], "London");
+            Assert.AreEqual(visitorDelegate.Context[PredefinedContext.LOCATION_CITY], "London");
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
-                FsPredefinedContext.APP_VERSION_CODE, "number"), "UpdateContext"), Times.Once());
+                PredefinedContext.APP_VERSION_CODE, "number"), "UpdateContext"), Times.Once());
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
-                FsPredefinedContext.DEVICE_LOCALE, "string"), "UpdateContext"), Times.Once());
+                PredefinedContext.DEVICE_LOCALE, "string"), "UpdateContext"), Times.Once());
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
-                FsPredefinedContext.DEVICE_MODEL, "string"), "UpdateContext"), Times.Once());
+                PredefinedContext.DEVICE_MODEL, "string"), "UpdateContext"), Times.Once());
         }
 
         [TestMethod()]

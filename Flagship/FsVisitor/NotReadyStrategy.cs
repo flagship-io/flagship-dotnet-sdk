@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Flagship.Logger;
 
 namespace Flagship.FsVisitor
 {
@@ -45,7 +46,7 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Utils.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.NOT_INITIALIZED), methodName);
+            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.NOT_INITIALIZED), methodName);
         }
     }
 }

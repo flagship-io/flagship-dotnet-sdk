@@ -84,7 +84,7 @@ namespace Flagship.FsVisitor
                     var data = visitorData.ToObject<VisitorCacheDTOV1>();
                     if (data.Data.VisitorId != Visitor.VisitorId)
                     {
-                        Utils.Log.LogInfo(Config, string.Format(VISITOR_ID_MISMATCH_ERROR, data.Data.VisitorId, Visitor.VisitorId), "LookupVisitor");
+                        Logger.Log.LogInfo(Config, string.Format(VISITOR_ID_MISMATCH_ERROR, data.Data.VisitorId, Visitor.VisitorId), "LookupVisitor");
                         return;
                     }
                     Visitor.VisitorCache = new VisitorCache
@@ -96,7 +96,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "LookupVisitor");
+                Logger.Log.LogError(Config, ex.Message, "LookupVisitor");
             }
         }
 
@@ -125,7 +125,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "LookupVisitor");
+                Logger.Log.LogError(Config, ex.Message, "LookupVisitor");
             }
         }
 
@@ -193,7 +193,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "CacheVisitor");
+                Logger.Log.LogError(Config, ex.Message, "CacheVisitor");
             }
         }
 
@@ -210,7 +210,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "FlushVisitor");
+                Logger.Log.LogError(Config, ex.Message, "FlushVisitor");
             }
         }
 
@@ -353,7 +353,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "CacheHit");
+                Logger.Log.LogError(Config, ex.Message, "CacheHit");
             }
         }
 
@@ -373,7 +373,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "CacheHit");
+                Logger.Log.LogError(Config, ex.Message, "CacheHit");
             }
         }
 
@@ -390,7 +390,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "FlushHits");
+                Logger.Log.LogError(Config, ex.Message, "FlushHits");
             }
         }
         abstract public void ClearContext();

@@ -121,12 +121,12 @@ namespace Flagship.FsVisitor.Tests
             var newContext = new Dictionary<string, object>()
             {
                 ["key1"] = "value1",
-                [FsPredefinedContext.LOCATION_CITY] = "London",
-                [FsPredefinedContext.OS_VERSION_CODE] = 1,
-                [FsPredefinedContext.APP_VERSION_CODE] = "1",
-                [FsPredefinedContext.DEVICE_LOCALE] = Array.Empty<string>(),
-                [FsPredefinedContext.DEVICE_MODEL] = null,
-                [FsPredefinedContext.FLAGSHIP_CLIENT] = "custom client"
+                [PredefinedContext.LOCATION_CITY] = "London",
+                [PredefinedContext.OS_VERSION_CODE] = 1,
+                [PredefinedContext.APP_VERSION_CODE] = "1",
+                [PredefinedContext.DEVICE_LOCALE] = Array.Empty<string>(),
+                [PredefinedContext.DEVICE_MODEL] = null,
+                [PredefinedContext.FLAGSHIP_CLIENT] = "custom client"
             };
 
             defaultStrategy.UpdateContext(newContext);

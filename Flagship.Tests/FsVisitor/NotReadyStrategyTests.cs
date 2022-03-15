@@ -23,7 +23,7 @@ namespace Flagship.FsVisitor.Tests
         private Flagship.Config.DecisionApiConfig config;
         public NotReadyStrategyTests()
         {
-            fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            fsLogManagerMock = new Mock<IFsLogManager>();
             config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",

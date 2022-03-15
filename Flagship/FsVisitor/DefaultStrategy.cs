@@ -140,7 +140,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                Utils.Log.LogError(Config, ex.Message, "UserExposed");
+                Log.LogError(Config, ex.Message, "UserExposed");
                 CacheHit(flag);
             }
         }
@@ -149,12 +149,12 @@ namespace Flagship.FsVisitor
             const string functionName = "UserExposed";
             if (flag == null)
             {
-                Utils.Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
+                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
                 return;
             }
             if (flag.Value != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
-                Utils.Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
+                Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
                 return;
             }
 
@@ -220,7 +220,7 @@ namespace Flagship.FsVisitor
             {
                 if (hit == null)
                 {
-                    Utils.Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
+                    Log.LogError(Config, Constants.HIT_NOT_NULL, functionName);
                     return;
                 }
 
@@ -231,7 +231,7 @@ namespace Flagship.FsVisitor
 
                 if (!hit.IsReady())
                 {
-                    Utils.Log.LogError(Config, hit.GetErrorMessage(), functionName);
+                    Log.LogError(Config, hit.GetErrorMessage(), functionName);
                     return;
                 }
 
@@ -240,7 +240,7 @@ namespace Flagship.FsVisitor
             catch (Exception ex)
             {
                 CacheHit(hit);
-                Utils.Log.LogError(Config, ex.Message, functionName);
+                Log.LogError(Config, ex.Message, functionName);
             }
         }
 

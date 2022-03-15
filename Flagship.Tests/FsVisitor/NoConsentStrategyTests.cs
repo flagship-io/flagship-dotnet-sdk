@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using Flagship.Enums;
+using Newtonsoft.Json.Linq;
+using Flagship.Model;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -17,10 +19,11 @@ namespace Flagship.FsVisitor.Tests
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
+        private Flagship.Config.DecisionApiConfig config;
         public NoConsentStrategyTests() 
         {
             fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
-            var config = new Flagship.Config.DecisionApiConfig()
+            config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -40,6 +43,28 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void NoConsentStrategyTest()
         {
+            var noConsentStategy = new NoConsentStrategy(visitorDelegate);
+
+            var VisitorCacheImplementation = new Mock<Flagship.Cache.IVisitorCacheImplementation>();
+            var HitCaheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
+            config.HitCacheImplementation = HitCaheImplementation.Object;
+
+            noConsentStategy.CacheHit(flagDTO: null);
+            noConsentStategy.CacheHit(hit: null);
+            noConsentStategy.CacheVisitorAsync();
+            noConsentStategy.LookupHits();
+            noConsentStategy.LookupVisitor();
+
+            VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+
+            var privateNoConsentStrategy = new PrivateObject(noConsentStategy);
+
+            ICollection<Campaign> compaigns = (ICollection<Campaign>)privateNoConsentStrategy.Invoke("FetchVisitorCacheCampaigns", visitorDelegate);
+
+            Assert.AreEqual(compaigns.Count, 0);
 
         }
 

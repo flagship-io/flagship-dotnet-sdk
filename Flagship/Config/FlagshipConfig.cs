@@ -1,5 +1,8 @@
-﻿using Flagship.Delegate;
+﻿using Flagship.Cache;
+using Flagship.Delegate;
 using Flagship.Enums;
+using Flagship.FsVisitor;
+using Flagship.Hit;
 using Flagship.Utils;
 using System;
 using System.Collections.Generic;
@@ -29,6 +32,12 @@ namespace Flagship.Config
 
         public IFsLogManager LogManager { get; set; }
 
+        public IVisitorCacheImplementation VisitorCacheImplementation { get; set; }
+
+        public IHitCacheImplementation HitCacheImplementation { get; set; }
+
+        public bool DisableCache { get; set; } 
+        
         public FlagshipConfig()
         {
             LogLevel = LogLevel.ALL;

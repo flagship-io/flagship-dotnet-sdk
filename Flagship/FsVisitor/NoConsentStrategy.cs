@@ -3,6 +3,7 @@ using Flagship.Hit;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,36 @@ namespace Flagship.FsVisitor
         public NoConsentStrategy(VisitorDelegateAbstract visitor) : base(visitor)
         {
 
+        }
+
+        public override void LookupVisitor()
+        {
+            //
+        }
+
+        public override void CacheVisitorAsync()
+        {
+           //
+        }
+
+        public override void LookupHits()
+        {
+            //
+        }
+
+        public override void CacheHit(FlagDTO flagDTO)
+        {
+            //
+        }
+
+        public override void CacheHit(HitAbstract hit)
+        {
+            //
+        }
+
+        protected override ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
+        {
+            return new Collection<Campaign>();
         }
 
         public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)

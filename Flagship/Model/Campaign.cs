@@ -17,7 +17,7 @@
         /// </summary>
         public Variation Variation { get; set; }
             
-        public string CampaignType { get; set; }
+        public string Type { get; set; }
 
     }
 }

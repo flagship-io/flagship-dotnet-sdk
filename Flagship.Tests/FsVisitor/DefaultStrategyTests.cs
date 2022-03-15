@@ -10,6 +10,10 @@ using Flagship.Enums;
 using Newtonsoft.Json.Linq;
 using Flagship.Tests.Data;
 using Newtonsoft.Json;
+using Flagship.Cache;
+using Flagship.Model;
+using System.Collections.ObjectModel;
+using Flagship.Hit;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -121,6 +125,7 @@ namespace Flagship.FsVisitor.Tests
                 [FsPredefinedContext.APP_VERSION_CODE] = "1",
                 [FsPredefinedContext.DEVICE_LOCALE] = Array.Empty<string>(),
                 [FsPredefinedContext.DEVICE_MODEL] = null,
+                [FsPredefinedContext.FLAGSHIP_CLIENT] = "custom client"
             };
 
             defaultStrategy.UpdateContext(newContext);
@@ -167,6 +172,96 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
+        async public Task FetchFlagsWithCacheTest()
+        {
+            ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+            decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
+                .Returns(Task.FromResult(campaigns));
+
+            visitorDelegate.VisitorCache = new Model.VisitorCache
+            {
+                Version = 1,
+                Data = new VisitorCacheDTOV1()
+                {
+                    Version = 1,
+                    Data = new VisitorCacheData
+                    {
+                        VisitorId = "visitorID",
+                        Consent = true,
+                        Campaigns = new List<VisitorCacheCampaign>
+                        {
+                            new VisitorCacheCampaign
+                            {
+                                Activated = true,
+                                CampaignId = "campaignID",
+                                IsReference = true,
+                                Type= ModificationType.FLAG,
+                                VariationGroupId = "variationGbId",
+                                VariationId = "variationID",
+                                Flags = new Dictionary<string, object>
+                                {
+                                    ["key"] = "value"
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 1);
+        }
+
+        [TestMethod()]
+        async public Task FetchFlagsWithCacheV2Test()
+        {
+            ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+            decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
+                .Returns(Task.FromResult(campaigns));
+
+            visitorDelegate.VisitorCache = new Model.VisitorCache
+            {
+                Version = 2,
+                Data = new VisitorCacheDTOV1()
+                {
+                    Version = 2,
+                    Data = new VisitorCacheData
+                    {
+                    }
+                }
+            };
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 0);
+
+            visitorDelegate.VisitorCache = new Model.VisitorCache
+            {
+                Version = 1,
+                Data = new VisitorCacheDTOV1()
+                {
+                    Version = 1
+                }
+            };
+            defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 0);
+
+            visitorDelegate.VisitorCache = null;
+
+            defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            await defaultStrategy.FetchFlags().ConfigureAwait(false);
+
+            Assert.AreEqual(visitorDelegate.Flags.Count, 0);
+        }
+
+        [TestMethod()]
         public async Task UserExposedTest()
         {
             const string functionName = "UserExposed";
@@ -191,6 +286,13 @@ namespace Flagship.FsVisitor.Tests
             await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
             trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDtoValueNull), Times.Once());
+
+            var error = new Exception("userExposed error");
+
+            trackingManagerMock.Setup(x => x.SendActive(visitorDelegate, flagDto)).Throws(error);
+            await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, functionName), Times.Once());
         }
 
         [TestMethod()]
@@ -288,7 +390,7 @@ namespace Flagship.FsVisitor.Tests
         {
             const string functionName = "SendHit";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
-            await defaultStrategy.SendHit(null).ConfigureAwait(false);
+            await defaultStrategy.SendHit(hit: null).ConfigureAwait(false);
             fsLogManagerMock.Verify(x => x.Error(Constants.HIT_NOT_NULL, functionName), Times.Once());
         }
 
@@ -327,6 +429,17 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
+        public async Task SendHitsTest()
+        {
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            var screen = new Flagship.Hit.Screen("HomeView");
+            var page = new Flagship.Hit.Page("HomePage");
+            await defaultStrategy.SendHit(new List<Hit.HitAbstract>() { screen, page }).ConfigureAwait(false);
+            trackingManagerMock.Verify(x => x.SendHit(screen), Times.Once());
+            trackingManagerMock.Verify(x => x.SendHit(page), Times.Once());
+        }
+
+        [TestMethod()]
         public async Task SendConsentHitAsyncTest()
         {
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
@@ -344,7 +457,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public async Task SendConsentHitAsyncFailedTest()
         {
-            const string functionName = "SendConsentHit"; 
+            const string functionName = "SendConsentHit";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             const string errorMessage = "error sendHit";
@@ -363,7 +476,7 @@ namespace Flagship.FsVisitor.Tests
 
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
-            var newVisitorId = "newVisitorId";  
+            var newVisitorId = "newVisitorId";
 
             defaultStrategy.Authenticate(newVisitorId);
 
@@ -424,6 +537,552 @@ namespace Flagship.FsVisitor.Tests
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName), methodName), Times.Once());
 
+        }
+
+        [TestMethod]
+        public void LookupVisitorTest()
+        {
+            var visitorCache = new Mock<IVisitorCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.VisitorCache = null;
+            visitorDelegate.Config.VisitorCacheImplementation = visitorCache.Object;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            ICollection<Campaign> campaigns = new Collection<Campaign>()
+            {
+                new Campaign()
+                {
+                    Id = "id",
+                    Variation = new Variation
+                    {
+                        Id = "varID",
+                        Modifications = new Modifications
+                        {
+                            Type = ModificationType.FLAG,
+                            Value = new Dictionary<string, object>
+                            {
+                                ["key"] = "value"
+                            }
+                        },
+                        Reference = false
+                    },
+                    Type = "ab",
+                    VariationGroupId = "varGroupId"
+                }
+            };
+
+            var VisitorCacheCampaigns = new Collection<VisitorCacheCampaign>();
+
+            foreach (var item in campaigns)
+            {
+                VisitorCacheCampaigns.Add(new VisitorCacheCampaign
+                {
+                    CampaignId = item.Id,
+                    VariationGroupId = item.VariationGroupId,
+                    VariationId = item.Variation.Id,
+                    IsReference = item.Variation.Reference,
+                    Type = item.Variation.Modifications.Type,
+                    Activated = false,
+                    Flags = item.Variation.Modifications.Value
+                });
+            }
+
+
+            var failedData = new VisitorCacheDTOV1 
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = "any",
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = VisitorCacheCampaigns
+                }
+            };
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(JObject.FromObject(failedData)));
+
+            defaultStrategy.LookupVisitor();
+
+            fsLogManagerMock.Verify(x => x.Info(string.Format(VisitorStrategyAbstract.VISITOR_ID_MISMATCH_ERROR, "any", visitorId), "LookupVisitor"), Times.Once());
+
+            Assert.IsNull(visitorDelegate.VisitorCache);
+
+            var data = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = VisitorCacheCampaigns
+                }
+            };
+
+            var dataJson = JObject.FromObject(data);
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(dataJson));
+
+            defaultStrategy.LookupVisitor();
+
+            Assert.IsNotNull(visitorDelegate.VisitorCache);
+
+            Assert.AreEqual(JsonConvert.SerializeObject(visitorDelegate.VisitorCache.Data), JsonConvert.SerializeObject(data));
+
+            var error = new Exception("LookupVisitor error");
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Throws(error);
+
+            defaultStrategy.LookupVisitor();
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, "LookupVisitor"), Times.Once());
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(new JObject()));
+
+            defaultStrategy.LookupVisitor();
+
+            fsLogManagerMock.Verify(x => x.Error(VisitorStrategyAbstract.LOOKUP_VISITOR_JSON_OBJECT_ERROR, "LookupVisitor"), Times.Once());
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult<JObject>(null));
+
+            defaultStrategy.LookupVisitor();
+        }
+
+        [TestMethod]
+        public void VisitorCacheTest()
+        {
+            ICollection<Campaign> campaigns = new Collection<Campaign>()
+            {
+                new Campaign()
+                {
+                    Id = "id",
+                    Variation = new Variation
+                    {
+                        Id = "varID",
+                        Modifications = new Modifications
+                        {
+                            Type = ModificationType.FLAG,
+                            Value = new Dictionary<string, object>
+                            {
+                                ["key"] = "value"
+                            }
+                        },
+                        Reference = false
+                    },
+                    Type = "ab",
+                    VariationGroupId = "varGroupId"
+                }
+            };
+
+            var VisitorCacheCampaigns = new Collection<VisitorCacheCampaign>();
+
+            var variationHistory = new Dictionary<string, string>
+            {
+                ["varGrID"] = "varID"
+            };
+
+            foreach (var item in campaigns)
+            {
+                variationHistory[item.VariationGroupId] = item.Variation.Id;
+
+                VisitorCacheCampaigns.Add(new VisitorCacheCampaign
+                {
+                    CampaignId = item.Id,
+                    VariationGroupId = item.VariationGroupId,
+                    VariationId = item.Variation.Id,
+                    IsReference = item.Variation.Reference,
+                    Type = item.Variation.Modifications.Type,
+                    Activated = false,
+                    Flags = item.Variation.Modifications.Value
+                });
+            }
+
+
+
+            var data = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = VisitorCacheCampaigns,
+                    AssignmentsHistory= variationHistory
+                }
+            };
+
+
+
+            visitorDelegate.VisitorCache = new VisitorCache
+            {
+                Version = 1,
+                Data = new VisitorCacheDTOV1
+                {
+                    Version = 1,
+                    Data = new VisitorCacheData
+                    {
+                        VisitorId = visitorDelegate.VisitorId,
+                        AnonymousId = visitorDelegate.AnonymousId,
+                        Consent = visitorDelegate.HasConsented,
+                        Context = visitorDelegate.Context,
+                        AssignmentsHistory = new Dictionary<string, string>
+                        {
+                            ["varGrID"] = "varID"
+                        }
+                    }
+                }
+            };
+
+            var dataJson = JObject.FromObject(data);
+
+            var visitorCache = new Mock<IVisitorCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.Config.VisitorCacheImplementation = visitorCache.Object;
+
+            visitorDelegate.Campaigns = campaigns;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            defaultStrategy.CacheVisitorAsync();
+
+            visitorCache.Verify(x => x.CacheVisitor(visitorId, It.Is<JObject>(y => y.ToString() == dataJson.ToString())), Times.Once);
+
+            var error = new Exception("visitorCache error");
+
+            visitorCache.Setup(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>())).Throws(error);
+
+            defaultStrategy.CacheVisitorAsync();
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheVisitor"), Times.Once());
+        }
+
+        [TestMethod]
+        public void FlushVisitorAsyncTest()
+        {
+            var visitorCache = new Mock<IVisitorCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.Config.VisitorCacheImplementation = visitorCache.Object;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            defaultStrategy.FlushVisitorAsync();
+
+            visitorCache.Verify(x => x.FlushVisitor(visitorId), Times.Once());
+
+            var error = new Exception("visitorCache error");
+
+            visitorCache.Setup(x => x.FlushVisitor(It.IsAny<string>())).Throws(error);
+
+            defaultStrategy.FlushVisitorAsync();
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, "FlushVisitor"), Times.Once());
+
+        }
+
+        [TestMethod]
+        public void CacheHitActivateTest()
+        {
+            var hitCache = new Mock<IHitCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            var flag = new FlagDTO
+            {
+                CampaignId = "campaignId",
+                CampaignType = "ab",
+                IsReference = true,
+                Key = "key",
+                Value = "value",
+                VariationGroupId = "varGrID",
+                VariationId = "varID"
+            };
+
+            var hitData = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.ACTIVATE,
+                    Content = flag,
+                    Time = DateTime.Now
+                }
+            };
+
+            var hitDataJson = JObject.FromObject(hitData);
+
+            defaultStrategy.CacheHit(flag);
+
+            hitCache.Verify(x => x.CacheHit(visitorId, It.Is<JObject>(y =>
+             y["Data"]["Type"].Value<int>() == ((int)HitCacheType.ACTIVATE) &&
+             y["Data"]["Content"].Value<JObject>().ToString() == JObject.FromObject(flag).ToString()
+            )), Times.Once());
+
+            var error = new Exception("CacheHit error");
+
+            hitCache.Setup(x => x.CacheHit(visitorId, It.IsAny<JObject>())).Throws(error);
+
+            defaultStrategy.CacheHit(flag);
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheHit"), Times.Once());
+        }
+
+        [TestMethod]
+        public void CacheHitTest()
+        {
+            var hitCache = new Mock<IHitCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            var hit = new Screen("Home");
+
+            var hitData = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.ACTIVATE,
+                    Content = hit,
+                    Time = DateTime.Now
+                }
+            };
+
+            var hitDataJson = JObject.FromObject(hitData);
+
+            defaultStrategy.CacheHit(hit);
+
+            hitCache.Verify(x => x.CacheHit(visitorId, It.Is<JObject>(y =>
+             y["Data"]["Type"].Value<int>() == ((int)HitCacheType.SCREENVIEW) &&
+             y["Data"]["Content"].Value<JObject>().ToString() == JObject.FromObject(hit).ToString()
+            )), Times.Once());
+
+            var error = new Exception("CacheHit error");
+
+            hitCache.Setup(x => x.CacheHit(visitorId, It.IsAny<JObject>())).Throws(error);
+
+            defaultStrategy.CacheHit(hit);
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheHit"), Times.Once());
+        }
+
+        [TestMethod]
+        public void FlushHitsAsyncTest()
+        {
+            var hitCache = new Mock<IHitCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            defaultStrategy.FlushHitAsync();
+
+            hitCache.Verify(x => x.FlushHits(visitorId), Times.Once());
+
+            var error = new Exception("hitsCache error");
+
+            hitCache.Setup(x => x.FlushHits(It.IsAny<string>())).Throws(error);
+
+            defaultStrategy.FlushHitAsync();
+
+            fsLogManagerMock.Verify(x => x.Error(error.Message, "FlushHits"), Times.Once());
+        }
+
+        [TestMethod]
+        public void LookupHitsTest()
+        {
+            var hitCache = new Mock<IHitCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            var screenHit = new Screen(string.Concat(Enumerable.Repeat("Home", 2500)));
+
+            var hitData = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.SCREENVIEW,
+                    Content = screenHit,
+                    Time = DateTime.Now
+                }
+            };
+
+            var pageHit = new Page("Home");
+
+            var hitData2 = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.PAGEVIEW,
+                    Content = pageHit,
+                    Time = DateTime.Now
+                }
+            };
+
+            var batchHit = new Batch()
+            {
+                Hits = new Collection<HitAbstract>()
+                {
+                    pageHit,
+                    screenHit
+                },
+            };
+
+            var hitData3 = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.BATCH,
+                    Content = batchHit,
+                    Time = DateTime.Now
+                }
+            };
+
+            var transactionHit = new Transaction("transactionID", "aff");
+
+            var hitData4 = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.TRANSACTION,
+                    Content = transactionHit,
+                    Time = DateTime.Now
+                }
+            };
+
+            var eventHit = new Event(EventCategory.USER_ENGAGEMENT, "aff");
+
+            var hitData5 = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.EVENT,
+                    Content = eventHit,
+                    Time = DateTime.Now
+                }
+            };
+
+            var itemHit = new Item("transID", "name", "code");
+
+            var hitData6 = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.ITEM,
+                    Content = itemHit,
+                    Time = DateTime.Now
+                }
+            };
+
+            var flag = new FlagDTO
+            {
+                CampaignId = "campaignCacheHitId",
+                CampaignType = "ab",
+                IsReference = true,
+                Key = "key",
+                Value = "value",
+                VariationGroupId = "varGrID",
+                VariationId = "varID"
+            };
+
+            var hitData7 = new HitCacheDTOV1
+            {
+                Version = 1,
+                Data = new HitCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Type = HitCacheType.ACTIVATE,
+                    Content = flag,
+                    Time = DateTime.Now
+                }
+            };
+
+            var array = new JArray()
+            {
+                JObject.FromObject(hitData),
+                JObject.FromObject(hitData2),
+                JObject.FromObject(hitData3),
+                JObject.FromObject(hitData4),
+                JObject.FromObject(hitData5),
+                JObject.FromObject(hitData6),
+                JObject.FromObject(hitData7),
+            };
+
+            hitCache.Setup(x => x.LookupHits(visitorId)).Returns(Task.FromResult(array));
+
+            defaultStrategy.LookupHits();
+
+            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, It.Is<FlagDTO>(
+                y => y.CampaignId == flag.CampaignId &&
+                y.CampaignType == flag.CampaignType &&
+                y.IsReference == flag.IsReference &&
+                y.Key == flag.Key &&
+                y.Value == flag.Value &&
+                y.VariationGroupId == flag.VariationGroupId &&
+                y.VariationId == flag.VariationId)), Times.Once());
+
+            Func<HitAbstract, bool> checkHit = (HitAbstract hitAbstract) =>
+            {
+                switch (hitAbstract.Type)
+                {
+                    case HitType.PAGEVIEW:
+                        var page = (Page)hitAbstract;
+                        return page.DocumentLocation == pageHit.DocumentLocation;
+                    case HitType.SCREENVIEW:
+                        var screen = (Screen)hitAbstract;
+                        return screen.DocumentLocation == screenHit.DocumentLocation;
+                    case HitType.TRANSACTION:
+                        var transaction = (Transaction)hitAbstract;
+                        return transaction.TransactionId == transactionHit.TransactionId && transaction.Affiliation == transactionHit.Affiliation;
+                    case HitType.ITEM:
+                        var item = (Item)hitAbstract;
+                        return item.TransactionId == itemHit.TransactionId && item.Code == itemHit.Code && item.Name == itemHit.Name;
+                    case HitType.EVENT:
+                        var eventObject = (Event)hitAbstract;
+                        return eventObject.Category == eventHit.Category && eventObject.Action == eventHit.Action;
+                    case HitType.BATCH:
+                        var batch = (Batch)hitAbstract;
+                        return batch.Hits.Count == 2;
+                    default:
+                        break;
+                }
+                return false;
+            };
+
+            trackingManagerMock.Verify(x => x.SendHit(It.Is<Batch>(y => y.Hits.Any(checkHit))), Times.Exactly(3));
         }
     }
 }

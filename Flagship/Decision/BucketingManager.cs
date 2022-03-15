@@ -134,7 +134,7 @@ namespace Flagship.Decision
 
         public void StopPolling()
         {
-            if (_timer!=null)
+            if (_timer != null)
             {
                 _timer.Dispose();
             }
@@ -205,7 +205,7 @@ namespace Flagship.Decision
 
                 foreach (var item in BucketingContent.Campaigns)
                 {
-                    var campaign = GetVisitorCampaigns(item.VariationGroups, visitor, item.Id,item.Type);
+                    var campaign = GetVisitorCampaigns(item.VariationGroups, visitor, item.Id, item.Type);
                     if (campaign != null)
                     {
                         campaigns.Add(campaign);
@@ -234,7 +234,7 @@ namespace Flagship.Decision
                         Id = campaignId,
                         Variation = variation,
                         VariationGroupId = item.Id,
-                        CampaignType = campaignType
+                        Type = campaignType
                     };
                 }
             }
@@ -259,6 +259,30 @@ namespace Flagship.Decision
 
             foreach (var item in variationGroup.Variations)
             {
+                if (visitor.VisitorCache?.Version == 1)
+                {
+                    var visitorCache = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
+                    var variationHistory = visitorCache?.Data?.AssignmentsHistory;
+
+                    var cacheVariationId = variationHistory!=null && variationHistory.ContainsKey(variationGroup.Id) ? variationHistory[variationGroup.Id] : null;
+                   
+                    if (cacheVariationId != null)
+                    {
+                        var newVariation = variationGroup.Variations.FirstOrDefault(x => x.Id == cacheVariationId);
+                        if (newVariation == null)
+                        {
+                            continue;
+                        }
+
+                        return new Model.Variation
+                        {
+                            Id = newVariation.Id,
+                            Modifications = newVariation.Modifications,
+                            Reference = newVariation.Reference,
+                        };
+                    }
+                }
+
                 totalAllocation += item.Allocation;
                 if (hashAllocation <= totalAllocation)
                 {
@@ -424,7 +448,7 @@ namespace Flagship.Decision
                 return MatchOperator(operatorName, contextString, value);
 
             }
-            if ((targetingValue is int || targetingValue is long || targetingValue is double) 
+            if ((targetingValue is int || targetingValue is long || targetingValue is double)
                 && (contextValue is int || contextValue is long || contextValue is double))
             {
                 return MatchOperator(operatorName, Convert.ToDouble(contextValue), Convert.ToDouble(targetingValue));

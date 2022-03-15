@@ -33,6 +33,7 @@ namespace Flagship.FsVisitor.Tests
             configManager.SetupGet(x=>x.Config).Returns(config);
 
             visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object });
+            visitorDelegateMock.Protected().Setup<VisitorStrategyAbstract>("GetStrategy").CallBase();
             defaultStrategy = new Mock<VisitorStrategyAbstract>(visitorDelegateMock.Object);
 
             visitorDelegateMock.Protected().Setup<VisitorStrategyAbstract>("GetStrategy").Returns(defaultStrategy.Object);

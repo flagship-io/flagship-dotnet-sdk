@@ -49,9 +49,9 @@ namespace Flagship.Hit
             return apiKeys;
         }
 
-        internal override bool IsReady()
+        internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady() && 
+            return (!checkParent || base.IsReady()) && 
                 !string.IsNullOrWhiteSpace(TransactionId) && 
                 !string.IsNullOrWhiteSpace(Name) && 
                 !string.IsNullOrWhiteSpace(Code);

@@ -29,6 +29,17 @@ namespace Flagship.Decision.Tests
         {
             return File.ReadAllText("bucketing.json");
         }
+
+        public string GetBucketingRealloc()
+        {
+            return File.ReadAllText("bucketing_realloc.json");
+        }
+
+        public string GetBucketingRemovedVariation2() 
+        {
+            return File.ReadAllText("Bucketing_removed_variation.json");
+        }
+
         [TestMethod()]
         public async Task BucketingManagerTest()
         {
@@ -889,9 +900,115 @@ namespace Flagship.Decision.Tests
         }
 
         [TestMethod()]
-        public void GetCampaignsTest()
+        public async Task GetCampaignsTest()
         {
+            var config = new Config.BucketingConfig()
+            {
+                EnvId = "envID",
+                ApiKey = "spi",
+                PollingInterval = TimeSpan.FromSeconds(0),
+            };
 
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(GetBucketingRealloc(), Encoding.UTF8, "application/json"),
+            };
+
+            HttpResponseMessage httpResponse2 = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(GetBucketingRemovedVariation2(), Encoding.UTF8, "application/json"),
+            };
+
+            httpResponse.Headers.Add(HttpResponseHeader.LastModified.ToString(), "2022-01-20");
+
+            var url = string.Format(Constants.BUCKETING_API_URL, config.EnvId);
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri.ToString() == url),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).ReturnsAsync(httpResponse).ReturnsAsync(httpResponse2);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var decisionManager = new BucketingManager(config, httpClient, Murmur.MurmurHash.Create32());
+
+            var decisionManagerPrivate = new PrivateObject(decisionManager);
+
+            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["age"] = 20
+            };
+
+
+            var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitor_1", false, context, false, configManager);
+
+
+            await decisionManager.StartPolling().ConfigureAwait(false);
+
+            var campaigns = await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+            var flags = await decisionManager.GetFlags(campaigns).ConfigureAwait(false);
+
+            Assert.AreEqual(6, flags.Count);
+
+            Assert.IsNotNull(flags.FirstOrDefault(x => x.VariationId == "c20j9lgbcahhf2mvhbf0"));
+
+            visitorDelegate.VisitorCache = new VisitorCache
+            {
+                Version = 1,
+                Data = new VisitorCacheDTOV1
+                {
+                    Version = 1,
+                    Data = new VisitorCacheData
+                    {
+                        VisitorId = "visitor_1",
+                        Consent = true,
+                        AssignmentsHistory = new Dictionary<string, string>
+                        {
+                            ["c20j8bk3fk9hdphqtd2g"] = "c20j8bk3fk9hdphqtd3g"
+                        }
+                    }
+                }
+            };
+
+
+            await decisionManager.StartPolling().ConfigureAwait(false);
+
+            campaigns = await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+            flags = await decisionManager.GetFlags(campaigns).ConfigureAwait(false);
+
+            Assert.AreEqual(6, flags.Count);
+
+            // Test realloc
+            Assert.IsNull(flags.FirstOrDefault(x => x.VariationId == "c20j9lgbcahhf2mvhbf0"));
+
+            Assert.IsNotNull(flags.FirstOrDefault(x => x.VariationId == "c20j8bk3fk9hdphqtd3g"));
+
+
+
+            await decisionManager.StartPolling().ConfigureAwait(false);
+
+            campaigns = await decisionManager.GetCampaigns(visitorDelegate).ConfigureAwait(false);
+            flags = await decisionManager.GetFlags(campaigns).ConfigureAwait(false);
+
+            Assert.AreEqual(5, flags.Count);
+
+            // Test realloc
+            Assert.IsNull(flags.FirstOrDefault(x => x.VariationId == "c20j9lgbcahhf2mvhbf0"));
+
+            Assert.IsNull(flags.FirstOrDefault(x => x.VariationId == "c20j8bk3fk9hdphqtd3g"));
+
+            httpResponse.Dispose();
+            httpClient.Dispose();
+            httpResponse2.Dispose();
         }
     }
 }

@@ -75,9 +75,9 @@ namespace Flagship.Hit
             return apiKeys;
         }
 
-        internal override bool IsReady()
+        internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady() && !string.IsNullOrWhiteSpace(TransactionId) && !string.IsNullOrWhiteSpace(Affiliation);
+            return (!checkParent || base.IsReady()) && !string.IsNullOrWhiteSpace(TransactionId) && !string.IsNullOrWhiteSpace(Affiliation);
         }
 
         internal override string GetErrorMessage()

@@ -9,6 +9,8 @@ namespace Flagship.Enums
     internal static class Constants
     {
         public const int DEFAULT_POLLING_INTERVAL = 2000;
+
+        public const int DEFAULT_HIT_CACHE_TIME = 14400000;
         /// <summary>
         /// Default request timeout in second
         /// </summary>
@@ -53,7 +55,7 @@ namespace Flagship.Enums
 
         public const string GET_FLAG_CAST_ERROR = "Flag for key {0} has a different type. Default value is returned.";
 
-        public const string GET_FLAG_ERROR = "No flag for key {0}.";
+        public const string GET_FLAG_ERROR = "No flag for key {0}, no activate will be sent";
 
         public const string USER_EXPOSED_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, no activate will be sent";
 

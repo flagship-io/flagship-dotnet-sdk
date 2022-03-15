@@ -115,18 +115,7 @@ namespace Flagship.Tests.Api
 
             await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
 
-            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-                 "SendAsync",
-                  ItExpr.Is<HttpRequestMessage>(x => action(x)),
-                  ItExpr.IsAny<CancellationToken>()
-                ).Throws(errorSendAsyn).Verifiable();
-
-            await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
-
-
             mockHandler.Verify();
-
-            fsLogManagerMock.Verify(x => x.Error(errorSendAsyn.Message, "SendActive"), Times.Once());
 
             httpResponse.Dispose();
             httpClient.Dispose();
@@ -168,19 +157,9 @@ namespace Flagship.Tests.Api
 
             await trackingManager.SendHit(hit).ConfigureAwait(false);
 
-            var errorSendAsyn = new Exception("Error Send");
-
-            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                 ItExpr.IsAny<HttpRequestMessage>(),
-                 ItExpr.IsAny<CancellationToken>()
-               ).Throws(errorSendAsyn);
-
             await trackingManager.SendHit(hit).ConfigureAwait(false);
 
             mockHandler.Protected().Verify("SendAsync", Times.Exactly(2), new object[] { ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
-
-            fsLogManagerMock.Verify(x => x.Error(errorSendAsyn.Message, "SendHit"), Times.Once());
 
             httpResponse.Dispose();
             httpClient.Dispose();

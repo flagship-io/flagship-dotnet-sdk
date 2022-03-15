@@ -102,6 +102,8 @@
     <Compile Include="FsVisitor\VisitorBuilderTests.cs" />
     <Compile Include="FsVisitor\VisitorDelegateTests.cs" />
     <Compile Include="FsVisitor\VisitorTests.cs" />
+    <Compile Include="Hit\BatchConverterTests.cs" />
+    <Compile Include="Hit\BatchTests.cs" />
     <Compile Include="Hit\EventTests.cs" />
     <Compile Include="Hit\ItemTests.cs" />
     <Compile Include="Hit\PageTests.cs" />
@@ -129,6 +131,12 @@
       <Link>.editorconfig</Link>
     </None>
     <None Include="app.config" />
+    <None Include="Bucketing_removed_variation.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Bucketing_realloc.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Bucketing.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

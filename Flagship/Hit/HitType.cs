@@ -12,6 +12,7 @@ namespace Flagship.Hit
         SCREENVIEW,
         TRANSACTION,
         ITEM,
-        EVENT
+        EVENT,
+        BATCH
     }
 }

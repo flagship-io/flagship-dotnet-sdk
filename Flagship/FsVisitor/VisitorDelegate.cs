@@ -29,8 +29,7 @@ namespace Flagship.FsVisitor
 
         private IFlag<T> CreateFlag<T>(string key, T defaultValue)
         {
-            var flagDTO = Flags.FirstOrDefault(x => x.Key == key);
-            return new Flag<T>(key, this, flagDTO, defaultValue);
+            return new Flag<T>(key, this, defaultValue);
         }
 
         public override IFlag<string> GetFlag(string key, string defaultValue)

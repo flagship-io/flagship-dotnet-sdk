@@ -19,13 +19,14 @@ namespace Flagship.FsVisitor
         protected string _anonymousId;
         virtual public string VisitorId { get; set; }
         virtual public ICollection<FlagDTO> Flags { get; set; }
+
+        virtual public ICollection<Campaign> Campaigns { get; set; } 
         virtual public bool HasConsented => _hasConsented;
         virtual public FlagshipConfig Config => ConfigManager.Config;
         virtual public IConfigManager ConfigManager { get; set; }
         virtual public IDictionary<string, object> Context => _context;
         virtual public string AnonymousId { get => _anonymousId; internal set { _anonymousId = value; } }
-
-        private VisitorStrategyAbstract _strategy;
+        virtual public VisitorCache VisitorCache { get; set; }
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
@@ -41,6 +42,9 @@ namespace Flagship.FsVisitor
             {
                 _anonymousId = Guid.NewGuid().ToString();
             }
+
+            GetStrategy().LookupHits();
+            GetStrategy().LookupVisitor();
         }
        
         protected string CreateVisitorId()
@@ -59,23 +63,24 @@ namespace Flagship.FsVisitor
 
         virtual protected VisitorStrategyAbstract GetStrategy()
         {
+            VisitorStrategyAbstract strategy;
             if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.NOT_INITIALIZED)
             {
-                _strategy = _strategy!=null &&  _strategy.GetType().Name == typeof(NotReadyStrategy).Name ? _strategy: new NotReadyStrategy(this);
+                strategy = new NotReadyStrategy(this);
             }
             else if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.READY_PANIC_ON)
             {
-                _strategy = _strategy != null && _strategy.GetType().Name == typeof(PanicStrategy).Name ? _strategy : new PanicStrategy(this);
+                strategy =  new PanicStrategy(this);
             }
             else if (!HasConsented)
             {
-                _strategy = _strategy != null && _strategy.GetType().Name == typeof(NoConsentStrategy).Name ? _strategy : new NoConsentStrategy(this);
+                strategy =  new NoConsentStrategy(this);
             }
             else
             {
-                _strategy = _strategy != null && _strategy.GetType().Name == typeof(DefaultStrategy).Name ? _strategy : new DefaultStrategy(this);
+                strategy =  new DefaultStrategy(this);
             }
-            return _strategy;
+            return strategy;
         }
 
         virtual public void SetConsent(bool hasConsented)

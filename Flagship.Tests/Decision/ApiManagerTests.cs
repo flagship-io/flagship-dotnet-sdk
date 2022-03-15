@@ -156,7 +156,7 @@ namespace Flagship.Decision.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
             var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
-            var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
+            var decisionManagerMock = new Mock<IDecisionManager>();
             var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>();

@@ -9,6 +9,8 @@ using Moq;
 using Flagship.Enums;
 using Newtonsoft.Json;
 using Flagship.Logger;
+using Flagship.Model;
+using Newtonsoft.Json.Linq;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -19,10 +21,11 @@ namespace Flagship.FsVisitor.Tests
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
+        private Flagship.Config.DecisionApiConfig config;
         public PanicStrategyTests() 
         {
-            fsLogManagerMock = new Mock<IFsLogManager>();
-            var config = new Flagship.Config.DecisionApiConfig()
+            fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -43,7 +46,28 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void PanicStrategyTest()
         {
+            var panicStrategy = new PanicStrategy(visitorDelegate);
 
+            var VisitorCacheImplementation = new Mock<Flagship.Cache.IVisitorCacheImplementation>();
+            var HitCaheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
+            config.HitCacheImplementation = HitCaheImplementation.Object;
+
+            panicStrategy.CacheHit(flagDTO: null);
+            panicStrategy.CacheHit(hit: null);
+            panicStrategy.CacheVisitorAsync();
+            panicStrategy.LookupHits();
+            panicStrategy.LookupVisitor();
+
+            VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+
+            var privateNoConsentStrategy = new PrivateObject(panicStrategy);
+
+            ICollection<Campaign> compaigns = (ICollection<Campaign>)privateNoConsentStrategy.Invoke("FetchVisitorCacheCampaigns", visitorDelegate);
+
+            Assert.AreEqual(compaigns.Count, 0);
         }
 
         [TestMethod()]

@@ -26,7 +26,7 @@ namespace Flagship.Enums
 
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
-        public const string SDK_VERSION = "V1";
+        public const string SDK_VERSION = "V3";
 
         public const string FLAGSHIP_SDK = "Flagship SDK";
 

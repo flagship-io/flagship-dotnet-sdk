@@ -8,7 +8,7 @@ namespace Flagship.FsFlag
 {
     public interface IFlag<T> 
     {
-        T Value(bool userExposed=true);
+        T GetValue(bool userExposed=true);
 
         bool Exist { get; }
 

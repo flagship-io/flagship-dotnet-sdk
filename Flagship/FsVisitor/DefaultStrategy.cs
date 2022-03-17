@@ -86,7 +86,7 @@ namespace Flagship.FsVisitor
             if (visitor.VisitorCache.Version == 1)
             {
                   var data= (VisitorCacheDTOV1)visitor.VisitorCache.Data;
-                visitor.UpdateContext(data.Data.Context);
+                visitor.UpdateContext(data.Data.Context.ToDictionary(entry => entry.Key, entry => entry.Value));
                 
                 foreach (var item in data.Data.Campaigns)
                 {
@@ -124,7 +124,7 @@ namespace Flagship.FsVisitor
                 }
                 Visitor.Campaigns = campaigns;
                 Visitor.Flags = await DecisionManager.GetFlags(campaigns);
-                CacheVisitorAsync();
+                Visitor.GetStrategy().CacheVisitorAsync();
             }
             catch (Exception ex)
             {
@@ -141,7 +141,7 @@ namespace Flagship.FsVisitor
             catch (Exception ex)
             {
                 Log.LogError(Config, ex.Message, "UserExposed");
-                CacheHit(flag);
+                Visitor.GetStrategy().CacheHit(flag);
             }
         }
         public override async Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
@@ -239,7 +239,7 @@ namespace Flagship.FsVisitor
             }
             catch (Exception ex)
             {
-                CacheHit(hit);
+                Visitor.GetStrategy().CacheHit(hit);
                 Log.LogError(Config, ex.Message, functionName);
             }
         }

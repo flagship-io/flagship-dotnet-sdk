@@ -61,7 +61,7 @@ namespace Flagship.FsVisitor
             //_context[FsPredefinedContext.FLAGSHIP_VISITOR] = VisitorId; 
         }
 
-        virtual protected VisitorStrategyAbstract GetStrategy()
+        virtual public VisitorStrategyAbstract GetStrategy()
         {
             VisitorStrategyAbstract strategy;
             if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.NOT_INITIALIZED)

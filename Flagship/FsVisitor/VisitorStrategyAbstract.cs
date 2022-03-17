@@ -21,7 +21,8 @@ namespace Flagship.FsVisitor
     {
         public const string LOOKUP_HITS_JSON_OBJECT_ERROR = "JSON DATA must fit the type HitCacheDTO";
         public const string LOOKUP_VISITOR_JSON_OBJECT_ERROR = "JSON DATA must fit the type VisitorCacheDTO, property version is required";
-        public const string VISITOR_ID_MISMATCH_ERROR = "Visitor ID mismatch: %s vs %s";
+        public const string VISITOR_ID_MISMATCH_ERROR = "Visitor ID mismatch: {0} vs {1}";
+        public const int HIT_BATCH_LENGTH = 2621440;
         protected VisitorDelegateAbstract Visitor { get; set; }
 
         protected FlagshipConfig Config => Visitor.Config;
@@ -42,8 +43,8 @@ namespace Flagship.FsVisitor
             {
                 if (!hasConsented)
                 {
-                    FlushHitAsync();
-                    FlushVisitorAsync();
+                    Visitor.GetStrategy().FlushHitAsync();
+                    Visitor.GetStrategy().FlushVisitorAsync();
                 }
 
                 var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, "fs_consent")
@@ -293,7 +294,7 @@ namespace Flagship.FsVisitor
                     }
 
                     var batchSize = Newtonsoft.Json.JsonConvert.SerializeObject(batches[count]).Length;
-                    if (batchSize > 2500)
+                    if (batchSize > HIT_BATCH_LENGTH)
                     {
                         count++;
 

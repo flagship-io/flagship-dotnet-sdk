@@ -101,7 +101,9 @@ ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProto
             config.ApiKey = apiKey;
 
             fsInstance.SetStatus(FlagshipStatus.STARTING);
-            var httpClient = new HttpClient();
+            var httpClient = new HttpClient() { 
+                Timeout = config.Timeout ?? TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT)
+        };
 
             IDecisionManager decisionManager = fsInstance._configManager?.DecisionManager;
 

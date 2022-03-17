@@ -54,7 +54,7 @@ namespace Flagship.FsFlag
             return _visitorDelegateAbstract.UserExposed(_key, _defaultValue, flagDTO);
         }
 
-        public T Value(bool userExposed = true)
+        public T GetValue(bool userExposed = true)
         {
             var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
             return _visitorDelegateAbstract.GetFlagValue(_key, (T)_defaultValue, flagDTO, userExposed);

@@ -24,11 +24,11 @@ namespace Flagship.Config
 
         public LogLevel LogLevel { get; set; }
          
-        public event StatusChangeDelegate StatusChange;
+        public event StatusChangeDelegate StatusChanged;
 
         internal void SetStatus(FlagshipStatus status)
         {
-            StatusChange?.Invoke(status);
+            StatusChanged?.Invoke(status);
         }
 
         public IFsLogManager LogManager { get; set; }

@@ -10,7 +10,7 @@ namespace Flagship.FsFlag
     {
         T GetValue(bool userExposed=true);
 
-        bool Exist { get; }
+        bool Exists { get; }
 
         Task UserExposed();
 

@@ -60,7 +60,7 @@ namespace Flagship.FsVisitor
             var visitor = new Visitor(visitorDelegate);
             if (_instanceType == InstanceType.SINGLE_INSTANCE)
             {
-                Main.Flagship.Visitor = visitor;
+                Main.Fs.Visitor = visitor;
             }
             return visitor;
         }

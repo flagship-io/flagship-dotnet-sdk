@@ -64,13 +64,13 @@ namespace Flagship.FsFlag.Tests
             visitorMock.Setup(x => x.UserExposed(flagDTO.Key, defaultValue, flagDTO)).Returns(Task.CompletedTask);
             visitorMock.Setup(x=> x.GetFlagMetadata(It.IsAny<IFlagMetadata>(), flagDTO.Key, true)).Returns(metadata);
 
-            var value = flag.Value();
+            var value = flag.GetValue();
 
             await flag.UserExposed().ConfigureAwait(false);
             var resultMeta = flag.Metadata;
 
             Assert.AreEqual(flagDTO.Value, value);
-            Assert.IsTrue(flag.Exist);
+            Assert.IsTrue(flag.Exists);
             Assert.AreEqual(metadata, resultMeta);
 
             visitorMock.Verify(x => x.UserExposed<object>(flagDTO.Key, defaultValue, flagDTO), Times.Once());
@@ -108,7 +108,7 @@ namespace Flagship.FsFlag.Tests
 
             var resultMeta = flag.Metadata;
 
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
             Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(resultMeta));
 
             visitorMock.Verify(x => x.GetFlagMetadata(It.IsAny<IFlagMetadata>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never());

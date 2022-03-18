@@ -22,7 +22,7 @@ namespace Flagship.Config.Tests
 
             config.SetStatus(Enums.FlagshipStatus.NOT_INITIALIZED);
 
-            config.StatusChange += Config_StatusChange;
+            config.StatusChanged += Config_StatusChange;
 
             Assert.AreEqual(config.ApiKey, "apiKey");
             Assert.AreEqual(config.EnvId, "envId");

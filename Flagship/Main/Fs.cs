@@ -19,9 +19,9 @@ using System.Threading.Tasks;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Flagship.Main
 {
-    public class Flagship
+    public class Fs
     {
-        private static Flagship instance;
+        private static Fs instance;
 
         private FlagshipStatus _status = FlagshipStatus.NOT_INITIALIZED;
 
@@ -30,16 +30,16 @@ namespace Flagship.Main
         private IConfigManager _configManager;
         private FsVisitor.Visitor _visitor;
 
-        protected static Flagship GetInstance()
+        protected static Fs GetInstance()
         {
             if (instance == null)
             {
-                instance = new Flagship();
+                instance = new Fs();
             }
             return instance;
         }
 
-        private Flagship()
+        private Fs()
         {
 
         }

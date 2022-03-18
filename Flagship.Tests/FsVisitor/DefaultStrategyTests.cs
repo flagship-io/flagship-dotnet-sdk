@@ -910,7 +910,7 @@ namespace Flagship.FsVisitor.Tests
 
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
-            var screenHit = new Screen(string.Concat(Enumerable.Repeat("Home", 2500)));
+            var screenHit = new Screen(string.Concat(Enumerable.Repeat("Home", 1000000)));
 
             var hitData = new HitCacheDTOV1
             {
@@ -925,7 +925,7 @@ namespace Flagship.FsVisitor.Tests
                 }
             };
 
-            var pageHit = new Page("Home");
+            var pageHit = new Page(string.Concat(Enumerable.Repeat("Home", 1000000)));
 
             var hitData2 = new HitCacheDTOV1
             {
@@ -1083,7 +1083,7 @@ namespace Flagship.FsVisitor.Tests
                 return false;
             };
 
-            trackingManagerMock.Verify(x => x.SendHit(It.Is<Batch>(y => y.Hits.Any(checkHit))), Times.Exactly(3));
+            trackingManagerMock.Verify(x => x.SendHit(It.Is<Batch>(y => y.Hits.Any(checkHit))), Times.Exactly(4));
         }
     }
 }

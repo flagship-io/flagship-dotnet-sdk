@@ -44,7 +44,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void TestStrategy()
         {
-            var flagship = new Mock<Flagship.Main.Flagship>();
+            var flagship = new Mock<Flagship.Main.Fs>();
             var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object);
             var privateVisitor = new PrivateObject(visitorDelegate);
             privateVisitor.Invoke("GetStrategy");
@@ -115,7 +115,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("key", "default");
             Assert.IsNotNull(flag);
-            Assert.IsTrue(flag.Exist);
+            Assert.IsTrue(flag.Exists);
         }
 
         [TestMethod()]
@@ -124,7 +124,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", false);
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]
@@ -133,7 +133,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", 32);
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]
@@ -142,7 +142,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JObject());
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]
@@ -151,7 +151,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JArray());
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]

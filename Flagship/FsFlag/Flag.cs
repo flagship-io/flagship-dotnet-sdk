@@ -23,7 +23,7 @@ namespace Flagship.FsFlag
 
 
 
-        public bool Exist
+        public bool Exists
         {
             get
             {

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
+using Flagship.Main;
 
 namespace Flagship.FsVisitor
 { 
@@ -64,11 +65,11 @@ namespace Flagship.FsVisitor
         virtual public VisitorStrategyAbstract GetStrategy()
         {
             VisitorStrategyAbstract strategy;
-            if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.NOT_INITIALIZED)
+            if (Fs.Status == Enums.FlagshipStatus.NOT_INITIALIZED)
             {
                 strategy = new NotReadyStrategy(this);
             }
-            else if (Flagship.Main.Flagship.Status == Enums.FlagshipStatus.READY_PANIC_ON)
+            else if (Fs.Status == Enums.FlagshipStatus.READY_PANIC_ON)
             {
                 strategy =  new PanicStrategy(this);
             }

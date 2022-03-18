@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.Hit;
+using Flagship.Main;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -133,26 +134,37 @@ namespace TestQA
         static async Task TestGetFlag1()
         {
             Console.WriteLine("Test getFlag 1");
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor-A")
+            var visitor = Fs.NewVisitor("visitor-A")
                 .WithContext(new Dictionary<string, object> {
                     ["qa_getflag"] = true
                 }).Build();
 
+            visitor.UpdateContext("key", DateTime.Now.ToShortDateString());
+
+            visitor.UpdateContext(Flagship.Enums.PredefinedContext.OS_NAME, "");
+            visitor.UpdateContext(Flagship.Enums.PredefinedContext.IP, "");
+
             await visitor.FetchFlags();
 
-            var flag = visitor.GetFlag("qa_flag", "default");
+            var flag = visitor.GetFlag("scenario_1_value", "default");
 
             Console.WriteLine("flagValue {0}", flag.GetValue());
 
-            Console.WriteLine("Flag exist: {0}", flag.Exist);
+            Console.WriteLine("Flag exist: {0}", flag.Exists);
+
+            visitor.SetConsent(true);
 
             Console.WriteLine("metaData : {0}", flag.Metadata.ToJson());
+
+            await flag.UserExposed();
+
+            visitor.Authenticate("");
         }
 
         static async Task TestGetFlag2()
         {
             Console.WriteLine("\nTest getFlag wrong type");
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor-A")
+            var visitor = Fs.NewVisitor("visitor-A")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_getflag"] = true
@@ -164,7 +176,7 @@ namespace TestQA
 
             Console.WriteLine("flagValue {0}", flag.GetValue());
 
-            Console.WriteLine("Flag exist: {0}", flag.Exist);
+            Console.WriteLine("Flag exist: {0}", flag.Exists);
 
             Console.WriteLine("metaData : {0}", flag.Metadata.ToJson());
         }
@@ -172,7 +184,7 @@ namespace TestQA
         static async Task TestGetFlag3()
         {
             Console.WriteLine("\nTest getFlag wrong key");
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor-A")
+            var visitor = Fs.NewVisitor("visitor-A")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_getflag"] = true
@@ -184,7 +196,7 @@ namespace TestQA
 
             Console.WriteLine("flagValue {0}", flag.GetValue());
 
-            Console.WriteLine("Flag exist: {0}", flag.Exist);
+            Console.WriteLine("Flag exist: {0}", flag.Exists);
 
             Console.WriteLine("metaData : {0}", flag.Metadata.ToJson());
         }
@@ -192,7 +204,7 @@ namespace TestQA
         static async Task TestGetFlag4()
         {
             Console.WriteLine("\nTest getFlag Original");
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor-F")
+            var visitor = Fs.NewVisitor("visitor-F")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_getflag"] = true
@@ -223,7 +235,7 @@ namespace TestQA
         {
             Console.WriteLine("\nvisitor created\n");
 
-            var visitor = Flagship.Main.Flagship.NewVisitor("alias")
+            var visitor = Fs.NewVisitor("alias")
                 .Build();
 
             Console.WriteLine("visitor {0}", visitor.VisitorId);
@@ -246,7 +258,13 @@ namespace TestQA
 
             Console.WriteLine("flagValue {0}", flag.GetValue());
 
-            await visitor.SendHit(new Screen("abtastylab"));
+            await visitor.SendHit(new Screen("abtastylab")
+            {
+                UserIp = "127.0.0.1",
+                ScreenResolution=  "800X600",
+                Locale = "fr",
+                SessionNumber = "1234"
+            });
 
             Console.WriteLine("\nvisitor Unauthenticate\n");
 
@@ -264,37 +282,37 @@ namespace TestQA
         {
             Console.WriteLine("\nScenario 1\n");
 
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_1")
+            var visitor = Fs.NewVisitor("visitor_1")
                 .Build();
 
-            Console.WriteLine("visitor {0}", Flagship.Main.Flagship.Visitor?.VisitorId);
+            Console.WriteLine("visitor {0}", Fs.Visitor?.VisitorId);
 
             Console.WriteLine("\nScenario 2\n");
 
-            visitor = Flagship.Main.Flagship.NewVisitor("visitor_1")
+            visitor = Fs.NewVisitor("visitor_1")
                 .Build();
 
-            visitor = Flagship.Main.Flagship.NewVisitor("visitor_2", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
+            visitor = Fs.NewVisitor("visitor_2", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
                 .Build();
 
-            Console.WriteLine("visitor {0}", Flagship.Main.Flagship.Visitor?.VisitorId);
+            Console.WriteLine("visitor {0}", Fs.Visitor?.VisitorId);
 
             Console.WriteLine("\nScenario 3\n");
 
-            visitor = Flagship.Main.Flagship.NewVisitor("visitor_1")
+            visitor = Fs.NewVisitor("visitor_1")
                 .Build();
 
-            visitor = Flagship.Main.Flagship.NewVisitor("visitor_2", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
+            visitor = Fs.NewVisitor("visitor_2", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
                 .Build();
 
-            visitor = Flagship.Main.Flagship.NewVisitor("visitor_3", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
+            visitor = Fs.NewVisitor("visitor_3", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
                 .Build();
 
-            Console.WriteLine("visitor {0}", Flagship.Main.Flagship.Visitor?.VisitorId);
+            Console.WriteLine("visitor {0}", Fs.Visitor?.VisitorId);
 
             Console.WriteLine("\nScenario 4\n");
 
-            var visitor_1 = Flagship.Main.Flagship.NewVisitor("visitor_1", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
+            var visitor_1 = Fs.NewVisitor("visitor_1", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
                 .Build();
 
             visitor_1.UpdateContext(new Dictionary<string, object>
@@ -302,26 +320,26 @@ namespace TestQA
                 ["color"] = "blue"
             });
 
-            Console.WriteLine("visitor {0}", Flagship.Main.Flagship.Visitor.Context["color"]);
+            Console.WriteLine("visitor {0}", Fs.Visitor.Context["color"]);
 
-            var visitor_2 = Flagship.Main.Flagship.NewVisitor("visitor_2", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
+            var visitor_2 = Fs.NewVisitor("visitor_2", Flagship.Enums.InstanceType.SINGLE_INSTANCE)
                 .Build();
 
-            Console.WriteLine("visitor {0}", Flagship.Main.Flagship.Visitor.Context.ContainsKey("color"));
+            Console.WriteLine("visitor {0}", Fs.Visitor.Context.ContainsKey("color"));
 
-            Flagship.Main.Flagship.Visitor.UpdateContext(new Dictionary<string, object>
+            Fs.Visitor.UpdateContext(new Dictionary<string, object>
             {
                 ["color"] = "red"
             });
 
             Console.WriteLine("visitor 1 {0}", visitor_1.Context["color"]);
             Console.WriteLine("visitor 2 {0}", visitor_2.Context["color"]);
-            Console.WriteLine("visitor {0}", Flagship.Main.Flagship.Visitor.Context["color"]);
+            Console.WriteLine("visitor {0}", Fs.Visitor.Context["color"]);
         }
 
         static async Task TestQA_Report1()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_a")
+            var visitor =   Fs.NewVisitor("visitor_a")
                 .WithContext(new Dictionary<string, object>
             {
                 ["qa_report"] = true,
@@ -347,7 +365,7 @@ namespace TestQA
 
         static async Task TestQA_Report2()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("zZz_visitor_zZz")
+            var visitor = Fs.NewVisitor("zZz_visitor_zZz")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_report"] = true,
@@ -373,7 +391,7 @@ namespace TestQA
 
         static async Task TestQA_Report3()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_0_0")
+            var visitor = Fs.NewVisitor("visitor_0_0")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_report"] = true,
@@ -395,7 +413,7 @@ namespace TestQA
 
         static async Task TestQA_Report4()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_B_B")
+            var visitor = Fs.NewVisitor("visitor_B_B")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_report"] = true,
@@ -411,7 +429,7 @@ namespace TestQA
 
         static async Task TestQA_Report5()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_1111")
+            var visitor = Fs.NewVisitor("visitor_1111")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_report"] = true,
@@ -439,7 +457,7 @@ namespace TestQA
 
         static async Task TestQA_Report6()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_22")
+            var visitor = Fs.NewVisitor("visitor_22")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["qa_report"] = false,
@@ -465,7 +483,7 @@ namespace TestQA
 
         static async Task TestCache1()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_5678")
+            var visitor = Fs.NewVisitor("visitor_5678")
                 .WithContext(new Dictionary<string, object> { 
                 ["plan"] = "premium"
             }).Build();
@@ -492,11 +510,11 @@ namespace TestQA
 
             await visitor.FetchFlags();
 
-            visitor = Flagship.Main.Flagship.NewVisitor("visitor_5678")
+            visitor = Fs.NewVisitor("visitor_5678")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["plan"] = "premium"
-                }).Build();
+                }).IsAuthenticated(true).HasConsented(true).Build();
 
             await visitor.FetchFlags();
 
@@ -572,7 +590,7 @@ namespace TestQA
 
         static async Task TestRealloc()
         {
-            var visitor = Flagship.Main.Flagship.NewVisitor("visitor_AAAA")
+            var visitor = Fs.NewVisitor("visitor_AAAA")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["cacheEnabled"] = true
@@ -604,7 +622,7 @@ namespace TestQA
             Console.WriteLine("new visitor ");
             Console.ReadKey();
 
-            visitor = Flagship.Main.Flagship.NewVisitor("visitor_BBBB")
+            visitor = Fs.NewVisitor("visitor_BBBB")
                 .WithContext(new Dictionary<string, object>
                 {
                     ["cacheEnabled"] = true
@@ -627,15 +645,19 @@ namespace TestQA
         }
         static void Main(string[] args)
         {
-            Flagship.Main.Flagship.Start("c1ndrd07m0300ro0jf20", "QzdTI1M9iqaIhnJ66a34C5xdzrrvzq6q8XSVOsS6", 
-                new BucketingConfig() { 
+            Fs.Start("", "", 
+                new BucketingConfig { 
                 HitCacheImplementation= new HitCache(),
                 VisitorCacheImplementation = new VisitorCache(),
-                Timeout= TimeSpan.FromSeconds(10)
-            });
+                //LogManager = new sentryCustomLog(),
+                LogLevel = Flagship.Enums.LogLevel.ALL,
+                Timeout = TimeSpan.FromSeconds(10),
+                PollingInterval = TimeSpan.FromSeconds(2)
+
+                });
 
             Console.ReadKey();
-            TestRealloc().Wait();
+            TestGetFlag1().Wait();
             Console.ReadLine();
         }
     }

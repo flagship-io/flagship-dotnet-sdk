@@ -2,9 +2,9 @@ name: CI pipeline
 # This workflow is triggered on pushes to the repository.
 on:
   push:
-    branches:
-      - main
-      - new_archi
+    branches: [main, new_archi_v2]
+  pull_request:
+    branches: [main]
 
 jobs:
   build:

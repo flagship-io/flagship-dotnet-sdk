@@ -212,7 +212,7 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.FetchFlags().ConfigureAwait(false);
 
-            Assert.AreEqual(visitorDelegate.Flags.Count, 1);
+            Assert.AreEqual(1, visitorDelegate.Flags.Count);
         }
 
         [TestMethod()]

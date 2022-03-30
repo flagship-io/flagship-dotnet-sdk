@@ -484,11 +484,11 @@ namespace TestQA
         static async Task TestCache1()
         {
             var visitor = Fs.NewVisitor("visitor_5678")
-                .WithContext(new Dictionary<string, object> { 
-                ["plan"] = "premium"
-            }).Build();
+                .WithContext(new Dictionary<string, object> {
+                    ["plan"] = "premium"
+                }).Build();
 
-            
+
             await visitor.FetchFlags();
 
             var flag = visitor.GetFlag("myAwesomeFeature", 1);
@@ -501,7 +501,7 @@ namespace TestQA
             Console.ReadKey();
 
             await visitor.SendHit(new Screen("Screen 2"));
-            await visitor.SendHit(new Event( EventCategory.ACTION_TRACKING,"event 1"));
+            await visitor.SendHit(new Event(EventCategory.ACTION_TRACKING, "event 1"));
 
             await visitor.GetFlag("perso_value", 1).UserExposed();
 
@@ -575,7 +575,33 @@ namespace TestQA
 
             visitor.SetConsent(true);
 
-            await visitor.SendHit(new Event( EventCategory.USER_ENGAGEMENT,"Event 2"));
+            await visitor.SendHit(new Event(EventCategory.USER_ENGAGEMENT, "Event 2"));
+
+            await visitor.SendHit(new Transaction("#12345", "affiliation")
+            {
+                Taxes = 19.99,
+                Currency = "USD",
+                CouponCode = "code",
+                ItemCount = 1,
+                ShippingMethod = "road",
+                ShippingCosts = 5,
+                PaymentMethod = "credit_card",
+                TotalRevenue = 199.99
+            });
+
+            await visitor.SendHit(new Item("#12345", "product", "sku123")
+            {
+                Price = 199.99,
+                Quantity = 1,
+                Category = "test",
+            });
+
+            await visitor.SendHit(new Event(EventCategory.ACTION_TRACKING, "click")
+            {
+                Label = "label",
+                Value = 100,
+            });
+
             await visitor.FetchFlags();
 
             Console.WriteLine("Disabled panic mode");
@@ -645,7 +671,7 @@ namespace TestQA
         }
         static void Main(string[] args)
         {
-            Fs.Start("", "", 
+            Fs.Start("lkk", "lkl", 
                 new BucketingConfig { 
                 HitCacheImplementation= new HitCache(),
                 VisitorCacheImplementation = new VisitorCache(),
@@ -657,7 +683,7 @@ namespace TestQA
                 });
 
             Console.ReadKey();
-            TestGetFlag1().Wait();
+            TestCache1().Wait();
             Console.ReadLine();
         }
     }

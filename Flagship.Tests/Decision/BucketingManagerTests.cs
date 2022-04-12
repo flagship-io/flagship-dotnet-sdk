@@ -935,7 +935,8 @@ namespace Flagship.Decision.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var decisionManager = new BucketingManager(config, httpClient, Murmur.MurmurHash.Create32());
+            var murmurHash = Murmur.MurmurHash.Create32();
+            var decisionManager = new BucketingManager(config, httpClient, murmurHash);
 
             var decisionManagerPrivate = new PrivateObject(decisionManager);
 
@@ -1009,6 +1010,7 @@ namespace Flagship.Decision.Tests
             httpResponse.Dispose();
             httpClient.Dispose();
             httpResponse2.Dispose();
+            murmurHash.Dispose();
         }
     }
 }

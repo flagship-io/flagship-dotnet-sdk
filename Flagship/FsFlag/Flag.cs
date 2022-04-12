@@ -12,7 +12,6 @@ namespace Flagship.FsFlag
         private readonly string _key;
         private readonly VisitorDelegateAbstract _visitorDelegateAbstract;
         private readonly object _defaultValue;
-        private readonly IFlagMetadata _metadata;
  
         internal Flag(string key, VisitorDelegateAbstract visitorDelegate, object DefaultValue)
         {

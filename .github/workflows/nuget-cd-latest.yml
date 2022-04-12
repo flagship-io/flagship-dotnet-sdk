@@ -38,8 +38,10 @@ jobs:
         run: ./pack.ps1
         working-directory: Flagship.Nuget
 
-      - name: Archive Nuget file
-        uses: actions/upload-artifact@v2
-        with:
-          name: Nuget file
-          path: Flagship.Nuget/*
+      - name: set Nuget api key
+        run: nuget setApiKey ${{ secrets.NUGET_API_KEY }}
+        working-directory: Flagship.Nuget
+
+      - name: Push Nuget Packages
+        run: nuget push Flagship.SDK.3.0.0.nupkg -Source https://api.nuget.org/v3/index.json
+        working-directory: Flagship.Nuget

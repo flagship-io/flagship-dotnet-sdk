@@ -4,6 +4,7 @@ using Flagship.Hit;
 using Flagship.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,36 @@ namespace Flagship.FsVisitor
         {
         }
 
+        public override void LookupVisitor()
+        {
+            //
+        }
+
+        public override void CacheVisitorAsync()
+        {
+            //
+        }
+
+        public override void LookupHits()
+        {
+            //
+        }
+
+        public override void CacheHit(FlagDTO flagDTO)
+        {
+            //
+        }
+
+        public override void CacheHit(HitAbstract hit)
+        {
+            //
+        }
+
+        protected override ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
+        {
+            return new Collection<Campaign>();
+        }
+
         public override Task SendConsentHitAsync(bool hasConsented)
         {
             return Task.Factory.StartNew(() =>
@@ -24,9 +55,9 @@ namespace Flagship.FsVisitor
             });
         }
 
-        public override void UpdateContexCommon(IDictionary<string, object> context)
+        public override void UpdateContext(IDictionary<string, object> context)
         {
-            Log("UpdateContex");
+            Log("UpdateContex");    
         }
 
         protected override void UpdateContexKeyValue(string key, object value)
@@ -69,7 +100,7 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Utils.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.READY_PANIC_ON), methodName);
+            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.READY_PANIC_ON), methodName);
         }
     }
 }

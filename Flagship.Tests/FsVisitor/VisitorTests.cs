@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Moq;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
+using Moq.Protected;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -20,6 +21,8 @@ namespace Flagship.FsVisitor.Tests
         {
             var configManager = new Mock<Flagship.Config.IConfigManager>();
             visitorDelegateMock = new Mock<VisitorDelegateAbstract>(new object[] { "visitor_id", false, new Dictionary<string, object>(), false, configManager.Object });
+
+            visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
             Visitor = new Visitor(visitorDelegateMock.Object);
         }
 
@@ -78,7 +81,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest()
         {
-            var flag = new FsFlag.Flag<string>("key", visitorDelegateMock.Object, null, "string");
+            var flag = new FsFlag.Flag<string>("key", visitorDelegateMock.Object, "string");
             visitorDelegateMock.Setup(x => x.GetFlag("key", "string")).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", "string");
             Assert.AreEqual(flag, resultFlag);
@@ -88,7 +91,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest1()
         {
-            var flag = new FsFlag.Flag<long>("key", visitorDelegateMock.Object, null, 2);
+            var flag = new FsFlag.Flag<long>("key", visitorDelegateMock.Object, 2);
             visitorDelegateMock.Setup(x => x.GetFlag("key", 2)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", 2);
             Assert.AreEqual(flag, resultFlag);
@@ -98,7 +101,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest2()
         {
-            var flag = new FsFlag.Flag<bool>("key", visitorDelegateMock.Object, null, true);
+            var flag = new FsFlag.Flag<bool>("key", visitorDelegateMock.Object, true);
             visitorDelegateMock.Setup(x => x.GetFlag("key", true)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", true);
             Assert.AreEqual(flag, resultFlag);
@@ -109,7 +112,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest3()
         {
             var defaultValue = new JArray(new object[] { "a", "b" });
-            var flag = new FsFlag.Flag<JArray>("key", visitorDelegateMock.Object, null, defaultValue);
+            var flag = new FsFlag.Flag<JArray>("key", visitorDelegateMock.Object, defaultValue);
             visitorDelegateMock.Setup(x => x.GetFlag("key", defaultValue)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", defaultValue);
             Assert.AreEqual(flag, resultFlag);
@@ -120,7 +123,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest4()
         {
             var defaultValue = new JObject();
-            var flag = new FsFlag.Flag<JObject>("key", visitorDelegateMock.Object, null, defaultValue);
+            var flag = new FsFlag.Flag<JObject>("key", visitorDelegateMock.Object, defaultValue);
             visitorDelegateMock.Setup(x => x.GetFlag("key", defaultValue)).Returns(flag);
             var resultFlag = Visitor.GetFlag("key", defaultValue);
             Assert.AreEqual(flag, resultFlag);
@@ -139,7 +142,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest()
         {
-            var newContext = new Dictionary<string, string>();
+            var newContext = new Dictionary<string, object>();
             visitorDelegateMock.Setup(x=>x.UpdateContext(newContext)).Verifiable();
             Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
@@ -148,7 +151,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest1()
         {
-            var newContext = new Dictionary<string, bool>();
+            var newContext = new Dictionary<string, object>();
             visitorDelegateMock.Setup(x => x.UpdateContext(newContext)).Verifiable();
             Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
@@ -157,7 +160,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest2()
         {
-            var newContext = new Dictionary<string, double>();
+            var newContext = new Dictionary<string, object>();
             visitorDelegateMock.Setup(x => x.UpdateContext(newContext)).Verifiable();
             Visitor.UpdateContext(newContext);
             visitorDelegateMock.Verify();
@@ -185,6 +188,23 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.Setup(x => x.UpdateContext("key", 2)).Verifiable();
             Visitor.UpdateContext("key", 2);
             visitorDelegateMock.Verify();
+        }
+
+        [TestMethod()]
+        public void AuthenticateTest()
+        {
+            var visitorId = "visitorID";
+            visitorDelegateMock.Setup(x => x.Authenticate(visitorId)).Verifiable();
+            Visitor.Authenticate(visitorId);
+            visitorDelegateMock.Verify(x=>x.Authenticate(visitorId), Times.Once());
+        }
+
+        [TestMethod()]
+        public void UnauthenticateTest()
+        { 
+            visitorDelegateMock.Setup(x => x.Unauthenticate()).Verifiable();
+            Visitor.Unauthenticate();
+            visitorDelegateMock.Verify(x => x.Unauthenticate(), Times.Once());
         }
     }
 }

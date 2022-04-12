@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 using System.IO;
 using Moq;
 using Flagship.Enums;
+using Flagship.Logger;
 
-namespace Flagship.Utils.Tests
+namespace Flagship.Logger.Tests 
 {
     [TestClass()]
     public class LogTests
@@ -17,7 +18,7 @@ namespace Flagship.Utils.Tests
         [TestMethod()]
         public void LogErrorTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
             var config = new Config.DecisionApiConfig()
             {
                 LogManager = fsLogManagerMock.Object,
@@ -46,7 +47,7 @@ namespace Flagship.Utils.Tests
         [TestMethod()]
         public void LogErrorFailedTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
             var config = new Config.DecisionApiConfig()
             {
                 LogManager = fsLogManagerMock.Object,
@@ -76,7 +77,7 @@ namespace Flagship.Utils.Tests
         [TestMethod()]
         public void LogInfoTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
             var config = new Config.DecisionApiConfig()
             {
                 LogManager = fsLogManagerMock.Object,
@@ -105,7 +106,7 @@ namespace Flagship.Utils.Tests
         [TestMethod()]
         public void LogInfoFailedTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
             var config = new Config.DecisionApiConfig()
             {
                 LogManager = fsLogManagerMock.Object,

@@ -1,4 +1,5 @@
 ﻿using Flagship.Enums;
+using Flagship.Logger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
@@ -29,7 +30,6 @@ namespace Flagship.Tests.Api
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
                  "SendAsync",
                   ItExpr.IsAny<HttpRequestMessage>(),
@@ -37,10 +37,12 @@ namespace Flagship.Tests.Api
                 ).ReturnsAsync(httpResponse);
 
 
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
             var config = new Flagship.Config.DecisionApiConfig
             {
+                ApiKey = "apiKey",
+                EnvId = "envId",
                 LogManager = fsLogManagerMock.Object,
             };
 
@@ -54,22 +56,66 @@ namespace Flagship.Tests.Api
 
             var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, true, configManager);
 
-            var flag = new Flagship.Model.FlagDTO();
+            var flag = new Flagship.Model.FlagDTO()
+            {
+                VariationGroupId = "varGroupID",
+                VariationId = "varID",
 
-            await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
+            };
+
+            var postData = new Dictionary<string, object>
+            {
+                [Constants.VISITOR_ID_API_ITEM] = visitorDelegate.VisitorId,
+                [Constants.VARIATION_ID_API_ITEM] = flag.VariationId,
+                [Constants.VARIATION_GROUP_ID_API_ITEM] = flag.VariationGroupId,
+                [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
+                [Constants.ANONYMOUS_ID] = null
+            };
+
+            
+
+            Func<HttpRequestMessage, bool> action = (HttpRequestMessage x) => {
+
+                var postDataString = JsonConvert.SerializeObject(postData);
+                var headers = new HttpRequestMessage().Headers;
+                headers.Add(Constants.HEADER_X_API_KEY, config.ApiKey);
+                headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
+                headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var result = x.Content.ReadAsStringAsync().Result ;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post;
+            };
 
             var errorSendAsyn = new Exception("Error Send");
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                 ItExpr.IsAny<HttpRequestMessage>(),
-                 ItExpr.IsAny<CancellationToken>()
-               ).Throws(errorSendAsyn);
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(x => action(x)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
 
             await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
 
-            mockHandler.Protected().Verify("SendAsync", Times.Exactly(3), new object[] {  ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
-            fsLogManagerMock.Verify(x => x.Error(errorSendAsyn.Message, "SendActive"), Times.Once());
+            // XC test
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(x => action(x)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+
+            var newVisitorId = "newVisitorId";
+            visitorDelegate.Authenticate(newVisitorId);
+
+            postData[Constants.VISITOR_ID_API_ITEM] = visitorDelegate.VisitorId;
+            postData[Constants.ANONYMOUS_ID]= visitorDelegate.AnonymousId;
+
+
+            await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
+
+            mockHandler.Verify();
 
             httpResponse.Dispose();
             httpClient.Dispose();
@@ -93,7 +139,7 @@ namespace Flagship.Tests.Api
                 ).ReturnsAsync(httpResponse);
 
 
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
             var config = new Flagship.Config.DecisionApiConfig
             {
@@ -111,19 +157,9 @@ namespace Flagship.Tests.Api
 
             await trackingManager.SendHit(hit).ConfigureAwait(false);
 
-            var errorSendAsyn = new Exception("Error Send");
-
-            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                 ItExpr.IsAny<HttpRequestMessage>(),
-                 ItExpr.IsAny<CancellationToken>()
-               ).Throws(errorSendAsyn);
-
             await trackingManager.SendHit(hit).ConfigureAwait(false);
 
             mockHandler.Protected().Verify("SendAsync", Times.Exactly(2), new object[] { ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
-
-            fsLogManagerMock.Verify(x => x.Error(errorSendAsyn.Message, "SendHit"), Times.Once());
 
             httpResponse.Dispose();
             httpClient.Dispose();

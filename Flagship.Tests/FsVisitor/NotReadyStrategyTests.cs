@@ -8,20 +8,23 @@ using System.Threading.Tasks;
 using Moq;
 using Flagship.Enums;
 using Newtonsoft.Json;
+using Flagship.Logger;
+using Newtonsoft.Json.Linq;
 
 namespace Flagship.FsVisitor.Tests
 {
     [TestClass()]
     public class NotReadyStrategyTests
     {
-        private Mock<Flagship.Utils.IFsLogManager> fsLogManagerMock;
+        private Mock<IFsLogManager> fsLogManagerMock;
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
+        private Flagship.Config.DecisionApiConfig config;
         public NotReadyStrategyTests()
         {
-            fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
-            var config = new Flagship.Config.DecisionApiConfig()
+            fsLogManagerMock = new Mock<IFsLogManager>();
+            config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -42,7 +45,22 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void NotReadyStrategyTest()
         {
+            var notReadyStategy = new NotReadyStrategy(visitorDelegate);
 
+            var VisitorCacheImplementation = new Mock<Flagship.Cache.IVisitorCacheImplementation>();
+            var HitCaheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
+            config.HitCacheImplementation = HitCaheImplementation.Object;
+
+            notReadyStategy.CacheHit(flagDTO: null);
+            notReadyStategy.CacheHit(hit: null);
+            notReadyStategy.CacheVisitorAsync();
+            notReadyStategy.LookupHits();
+            notReadyStategy.LookupVisitor();
+
+            VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
         }
 
         [TestMethod()]

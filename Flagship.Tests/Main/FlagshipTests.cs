@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Flagship.Utils;
 using System.IO;
 using Flagship.Enums;
+using Flagship.Logger;
 
 namespace Flagship.Main.Tests
 {
@@ -19,14 +20,14 @@ namespace Flagship.Main.Tests
         {
             var stringWriter = new StringWriter();
             Console.SetOut(stringWriter);
-            Flagship.Start(null, null);
-            Assert.IsNotNull(Flagship.Config);
-            Assert.IsInstanceOfType(Flagship.Config, typeof(Config.DecisionApiConfig));
-            Assert.IsInstanceOfType(Flagship.Config.LogManager, typeof(FsLogManager));
-            Assert.IsNull(Flagship.Config.EnvId);
-            Assert.IsNull(Flagship.Config.ApiKey);
+            Fs.Start(null, null);
+            Assert.IsNotNull(Fs.Config);
+            Assert.IsInstanceOfType(Fs.Config, typeof(Config.DecisionApiConfig));
+            Assert.IsInstanceOfType(Fs.Config.LogManager, typeof(FsLogManager));
+            Assert.IsNull(Fs.Config.EnvId);
+            Assert.IsNull(Fs.Config.ApiKey);
 
-            Assert.AreEqual(FlagshipStatus.NOT_INITIALIZED, Flagship.Status);
+            Assert.AreEqual(FlagshipStatus.NOT_INITIALIZED, Fs.Status);
 
             Assert.IsTrue(stringWriter.ToString().Contains(Constants.INITIALIZATION_PARAM_ERROR));
             stringWriter.Dispose();
@@ -41,63 +42,102 @@ namespace Flagship.Main.Tests
             var envId = "envId";
             var apiKey = "apiKey";
 
-            Flagship.Start(envId, apiKey);
+            Fs.Start(envId, apiKey);
 
-            Assert.IsNotNull(Flagship.Config);
-            Assert.IsInstanceOfType(Flagship.Config, typeof(Config.DecisionApiConfig));
-            Assert.IsInstanceOfType(Flagship.Config.LogManager, typeof(FsLogManager));
+            Assert.IsNotNull(Fs.Config);
+            Assert.IsInstanceOfType(Fs.Config, typeof(Config.DecisionApiConfig));
+            Assert.IsInstanceOfType(Fs.Config.LogManager, typeof(FsLogManager));
 
-            Assert.AreEqual(envId, Flagship.Config.EnvId);
-            Assert.AreEqual(apiKey, Flagship.Config.ApiKey);
+            Assert.AreEqual(envId, Fs.Config.EnvId);
+            Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
-            Assert.AreEqual(FlagshipStatus.READY, Flagship.Status);
+            Assert.AreEqual(FlagshipStatus.READY, Fs.Status);
 
             envId = "new envId";
             apiKey = "new apiKey";
 
-            Flagship.Start(envId, apiKey);
+            Fs.Start(envId, apiKey);
 
-            Assert.IsNotNull(Flagship.Config);
-            Assert.IsInstanceOfType(Flagship.Config, typeof(Config.DecisionApiConfig));
-            Assert.IsInstanceOfType(Flagship.Config.LogManager, typeof(FsLogManager));
+            Assert.IsNotNull(Fs.Config);
+            Assert.IsInstanceOfType(Fs.Config, typeof(Config.DecisionApiConfig));
+            Assert.IsInstanceOfType(Fs.Config.LogManager, typeof(FsLogManager));
 
-            Assert.AreEqual(envId, Flagship.Config.EnvId);
-            Assert.AreEqual(apiKey, Flagship.Config.ApiKey);
+            Assert.AreEqual(envId, Fs.Config.EnvId);
+            Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
             var config = new Config.DecisionApiConfig();
 
-            Flagship.Start(envId, apiKey, config);
+            Fs.Start(envId, apiKey, config);
 
-            Assert.IsNotNull(Flagship.Config);
-            Assert.AreEqual(Flagship.Config, config);
-            Assert.IsInstanceOfType(Flagship.Config.LogManager, typeof(FsLogManager));
+            Assert.IsNotNull(Fs.Config);
+            Assert.AreEqual(Fs.Config, config);
+            Assert.IsInstanceOfType(Fs.Config.LogManager, typeof(FsLogManager));
 
-            Assert.AreEqual(envId, Flagship.Config.EnvId);
-            Assert.AreEqual(apiKey, Flagship.Config.ApiKey);
+            Assert.AreEqual(envId, Fs.Config.EnvId);
+            Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
             Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION)));
             stringWriter.Dispose();
         }
 
         [TestMethod()]
+        public void Start3Test()
+        {
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            var envId = "envId";
+            var apiKey = "apiKey";
+
+            var config = new Config.BucketingConfig();
+
+            Fs.Start(envId, apiKey, config);
+
+            Assert.IsNotNull(Fs.Config);
+            Assert.IsInstanceOfType(Fs.Config, typeof(Config.BucketingConfig));
+            Assert.IsInstanceOfType(Fs.Config.LogManager, typeof(FsLogManager));
+
+            Assert.AreEqual(envId, Fs.Config.EnvId);
+            Assert.AreEqual(apiKey, Fs.Config.ApiKey);
+
+            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION)));
+            Assert.IsTrue(stringWriter.ToString().Contains("Bucketing polling starts"));
+
+            stringWriter.Dispose();
+        }
+
+        [TestMethod()]
         public void NewVisitorTest()
         {
-            var visitorBuilder = Flagship.NewVisitor();
+            var visitorBuilder = Fs.NewVisitor();
             Assert.IsNull(visitorBuilder);
 
-            Flagship.Start(null, null);
+            Fs.Start(null, null);
 
-            visitorBuilder = Flagship.NewVisitor();
+            visitorBuilder = Fs.NewVisitor();
             Assert.IsNull(visitorBuilder);
 
             var envId = "envId";
             var apiKey = "apiKey";
 
-            Flagship.Start(envId, apiKey);
+            Fs.Start(envId, apiKey);
 
-            visitorBuilder = Flagship.NewVisitor();
+            visitorBuilder = Fs.NewVisitor();
 
             Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+
+            var visitorId = "visitorId";
+            visitorBuilder = Fs.NewVisitor(visitorId);
+            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
+
+            visitorBuilder = Fs.NewVisitor(visitorId, InstanceType.SINGLE_INSTANCE);
+            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
+
+            visitorBuilder = Fs.NewVisitor(InstanceType.SINGLE_INSTANCE);
+            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+
         }
     }
 }

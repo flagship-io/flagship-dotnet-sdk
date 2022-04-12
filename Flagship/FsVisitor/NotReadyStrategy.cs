@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Flagship.Logger;
 
 namespace Flagship.FsVisitor
 {
@@ -16,6 +17,30 @@ namespace Flagship.FsVisitor
         {
         }
 
+        public override void LookupVisitor()
+        {
+            //
+        }
+
+        public override void CacheVisitorAsync()
+        {
+            //
+        }
+
+        public override void LookupHits()
+        {
+            //
+        }
+
+        public override void CacheHit(FlagDTO flagDTO)
+        {
+            //
+        }
+
+        public override void CacheHit(HitAbstract hit)
+        {
+            //
+        }
         public override Task FetchFlags()
         {
             return Task.Factory.StartNew(() => { Log("FetchFlags"); });
@@ -45,7 +70,7 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Utils.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.NOT_INITIALIZED), methodName);
+            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.NOT_INITIALIZED), methodName);
         }
     }
 }

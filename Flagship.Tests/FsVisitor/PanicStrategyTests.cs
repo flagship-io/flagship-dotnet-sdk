@@ -8,20 +8,24 @@ using System.Threading.Tasks;
 using Moq;
 using Flagship.Enums;
 using Newtonsoft.Json;
+using Flagship.Logger;
+using Flagship.Model;
+using Newtonsoft.Json.Linq;
 
 namespace Flagship.FsVisitor.Tests
 {
     [TestClass()]
     public class PanicStrategyTests
     {
-        private Mock<Flagship.Utils.IFsLogManager> fsLogManagerMock;
+        private Mock<IFsLogManager> fsLogManagerMock;
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
+        private Flagship.Config.DecisionApiConfig config;
         public PanicStrategyTests() 
         {
-            fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
-            var config = new Flagship.Config.DecisionApiConfig()
+            fsLogManagerMock = new Mock<IFsLogManager>();
+            config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -42,7 +46,28 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void PanicStrategyTest()
         {
+            var panicStrategy = new PanicStrategy(visitorDelegate);
 
+            var VisitorCacheImplementation = new Mock<Flagship.Cache.IVisitorCacheImplementation>();
+            var HitCaheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
+            config.HitCacheImplementation = HitCaheImplementation.Object;
+
+            panicStrategy.CacheHit(flagDTO: null);
+            panicStrategy.CacheHit(hit: null);
+            panicStrategy.CacheVisitorAsync();
+            panicStrategy.LookupHits();
+            panicStrategy.LookupVisitor();
+
+            VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+
+            var privateNoConsentStrategy = new PrivateObject(panicStrategy);
+
+            ICollection<Campaign> compaigns = (ICollection<Campaign>)privateNoConsentStrategy.Invoke("FetchVisitorCacheCampaigns", visitorDelegate);
+
+            Assert.AreEqual(compaigns.Count, 0);
         }
 
         [TestMethod()]
@@ -54,10 +79,10 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
-        public void UpdateContexCommonTest()
+        public void UpdateContextTest() 
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
-            panicStrategy.UpdateContexCommon(new Dictionary<string, object>());
+            panicStrategy.UpdateContext(new Dictionary<string, object>());
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
         }
 

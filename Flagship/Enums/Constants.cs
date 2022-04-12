@@ -9,6 +9,8 @@ namespace Flagship.Enums
     internal static class Constants
     {
         public const int DEFAULT_POLLING_INTERVAL = 2000;
+
+        public const int DEFAULT_HIT_CACHE_TIME = 14400000;
         /// <summary>
         /// Default request timeout in second
         /// </summary>
@@ -18,9 +20,13 @@ namespace Flagship.Enums
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 
+        public const string BUCKETING_API_URL = "https://cdn.flagship.io/{0}/bucketing.json";
+
+        public const string BUCKETING_API_CONTEXT_URL = "https://decision.flagship.io/v2/{0}/events";
+
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
-        public const string SDK_VERSION = "V1";
+        public const string SDK_VERSION = "V3";
 
         public const string FLAGSHIP_SDK = "Flagship SDK";
 
@@ -37,6 +43,10 @@ namespace Flagship.Enums
 
         public const string PROCESS_INITIALIZATION = "INITIALIZATION";
 
+        public const string VISITOR_ID_ERROR = "visitorId must not be null or empty";
+
+        public const string FLAGSHIP_VISITOR_NOT_AUTHENTICATE = "Visitor is not authenticated yet";
+
         public const string SDK_STARTED_INFO = "Flagship SDK (version: {0}) READY";
 
         public const string METHOD_DEACTIVATED_ERROR = "Method {0} is deactivated while SDK status is: {1}.";
@@ -45,7 +55,7 @@ namespace Flagship.Enums
 
         public const string GET_FLAG_CAST_ERROR = "Flag for key {0} has a different type. Default value is returned.";
 
-        public const string GET_FLAG_ERROR = "No flag for key {0}.";
+        public const string GET_FLAG_ERROR = "No flag for key {0}, no activate will be sent";
 
         public const string USER_EXPOSED_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, no activate will be sent";
 
@@ -54,6 +64,10 @@ namespace Flagship.Enums
         public const string HIT_NOT_NULL = "A hit must not be null";
 
         public const string METHOD_DEACTIVATED_CONSENT_ERROR = "Method {0} is deactivated for visitor {1} : visitor did not consent.";
+
+        public const string PREDEFINED_CONTEXT_TYPE_ERROR = "Predefined Context {0} must be type of {1}";
+
+        public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
 
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
         public const string CUSTOMER_UID = "cuid";

@@ -19,22 +19,23 @@ namespace Flagship.FsVisitor.Tests
         public void BuildTest()
         {
             var configManager = new Mock<Flagship.Config.IConfigManager>();
-            Builder = VisitorBuilder.Builder(configManager.Object, visitorId);
+            Builder = VisitorBuilder.Builder(configManager.Object, visitorId, Enums.InstanceType.NEW_INSTANCE);
 
             var visitor = Builder.Build();
 
             Assert.AreEqual(visitor.VisitorId, visitorId);
             Assert.AreEqual(true, visitor.HasConsented);
+            Assert.IsNull(Flagship.Main.Fs.Visitor);
 
             var context = new Dictionary<string, object>()
             {
                 ["key1"] = "value1",
             };
 
-            Builder.HasConsented(false).IsAuthenticated(false).Context(context);
+            Builder.HasConsented(false).IsAuthenticated(false).WithContext(context);
             visitor = Builder.Build();
 
-            Assert.AreEqual(1, visitor.Context.Count);
+            Assert.AreEqual(3, visitor.Context.Count);
             Assert.IsFalse(visitor.HasConsented);
 
             var context2 = new Dictionary<string, object>()
@@ -43,18 +44,23 @@ namespace Flagship.FsVisitor.Tests
                 ["key3"] = new object()
             };
 
-            Builder.Context(context2);
+            Builder.WithContext(context2);
             visitor = Builder.Build();
-            Assert.AreEqual(1, visitor.Context.Count);
+            Assert.AreEqual(3, visitor.Context.Count);
 
             var context3 = new Dictionary<string, object>()
             {
                 ["key1"] = 1,
             };
 
-            Builder.Context(context3);
+            Builder.WithContext(context3);
             visitor = Builder.Build();
-            Assert.AreEqual(1, visitor.Context.Count);
+            Assert.AreEqual(3, visitor.Context.Count);
+
+
+            Builder = VisitorBuilder.Builder(configManager.Object, visitorId, Enums.InstanceType.SINGLE_INSTANCE);
+            visitor = Builder.Build();
+            Assert.AreEqual(visitor, Flagship.Main.Fs.Visitor);
         }
 
     }

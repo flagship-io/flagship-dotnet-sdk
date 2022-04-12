@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 using System.IO;
 using Flagship.Enums;
 
-namespace Flagship.Utils.Tests
-{
+namespace Flagship.Logger.Tests
+{ 
     [TestClass()]
     public class FsLogManagerTests
     {

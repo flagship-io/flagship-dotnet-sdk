@@ -12,6 +12,7 @@ using Moq;
 using Flagship.Enums;
 using System.Net.Http.Headers;
 using System.Collections.ObjectModel;
+using Flagship.Logger;
 
 namespace Flagship.Decision.Tests
 {
@@ -155,7 +156,7 @@ namespace Flagship.Decision.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
             var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
-            var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
+            var decisionManagerMock = new Mock<IDecisionManager>();
             var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>();
@@ -178,7 +179,7 @@ namespace Flagship.Decision.Tests
         [TestMethod()]
         public async Task GetCampaignsTestFailTest()
         {
-            var fsLogManagerMock = new Mock<Flagship.Utils.IFsLogManager>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
 
             var config = new Flagship.Config.DecisionApiConfig()

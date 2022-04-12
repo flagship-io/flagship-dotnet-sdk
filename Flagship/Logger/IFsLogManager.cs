@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flagship.Utils
+namespace Flagship.Logger 
 {
     public interface IFsLogManager
     {

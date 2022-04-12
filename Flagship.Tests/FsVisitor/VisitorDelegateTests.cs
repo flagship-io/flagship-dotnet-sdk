@@ -25,21 +25,27 @@ namespace Flagship.FsVisitor.Tests
         Mock<Flagship.Config.IConfigManager> configManager;
         Mock<VisitorStrategyAbstract> defaultStrategy;
 
+
         public VisitorDelegateTests()
         {
+            var config = new Flagship.Config.DecisionApiConfig();
             configManager = new Mock<Flagship.Config.IConfigManager>();
+            configManager.SetupGet(x=>x.Config).Returns(config);
+
             visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object });
+            visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
             defaultStrategy = new Mock<VisitorStrategyAbstract>(visitorDelegateMock.Object);
 
-            visitorDelegateMock.Protected().Setup<VisitorStrategyAbstract>("GetStrategy").Returns(defaultStrategy.Object);
+            visitorDelegateMock.Setup<VisitorStrategyAbstract>(x=> x.GetStrategy()).Returns(defaultStrategy.Object);
             visitorDelegateMock.CallBase = true;
         }
+
 
         [TestMethod()]
         public void TestStrategy()
         {
-            var flagship = new Mock<Flagship.Main.Flagship>();
-            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,string>(),false, configManager.Object);
+            var flagship = new Mock<Flagship.Main.Fs>();
+            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object);
             var privateVisitor = new PrivateObject(visitorDelegate);
             privateVisitor.Invoke("GetStrategy");
         }
@@ -50,23 +56,31 @@ namespace Flagship.FsVisitor.Tests
             
             var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object );
 
-            Assert.AreEqual(visitor.AnonymousId, null);
+            Assert.IsNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
+            Assert.AreEqual(visitor.Context.Count, 3);
             Assert.AreEqual(visitor.Flags.Count, 0);
 
             visitor = new VisitorDelegate(null, false, context, false, configManager.Object);
-            Assert.AreNotEqual(visitorId, visitor.VisitorId);
+            Assert.IsNotNull(visitor.VisitorId);
             Assert.AreEqual(visitor.VisitorId.Length, 19);
+
+            visitor = new VisitorDelegate(visitorId, true, context, false, configManager.Object);
+            Assert.IsNotNull(visitor.AnonymousId);
+            Assert.AreEqual(visitorId, visitor.VisitorId);
+            Assert.AreEqual(36,visitor.AnonymousId.Length);
+
         }
 
         [TestMethod()]
         public void VisitorDelegateTest1()
         {
-            var context = new Dictionary<string, string>()
+            var context = new Dictionary<string, object>()
             {
-                ["key"] = "value"
+                ["key"] = "value",
+                ["key2"] = 4,
+                ["key3"] = true
             };
 
             var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object);
@@ -74,41 +88,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitor.AnonymousId, null);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
-            Assert.AreEqual(visitor.Flags.Count, 0);
-        }
-
-        [TestMethod()]
-        public void VisitorDelegateTest2()
-        {
-            var context = new Dictionary<string, double>()
-            {
-                ["key"] = 4
-            };
-
-            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object);
-
-            Assert.AreEqual(visitor.AnonymousId, null);
-            Assert.AreEqual(visitorId, visitor.VisitorId);
-            Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
-            Assert.AreEqual(visitor.Flags.Count, 0);
-        }
-
-        [TestMethod()]
-        public void VisitorDelegateTest3()
-        {
-            var context = new Dictionary<string, bool>()
-            {
-                ["key"] = true
-            };
-
-            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object);
-
-            Assert.AreEqual(visitor.AnonymousId, null);
-            Assert.AreEqual(visitorId, visitor.VisitorId);
-            Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 1);
+            Assert.AreEqual(visitor.Context.Count, 5);
             Assert.AreEqual(visitor.Flags.Count, 0);
         }
 
@@ -135,7 +115,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("key", "default");
             Assert.IsNotNull(flag);
-            Assert.IsTrue(flag.Exist);
+            Assert.IsTrue(flag.Exists);
         }
 
         [TestMethod()]
@@ -144,7 +124,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", false);
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]
@@ -153,7 +133,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", 32);
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]
@@ -162,7 +142,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JObject());
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]
@@ -171,7 +151,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JArray());
             Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exist);
+            Assert.IsFalse(flag.Exists);
         }
 
         [TestMethod()]
@@ -218,7 +198,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest()
         {
-            var context = new Dictionary<string, string>();
+            var context = new Dictionary<string, object>();
             defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
             visitorDelegateMock.Object.UpdateContext(context);
@@ -228,7 +208,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest1()
         {
-            var context = new Dictionary<string, bool>();
+            var context = new Dictionary<string, object>();
             defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
             visitorDelegateMock.Object.UpdateContext(context);
@@ -238,7 +218,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest2()
         {
-            var context = new Dictionary<string, double>();
+            var context = new Dictionary<string, object>();
             defaultStrategy.Setup(x => x.UpdateContext(context))
               .Verifiable();
             visitorDelegateMock.Object.UpdateContext(context);
@@ -276,10 +256,31 @@ namespace Flagship.FsVisitor.Tests
         public void UpdateContexCommonTest()
         {
             var context = new Dictionary<string, object>();
-            defaultStrategy.Setup(x => x.UpdateContexCommon(context))
+            defaultStrategy.Setup(x => x.UpdateContext(context))
             .Verifiable();
-            visitorDelegateMock.Object.UpdateContexCommon(context);
+            visitorDelegateMock.Object.UpdateContext(context);
             defaultStrategy.Verify();
+        }
+
+        [TestMethod()]
+        public void AuthenticateTest()
+        {
+            var visitorId = "newVisitorID";
+            defaultStrategy.Setup(x => x.Authenticate(visitorId))
+            .Verifiable();
+            visitorDelegateMock.Object.Authenticate(visitorId);
+
+            defaultStrategy.Verify(x=>x.Authenticate(visitorId),Times.Once());
+        }
+
+        [TestMethod()]
+        public void UnauthenticateTest()
+        {
+            defaultStrategy.Setup(x => x.Unauthenticate())
+            .Verifiable();
+            visitorDelegateMock.Object.Unauthenticate();
+
+            defaultStrategy.Verify(x => x.Unauthenticate(), Times.Once());
         }
     }
 }

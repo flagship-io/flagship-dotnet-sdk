@@ -24,9 +24,25 @@ namespace Flagship.Hit
 
         [Newtonsoft.Json.JsonProperty("AnonymousId")]
         internal string AnonymousId { get; set; }
+
+        /// <summary>
+        /// User IP
+        /// </summary>
         public string UserIp { get; set; }
+
+        /// <summary>
+        /// Screen resolution.
+        /// </summary>
         public string ScreenResolution { get; set; }
+
+        /// <summary>
+        /// User language
+        /// </summary>
         public string Locale { get; set; }
+
+        /// <summary>
+        /// Session number
+        /// </summary>
         public string SessionNumber { get; set; }
 
         public HitAbstract(HitType type)

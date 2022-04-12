@@ -44,8 +44,14 @@ namespace Flagship.Main
 
         }
 
+        /// <summary>
+        /// Return current status of Flagship SDK.
+        /// </summary>
         public static FlagshipStatus Status => GetInstance()._status;
 
+        /// <summary>
+        /// Return the current config used by the SDK.
+        /// </summary>
         public static FlagshipConfig Config => GetInstance()._config;
 
         private void SetStatus(FlagshipStatus status)
@@ -60,7 +66,7 @@ namespace Flagship.Main
         }
 
         /// <summary>
-        /// will return any previous created visitor instance initialized with the SINGLE_INSTANCE
+        /// Will return any previous created visitor instance initialized with the SINGLE_INSTANCE
         /// </summary>
         public static FsVisitor.Visitor Visitor
         {
@@ -68,7 +74,12 @@ namespace Flagship.Main
            internal set { GetInstance()._visitor = value; }
         }
 
-
+        /// <summary>
+        /// Start the Flagship SDK.
+        /// </summary>
+        /// <param name="envId">Environment id provided by Flagship.</param>
+        /// <param name="apiKey">Api authentication key provided by Flagship.</param>
+        /// <param name="config">Custom flagship configuration.</param>
         public static void Start(string envId, string apiKey, FlagshipConfig config = null)
         {
 #if NET40 || NETSTANDARD2_0

@@ -7,13 +7,36 @@ using System.Threading.Tasks;
 
 namespace Flagship.Hit
 {
+    /// <summary>
+    /// This hit can be used for any event (e.g. Add To Cart click, newsletter subscription).
+    /// </summary>
     public class Event : HitAbstract
     {
+        /// <summary>
+        /// Specifies the category of your event.
+        /// </summary>
         public EventCategory Category { get; set; }
+
+        /// <summary>
+        /// Event name that will also serve as the KPI that you will have inside your reporting. 
+        /// </summary>
         public string Action { get; set; }
+
+        /// <summary>
+        /// Additional description of your event.
+        /// </summary>
         public string Label { get; set; }
+
+        /// <summary>
+        /// Specifies the monetary value associated with an event (e.g. you earn 10 to 100 euros depending on the quality of lead generated). NOTE: this value must be non-negative.
+        /// </summary>
         public double? Value { get; set; }
 
+        /// <summary>
+        /// This hit can be used for any event (e.g. Add To Cart click, newsletter subscription).
+        /// </summary>
+        /// <param name="category">Specifies the category of your event.</param>
+        /// <param name="action">Event name that will also serve as the KPI that you will have inside your reporting. </param>
         public Event( EventCategory category, string action):base(HitType.EVENT)
         {
             Category = category;

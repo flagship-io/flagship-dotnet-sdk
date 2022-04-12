@@ -33,18 +33,33 @@ namespace Flagship.FsVisitor
             return new VisitorBuilder(configManager, visitorId, instanceType);
         }
 
+        /// <summary>
+        /// Specify if the Visitor is authenticated or anonymous.
+        /// </summary>
+        /// <param name="isAuthenticated">True for an authenticated visitor, false for an anonymous visitor.</param>
+        /// <returns></returns>
         public VisitorBuilder IsAuthenticated(bool isAuthenticated)
         {
             _isAuthenticated=isAuthenticated;   
             return this;
         }
 
+        /// <summary>
+        /// Specify if the Visitor has consented for personal data usage. When false some features will be deactivated, cache will be deactivated and cleared.
+        /// </summary>
+        /// <param name="hasConsented">Set to true when the visitor has consented, false otherwise.</param>
+        /// <returns></returns>
         public VisitorBuilder HasConsented(bool hasConsented)
         {
             _hasConsented = hasConsented;
             return this;
         }
 
+        /// <summary>
+        /// Specify Visitor initial context key / values used for targeting.
+        /// </summary>
+        /// <param name="context">visitor initial context.</param>
+        /// <returns></returns>
         public VisitorBuilder WithContext(IDictionary<string, object> context)
         {
             if (context!=null)
@@ -54,6 +69,10 @@ namespace Flagship.FsVisitor
             return this;
         }
 
+        /// <summary>
+        /// Complete the Visitor Creation process 
+        /// </summary>
+        /// <returns>Return an instance of \Flagship\Visitor\Visitor</returns>
         public Visitor Build()
         {
             var visitorDelegate = new VisitorDelegate(_visitorId,_isAuthenticated,_context, _hasConsented,_configManager);

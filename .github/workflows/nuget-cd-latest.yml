@@ -39,7 +39,7 @@ jobs:
         working-directory: Flagship.Nuget
 
       - name: set Nuget api key
-        run: nuget setApiKey ${{ secrets.NUGET_API_KEY }}
+        run: nuget setApiKey ${{ secrets.NUGET_APIKEY }}
         working-directory: Flagship.Nuget
 
       - name: Push Nuget Packages

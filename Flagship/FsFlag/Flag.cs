@@ -25,7 +25,9 @@ namespace Flagship.FsFlag
             get
             {
                 var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
-                return flagDTO != null && Utils.Utils.HasSameType(flagDTO.Value, _defaultValue);
+                return !string.IsNullOrWhiteSpace(flagDTO?.CampaignId) && 
+                    !string.IsNullOrWhiteSpace(flagDTO?.VariationId) && 
+                    !string.IsNullOrWhiteSpace(flagDTO?.VariationGroupId);
             }
         }
 

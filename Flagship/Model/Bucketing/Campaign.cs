@@ -8,6 +8,7 @@ namespace Flagship.Model.Bucketing
     {
         public string Id { get; set; }
         public string Type { get; set; }
+        public string Slug { get; set; }
         public IEnumerable<VariationGroup> VariationGroups { get; set; }
     }
 }

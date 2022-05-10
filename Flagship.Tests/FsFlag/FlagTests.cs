@@ -26,6 +26,8 @@ namespace Flagship.FsFlag.Tests
                 CampaignId = "campaignID",
                 VariationGroupId = "variationGroupID",
                 IsReference = true,
+                CampaignType = "ab",
+                Slug = "slujg"
             };
             return flagDTO;
         }   
@@ -39,7 +41,7 @@ namespace Flagship.FsFlag.Tests
                 EnvId = "envID"
             };
 
-            var metadata = new FlagMetadata(flagDTO.CampaignId, flagDTO.VariationGroupId, flagDTO.VariationId, flagDTO.IsReference, "");
+            var metadata = new FlagMetadata(flagDTO.CampaignId, flagDTO.VariationGroupId, flagDTO.VariationId, flagDTO.IsReference, flagDTO.CampaignType, flagDTO.Slug);
 
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
             var decisionManagerMock = new Mock<Decision.IDecisionManager>();
@@ -50,7 +52,7 @@ namespace Flagship.FsFlag.Tests
 
             visitorMock.Setup(x=> x.GetStrategy()).CallBase();
 
-            var flags = new List<Flagship.Model.FlagDTO>
+            var flags = new List<FlagDTO>
             {
                 flagDTO
             };
@@ -80,7 +82,8 @@ namespace Flagship.FsFlag.Tests
             item.IsReference == metadata.IsReference && 
             item.VariationGroupId == metadata.VariationGroupId &&
             item.VariationId == metadata.VariationId &&
-            item.CampaignType == metadata.CampaignType 
+            item.CampaignType == metadata.CampaignType &&
+            item.Slug == metadata.Slug
             
             ), flagDTO.Key, true), Times.Once());
         }
@@ -104,7 +107,7 @@ namespace Flagship.FsFlag.Tests
             var defaultValue = "defaultString";
             var flag = new Flag<string>("key", visitorMock.Object, defaultValue);
 
-            var metadata = new FlagMetadata("", "", "", false, "");
+            var metadata = new FlagMetadata("", "", "", false, "", null);
 
             var resultMeta = flag.Metadata;
 

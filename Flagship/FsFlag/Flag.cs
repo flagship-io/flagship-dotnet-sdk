@@ -20,8 +20,6 @@ namespace Flagship.FsFlag
             _defaultValue = DefaultValue;
         }
 
-
-
         public bool Exists
         {
             get
@@ -36,13 +34,12 @@ namespace Flagship.FsFlag
             get
             {
                 var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
-                var metadata = new FlagMetadata(flagDTO?.CampaignId ?? "", flagDTO?.VariationGroupId ?? "", flagDTO?.VariationId ?? "", flagDTO?.IsReference ?? false, flagDTO?.CampaignType ?? "");
+                var metadata = new FlagMetadata(flagDTO?.CampaignId ?? "", flagDTO?.VariationGroupId ?? "", flagDTO?.VariationId ?? "", flagDTO?.IsReference ?? false, flagDTO?.CampaignType ?? "", flagDTO?.Slug);
                 if (flagDTO == null)
                 {
                     return metadata;
                 }
 
-               
                 return _visitorDelegateAbstract.GetFlagMetadata(metadata, _key, Utils.Utils.HasSameType(flagDTO.Value, _defaultValue));
             }
         }

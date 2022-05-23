@@ -43,5 +43,5 @@ jobs:
         working-directory: Flagship.Nuget
 
       - name: Push Nuget Packages
-        run: nuget push Flagship.SDK.3.0.0.nupkg -Source https://api.nuget.org/v3/index.json
+        run: nuget push Flagship.SDK.nupkg -Source https://api.nuget.org/v3/index.json
         working-directory: Flagship.Nuget

@@ -23,4 +23,4 @@ Copy-Item -Path "..\Flagship\bin\Release\net5.0\Flagship*.pdb" -Destination ".\l
 Copy-Item -Path "..\Flagship\bin\Release\net5.0\Flagship*.xml" -Destination ".\lib\net5.0" -Recurse -force
 
 # Create the nuget package
-nuget pack Flagship.nuspec
+nuget pack -OutputFileNamesWithoutVersion Flagship.nuspec 

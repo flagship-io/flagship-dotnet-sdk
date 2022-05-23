@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Flagship.SDK</id>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <title>Flagship C# SDK</title>
     <authors>Flagship Team</authors>
     <license type="expression">Apache-2.0</license>
@@ -10,8 +10,8 @@
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>C# SDK for Flagship</description>
-    <releaseNotes>https://github.com/flagship-io/flagship-dotnet-sdk/blob/master/CHANGELOG.md</releaseNotes>
-    <copyright>Copyright 2021-2021</copyright>
+    <releaseNotes>https://docs.developers.flagship.io/docs/net</releaseNotes>
+    <copyright>Copyright 2021-2022</copyright>
     <tags>ABTasty Flagship</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.5">

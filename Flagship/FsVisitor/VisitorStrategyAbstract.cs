@@ -164,7 +164,9 @@ namespace Flagship.FsVisitor
                         IsReference = item.Variation.Reference,
                         Type = item.Variation.Modifications.Type,
                         Activated = false,
-                        Flags = item.Variation.Modifications.Value
+                        Flags = item.Variation.Modifications.Value,
+                        Slug = item.Slug
+                       
                     });
                 }
 

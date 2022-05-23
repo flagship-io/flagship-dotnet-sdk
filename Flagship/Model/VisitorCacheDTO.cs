@@ -18,6 +18,8 @@ namespace Flagship.Model
 
         public ModificationType Type { get; set; }
 
+        public string Slug { get; set; }  
+
         public bool? Activated { get; set; }
 
         public IDictionary<string,object> Flags { get; set; }

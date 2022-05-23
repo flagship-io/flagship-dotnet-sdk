@@ -82,10 +82,10 @@ namespace Flagship.Main
         /// <param name="config">Custom flagship configuration.</param>
         public static void Start(string envId, string apiKey, FlagshipConfig config = null)
         {
-#if NET40 || NETSTANDARD2_0
-ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
-#else
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+#if NET45
+ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
+#elif NET40
+ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
 #endif
 
             if (config == null)

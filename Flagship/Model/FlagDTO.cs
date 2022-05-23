@@ -20,5 +20,7 @@ namespace Flagship.Model
         public object Value { get; set; } 
 
         public string CampaignType { get; set; }
+        public string Slug { get; set; }
+
     }
 }

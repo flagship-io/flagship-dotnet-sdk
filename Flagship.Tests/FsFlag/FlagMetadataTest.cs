@@ -15,7 +15,7 @@ namespace Flagship.Tests.FsFlag
         [TestMethod()]
         public void ToJson()
         {
-            var metadata = new FlagMetadata("CampaignId", "VariationGroupId", "VariationId", true, "");
+            var metadata = new FlagMetadata("CampaignId", "VariationGroupId", "VariationId", true, "", null);
 
             var metadataJson = new Dictionary<string, object>()
             {
@@ -23,7 +23,8 @@ namespace Flagship.Tests.FsFlag
                 ["variationGroupId"] = "VariationGroupId",
                 ["variationId"] = "VariationId",
                 ["isReference"] = true,
-                ["campaignType"] = ""
+                ["campaignType"] = "",
+                ["slug"] = null
             };
             Assert.AreEqual(metadata.ToJson(), JsonConvert.SerializeObject(metadataJson));
         }
@@ -32,7 +33,7 @@ namespace Flagship.Tests.FsFlag
         public void EmptyMetadata()
         {
             Assert.AreEqual(JsonConvert.SerializeObject(FlagMetadata.EmptyMetadata()), 
-                JsonConvert.SerializeObject(new FlagMetadata("","","", false,"")));
+                JsonConvert.SerializeObject(new FlagMetadata("","","", false,"", null)));
         }
     }
 }

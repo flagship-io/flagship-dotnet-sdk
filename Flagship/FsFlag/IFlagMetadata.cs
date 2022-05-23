@@ -13,6 +13,8 @@ namespace Flagship.FsFlag
         string VariationId { get; }
         bool IsReference { get; }
         string CampaignType { get; }
+
+        string Slug { get; }
         string ToJson();
     }
 }

@@ -18,6 +18,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flagship.QAApp", "Flagship.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestQA", "TestQA\TestQA.csproj", "{219768D1-3261-488D-84B2-335D4B438671}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test_last_version", "test_last_version\test_last_version.csproj", "{915A276B-67BE-4416-B032-6762B6EC8954}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_4_NET", "test_4_NET\test_4_NET.csproj", "{4454402F-2CD6-4638-85D1-5AF40E479914}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +44,14 @@ Global
 		{219768D1-3261-488D-84B2-335D4B438671}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{219768D1-3261-488D-84B2-335D4B438671}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{219768D1-3261-488D-84B2-335D4B438671}.Release|Any CPU.Build.0 = Release|Any CPU
+		{915A276B-67BE-4416-B032-6762B6EC8954}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{915A276B-67BE-4416-B032-6762B6EC8954}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{915A276B-67BE-4416-B032-6762B6EC8954}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{915A276B-67BE-4416-B032-6762B6EC8954}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4454402F-2CD6-4638-85D1-5AF40E479914}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4454402F-2CD6-4638-85D1-5AF40E479914}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4454402F-2CD6-4638-85D1-5AF40E479914}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4454402F-2CD6-4638-85D1-5AF40E479914}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

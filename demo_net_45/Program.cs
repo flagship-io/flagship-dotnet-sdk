@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Flagship.Config;
+﻿using Flagship.Config;
 using Flagship.Hit;
 using Flagship.Main;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace test_last_version
+namespace demo_net_45
 {
     class Program
     {
@@ -143,10 +145,9 @@ namespace test_last_version
             Console.WriteLine("flagValue: {0}", flag.GetValue());
         }
 
-
         static void Main(string[] args)
         {
-            Fs.Start("c1ndrd07m0300ro0jf20", "QzdTI1M9iqaIhnJ66a34C5xdzrrvzq6q8XSVOsS6",
+            Fs.Start("", "",
                 new DecisionApiConfig
                 {
                     //LogManager = new sentryCustomLog(),

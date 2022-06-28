@@ -85,10 +85,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api\TrackingManager.cs" />
-    <Compile Include="Bucketing\TargetingMatch.cs" />
     <Compile Include="Config\BucketingConfigTests.cs" />
     <Compile Include="Config\DecisionApiConfigTests.cs" />
-    <Compile Include="Config\FlagshipOptionsTests.cs" />
     <Compile Include="Data\CampaignsData.cs" />
     <Compile Include="Decision\ApiManagerTests.cs" />
     <Compile Include="Decision\BucketingManagerTests.cs" />
@@ -110,20 +108,9 @@
     <Compile Include="Hit\ScreenTests.cs" />
     <Compile Include="Hit\TransactionTests.cs" />
     <Compile Include="Main\FlagshipTests.cs" />
-    <Compile Include="Model\Hits\ItemTest.cs" />
-    <Compile Include="Model\Hits\TransactionTest.cs" />
-    <Compile Include="Model\Hits\ScreenviewTest.cs" />
-    <Compile Include="Model\Hits\PageviewTest.cs" />
-    <Compile Include="Model\Hits\EventTest.cs" />
-    <Compile Include="ModificationTest.cs" />
-    <Compile Include="FlagshipTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FlagshipVisitorTest.cs" />
-    <Compile Include="Services\HitSender\SenderTest.cs" />
-    <Compile Include="Utils\CreateVisitor.cs" />
     <Compile Include="Logger\FsLogManagerTests.cs" />
     <Compile Include="Logger\LogTests.cs" />
-    <Compile Include="Utils\TestHttpHandler.cs" />
     <Compile Include="Utils\UtilsTests.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -140,7 +127,6 @@
     <None Include="Bucketing.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <Fakes Include="Fakes\Flagship.fakes" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

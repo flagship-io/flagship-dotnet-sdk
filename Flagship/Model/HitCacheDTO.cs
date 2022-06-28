@@ -9,7 +9,7 @@ namespace Flagship.Model
 
     internal enum HitCacheType
     {
-        PAGEVIEW = Hits.HitType.PAGEVIEW,
+        PAGEVIEW = Hit.HitType.PAGEVIEW,
         SCREENVIEW = Hit.HitType.SCREENVIEW,
         EVENT = Hit.HitType.EVENT,
         TRANSACTION = Hit.HitType.TRANSACTION,

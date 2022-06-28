@@ -1074,9 +1074,6 @@ namespace Flagship.FsVisitor.Tests
                     case HitType.EVENT:
                         var eventObject = (Event)hitAbstract;
                         return eventObject.Category == eventHit.Category && eventObject.Action == eventHit.Action;
-                    case HitType.BATCH:
-                        var batch = (Batch)hitAbstract;
-                        return batch.Hits.Count == 2;
                     default:
                         break;
                 }

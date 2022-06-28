@@ -393,9 +393,6 @@ namespace Flagship.Decision
                     case TargetingOperator.ENDS_WITH:
                         check = contextValue.ToString().EndsWith(targetingValue.ToString());
                         break;
-                    default:
-                        check = false;
-                        break;
                 }
             }
             catch (Exception ex)
@@ -412,7 +409,7 @@ namespace Flagship.Decision
             var check = initialCheck;
             foreach (var item in targetingValue)
             {
-                if (item.Type.ToString() == "Double")
+                if (item.Type.ToString() == "Double" || item.Type.ToString() == "Float")
                 {
                     check = TestOperator(operatorName, contextValue, item.Value<double>());
                 }
@@ -457,7 +454,7 @@ namespace Flagship.Decision
 
         protected bool MatchOperator(TargetingOperator operatorName, string contextValue, string targetingValue)
         {
-            bool check;
+            bool check = false;
             switch (operatorName)
             {
                 case TargetingOperator.GREATER_THAN:
@@ -471,9 +468,6 @@ namespace Flagship.Decision
                     break;
                 case TargetingOperator.LOWER_THAN_OR_EQUALS:
                     check = contextValue.CompareTo(targetingValue) <= 0;
-                    break;
-                default:
-                    check = false;
                     break;
             }
             return check;
@@ -481,7 +475,7 @@ namespace Flagship.Decision
 
         protected bool MatchOperator(TargetingOperator operatorName, double contextValue, double targetingValue)
         {
-            bool check;
+            bool check = false;
             switch (operatorName)
             {
                 case TargetingOperator.GREATER_THAN:
@@ -495,9 +489,6 @@ namespace Flagship.Decision
                     break;
                 case TargetingOperator.LOWER_THAN_OR_EQUALS:
                     check = contextValue.CompareTo(targetingValue) <= 0;
-                    break;
-                default:
-                    check = false;
                     break;
             }
             return check;

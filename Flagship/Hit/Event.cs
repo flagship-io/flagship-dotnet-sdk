@@ -30,7 +30,7 @@ namespace Flagship.Hit
         /// <summary>
         /// Specifies the monetary value associated with an event (e.g. you earn 10 to 100 euros depending on the quality of lead generated). NOTE: this value must be non-negative.
         /// </summary>
-        public double? Value { get; set; }
+        public uint? Value { get; set; }
 
         /// <summary>
         /// This hit can be used for any event (e.g. Add To Cart click, newsletter subscription).

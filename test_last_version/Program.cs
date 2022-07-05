@@ -146,7 +146,7 @@ namespace test_last_version
 
         static void Main(string[] args)
         {
-            Fs.Start("c1ndrd07m0300ro0jf20", "QzdTI1M9iqaIhnJ66a34C5xdzrrvzq6q8XSVOsS6",
+            Fs.Start("ENV_ID", "API_KEY",
                 new DecisionApiConfig
                 {
                     //LogManager = new sentryCustomLog(),

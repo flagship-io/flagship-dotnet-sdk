@@ -12,6 +12,9 @@ namespace Flagship.Hit
     
     public abstract class HitAbstract
     {
+
+        [JsonProperty("Key")]
+        public string Key { get; set; }
         [JsonProperty("VisitorId")]
         internal string VisitorId { get; set; }
         internal FlagshipConfig Config { get; set; }

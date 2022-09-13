@@ -13,6 +13,8 @@ namespace Flagship.Hit
         TRANSACTION,
         ITEM,
         EVENT,
-        BATCH
+        BATCH,
+        ACTIVATE,
+        CONTEXT
     }
 }

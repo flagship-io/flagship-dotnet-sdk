@@ -11,6 +11,11 @@ namespace Flagship.Enums
         public const int DEFAULT_POLLING_INTERVAL = 2000;
 
         public const int DEFAULT_HIT_CACHE_TIME = 14400000;
+
+        public const int DEFAULT_BATCH_TIME_INTERVAL = 10000;
+
+        public const int DEFAULT_BATCH_LENGTH = 20;
+
         /// <summary>
         /// Default request timeout in second
         /// </summary>
@@ -102,6 +107,8 @@ namespace Flagship.Enums
         public const string SCREEN_RESOLUTION_API_ITEM = "sr";
         public const string USER_LANGUAGE = "ul";
         public const string SESSION_NUMBER = "sn";
+        public const string VARIATION_GROUP_ID_API_ITEM_ACTIVATE = "caid";
+        public const string CUSTOMER_ENV_ID_API_ACTIVATE = "cid";
 
         public const string HIT_EVENT_ERROR_MESSSAGE = "event category and event action are required";
 
@@ -112,6 +119,8 @@ namespace Flagship.Enums
         public const string HIT_SCREEN_ERROR_MESSAGE = "documentLocation Screen name is required";
 
         public const string HIT_TRANSACTION_ERROR_MESSAGE = "Transaction Id and Transaction affiliation are required";
+
+       
     }
 
 }

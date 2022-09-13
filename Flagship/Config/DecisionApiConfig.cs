@@ -8,9 +8,8 @@ namespace Flagship.Config
 {
     public class DecisionApiConfig : FlagshipConfig
     {
-        public DecisionApiConfig() : base()
+        public DecisionApiConfig() : base(Enums.DecisionMode.DECISION_API)
         {
-            DecisionMode = Enums.DecisionMode.DECISION_API;
         }
     }
 }

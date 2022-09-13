@@ -419,6 +419,10 @@ namespace Flagship.Decision.Tests
 
             Assert.IsTrue(testOperator);
 
+            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, 2d, new JArray { 2d, 1d, 3d } });
+
+            Assert.IsTrue(testOperator);
+
             testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, "a", new JArray { "b", "c" } });
 
             Assert.IsFalse(testOperator);

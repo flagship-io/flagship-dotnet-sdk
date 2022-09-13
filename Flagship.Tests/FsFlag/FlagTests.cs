@@ -86,6 +86,28 @@ namespace Flagship.FsFlag.Tests
             item.Slug == metadata.Slug
             
             ), flagDTO.Key, true), Times.Once());
+
+            visitorMock.SetupGet(x => x.Flags).Returns((ICollection<FlagDTO>) null);
+            var keyNotExists = "keyNotExists";
+             defaultValue = "defaultString";
+            flag = new Flag<string>(keyNotExists, visitorMock.Object, defaultValue);
+
+            visitorMock.Setup(x => x.GetFlagValue(keyNotExists, defaultValue, null, true)).Returns(defaultValue);
+            visitorMock.Setup(x => x.UserExposed(keyNotExists, defaultValue, null)).Returns(Task.CompletedTask);
+            visitorMock.Setup(x => x.GetFlagMetadata(It.IsAny<IFlagMetadata>(), keyNotExists, true)).Returns(metadata);
+
+            value = flag.GetValue();
+
+            await flag.UserExposed().ConfigureAwait(false);
+            resultMeta = flag.Metadata;
+
+            Assert.AreEqual(defaultValue, value);
+            Assert.IsFalse(flag.Exists);
+            Assert.AreEqual(FlagMetadata.EmptyMetadata().ToJson(), resultMeta.ToJson());
+
+            visitorMock.Verify(x => x.UserExposed<object>(keyNotExists, defaultValue, null), Times.Once());
+            visitorMock.Verify(x => x.GetFlagValue(keyNotExists, defaultValue, null, true), Times.Once());
+            visitorMock.Verify(x => x.GetFlagMetadata(It.IsAny<IFlagMetadata>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once());
         }
 
         [TestMethod()]

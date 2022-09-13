@@ -1,4 +1,4 @@
-[![CI UnitTest & Build](https://github.com/flagship-io/flagship-dotnet-sdk/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/flagship-io/flagship-dotnet-sdk/actions/workflows/ci.yml/badge.svg?branch=master) [![codecov](https://codecov.io/gh/flagship-io/flagship-dotnet-sdk/branch/master/graph/badge.svg?token=R1UJJ9RP2C)](https://codecov.io/gh/flagship-io/flagship-dotnet-sdk)
+[![CI UnitTest & Build](https://github.com/flagship-io/flagship-dotnet-sdk/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/flagship-io/flagship-dotnet-sdk/actions/workflows/ci.yml/badge.svg?branch=main) [![codecov](https://codecov.io/gh/flagship-io/flagship-dotnet-sdk/branch/main/graph/badge.svg?token=R1UJJ9RP2C)](https://codecov.io/gh/flagship-io/flagship-dotnet-sdk) [![NuGet version](https://badge.fury.io/nu/Flagship.SDK.svg)](https://badge.fury.io/nu/Flagship.SDK)
 
 ## About Flagship
 

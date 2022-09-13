@@ -29,8 +29,13 @@ namespace Flagship.Config.Tests
             Assert.AreEqual(config.DecisionMode, Enums.DecisionMode.DECISION_API);
             Assert.AreEqual(config.Timeout, TimeSpan.FromMilliseconds(Flagship.Enums.Constants.REQUEST_TIME_OUT));
             Assert.AreEqual(config.LogLevel, Enums.LogLevel.ALL);
+            Assert.AreEqual(config.DisableCache, false);
 
             config.SetStatus(Enums.FlagshipStatus.READY);
+
+            config.DisableCache = true;
+            Assert.AreEqual(config.DisableCache, true);
+
         }
 
         private void Config_StatusChange(Enums.FlagshipStatus status)

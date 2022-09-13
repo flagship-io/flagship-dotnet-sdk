@@ -22,7 +22,7 @@ namespace Flagship.Hit.Tests
             };
             var action = "click";
             var label = "lable";
-            var value = 12f;
+            uint value = 12;
             var visitorId = "VisitorId";
             var hitEvent = new Hit.Event(EventCategory.USER_ENGAGEMENT, action)
             {

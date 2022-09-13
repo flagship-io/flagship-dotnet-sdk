@@ -18,7 +18,7 @@ namespace Flagship.Cache
         /// </summary>
         /// <param name="visitorId">visitor ID</param>
         /// <param name="data"></param>
-        Task CacheHit(string visitorId, JObject data);
+        Task CacheHit(JObject data);
 
         /// <summary>
         /// This method will be called to load hits corresponding to visitor ID from your database and trying to send them again in the background.
@@ -26,12 +26,12 @@ namespace Flagship.Cache
         /// </summary>
         /// <param name="visitorId">visitor ID</param>
         /// <returns></returns>
-        Task<JArray> LookupHits(string visitorId);
+        Task<JObject> LookupHits();
 
         /// <summary>
         /// This method will be called to erase the visitor hits cache corresponding to visitor ID from your database.
         /// </summary>
         /// <param name="visitorId">visitor ID</param>
-        Task FlushHits(string visitorId);
+        Task FlushHits(string[] hitKeys); 
     }
 }

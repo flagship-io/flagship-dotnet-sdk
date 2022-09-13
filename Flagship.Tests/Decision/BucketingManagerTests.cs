@@ -873,7 +873,7 @@ namespace Flagship.Decision.Tests
 
             var decisionManagerMock = new BucketingManager(config, httpClient, null);
 
-            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var trackingManagerMock = new Mock<Api.ITrackingManager>();
             var decisionManagerMock2 = new Mock<Flagship.Decision.IDecisionManager>();
             var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock2.Object, trackingManagerMock.Object);
 

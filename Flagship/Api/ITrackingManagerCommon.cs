@@ -11,6 +11,6 @@ namespace Flagship.Api
     {
         public FlagshipConfig Config { get; set; }
 
-        public void Add(Hit.HitAbstract hit);
-    }
+        public Task Add(Hit.HitAbstract hit);
+    } 
 }

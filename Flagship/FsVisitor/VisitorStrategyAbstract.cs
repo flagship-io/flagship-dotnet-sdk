@@ -43,11 +43,10 @@ namespace Flagship.FsVisitor
             {
                 if (!hasConsented)
                 {
-                    Visitor.GetStrategy().FlushHitAsync();
                     Visitor.GetStrategy().FlushVisitorAsync();
                 }
 
-                var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, "fs_consent")
+                var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, Constants.FS_CONSENT)
                 {
                     Label = $"{Constants.SDK_LANGUAGE}:{hasConsented}",
                     VisitorId = Visitor.VisitorId,
@@ -55,9 +54,8 @@ namespace Flagship.FsVisitor
                     Config = Config,
                     AnonymousId = Visitor.AnonymousId
                 };
-                await TrackingManager.SendHit(hitEvent);
 
-                
+                await SendHit(hitEvent);
             }
             catch (Exception ex)
             {
@@ -249,153 +247,6 @@ namespace Flagship.FsVisitor
             return hit;
         }
 
-        public virtual async void LookupHits()
-        {
-            var hitCacheInstance = Config?.HitCacheImplementation;
-            if (hitCacheInstance == null || Config.DisableCache )
-            {
-                return;
-            }
-
-            var hitsCache = await hitCacheInstance.LookupHits(Visitor.VisitorId);
-
-            if (hitsCache == null)
-            {
-                return;
-            }
-
-            var batches = new List<Batch>()
-            {
-                new Batch
-                {
-                    Hits = new Collection<HitAbstract>()
-                }
-            };
-
-            var count = 0;
-            foreach (var item in hitsCache) 
-            {
-                if (ChecKLookupHitData1(item) && CheckHitTime(item["Data"]["Time"].Value<DateTime>()))
-                {
-                    var hitCache = item.ToObject<HitCacheDTOV1>();
-
-                    if (hitCache.Data.Type == HitCacheType.ACTIVATE)
-                    {
-                        var content = (JObject)hitCache.Data.Content;
-                        var flagDTO = content.ToObject<FlagDTO>();
-                        _ = SendActivate(flagDTO);
-                        continue;
-                    }
-
-                    if (hitCache.Data.Type == HitCacheType.BATCH)
-                    {
-                        var content = (JObject)hitCache.Data.Content;
-                        var batche = content.ToObject<Batch>();
-                        _ = SendHit(batche);
-                        continue;
-                    }
-
-                    var batchSize = Newtonsoft.Json.JsonConvert.SerializeObject(batches[count]).Length;
-                    if (batchSize > HIT_BATCH_LENGTH)
-                    {
-                        count++;
-
-                        batches.Add(new Batch
-                        {
-                            Hits = new Collection<HitAbstract>
-                            {
-                                GetHitFromContent((JObject)hitCache.Data.Content)
-                            }
-                        });
-                    }
-                    else
-                    {
-                        batches[count].Hits.Add(GetHitFromContent((JObject)hitCache.Data.Content));
-                    }
-                }
-            }
-
-            if(batches.Count == 1 && batches[0].Hits.Count == 0)
-            {
-                return;
-            }
-
-            _ = SendHit(batches);
-        }
-
-        protected virtual JObject BuildHitCacheData(object data, HitCacheType type)
-        {
-            var hitData = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = Visitor.VisitorId,
-                    AnonymousId = Visitor.AnonymousId,
-                    Type = type,
-                    Content = data,
-                    Time = DateTime.Now
-                }
-            };
-
-            return JObject.FromObject(hitData);
-        }
-        public virtual async void CacheHit(HitAbstract hit)
-        {
-            try
-            {
-                var hitCacheInstance = Config?.HitCacheImplementation;
-                if (hitCacheInstance == null || Config.DisableCache)
-                {
-                    return;
-                }
-
-                var hitDataString = BuildHitCacheData(hit, (HitCacheType)hit.Type);
-
-                await hitCacheInstance.CacheHit(Visitor.VisitorId, hitDataString);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log.LogError(Config, ex.Message, "CacheHit");
-            }
-        }
-
-        public virtual async void CacheHit(FlagDTO flagDTO)
-        {
-            try 
-            {
-                var hitCacheInstance = Config?.HitCacheImplementation;
-                if (hitCacheInstance == null || Config.DisableCache)
-                {
-                    return;
-                }
-
-                var hitDataString = BuildHitCacheData(flagDTO, HitCacheType.ACTIVATE);
-
-                await hitCacheInstance.CacheHit(Visitor.VisitorId, hitDataString);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log.LogError(Config, ex.Message, "CacheHit");
-            }
-        }
-
-        public virtual async void FlushHitAsync() 
-        {
-            try
-            {
-                var hitCacheInstance = Config?.HitCacheImplementation;
-                if (hitCacheInstance == null || Config.DisableCache)
-                {
-                    return;
-                }
-                await hitCacheInstance.FlushHits(Visitor.VisitorId);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log.LogError(Config, ex.Message, "FlushHits");
-            }
-        }
         abstract public void ClearContext();
 
         abstract public Task FetchFlags();

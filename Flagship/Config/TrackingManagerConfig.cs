@@ -9,13 +9,13 @@ namespace Flagship.Config
 {
     public class TrackingManagerConfig : ITrackingManagerConfig
     {
-        public int BatchIntervals { get; set; }
+        public TimeSpan BatchIntervals { get; set; }
         public int BatchLength { get; set; }
         public BatchStrategy BatchStrategy { get; set; }
 
-        public TrackingManagerConfig(BatchStrategy batchStrategy = BatchStrategy.CONTINUOUS_CACHING, int batchIntervals = Constants.DEFAULT_BATCH_TIME_INTERVAL, int batchLength = Constants.DEFAULT_BATCH_LENGTH)
+        public TrackingManagerConfig(TimeSpan? batchIntervals, BatchStrategy batchStrategy = BatchStrategy.CONTINUOUS_CACHING, int batchLength = Constants.DEFAULT_BATCH_LENGTH)
         {
-            BatchIntervals = batchIntervals;
+            BatchIntervals = batchIntervals?? TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL);
             BatchLength = batchLength;
             BatchStrategy = batchStrategy;
         }

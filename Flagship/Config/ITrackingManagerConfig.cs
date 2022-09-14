@@ -12,13 +12,13 @@ namespace Flagship.Config
         /// <summary>
         /// Define the time intervals the SDK will use to send tracking batches.
         /// </summary>
-        public int BatchIntervals { get; set; }
+        TimeSpan BatchIntervals { get; set; }
 
         /// <summary>
         /// Define the maximum number of tracking hit that each batch can contain.
         /// </summary>
-        public int BatchLength { get; set; }
-        public BatchStrategy BatchStrategy { get; set; }
+        int BatchLength { get; set; }
+        BatchStrategy BatchStrategy { get; set; }
 
     }
 }

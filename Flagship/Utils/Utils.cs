@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,14 @@ namespace Flagship.Utils
                 return false;
             }
             return params1.GetType() == params2.GetType();
+        }
+
+        public static string ErrorFormat(string errorMessage, object errorData)
+        { 
+            return JsonConvert.SerializeObject(new { 
+                ErrorMessage = errorMessage,
+                ErrorData = errorData
+            });
         }
     }
 }

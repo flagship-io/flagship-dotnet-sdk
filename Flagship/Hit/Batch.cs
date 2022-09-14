@@ -26,7 +26,14 @@ namespace Flagship.Hit
 
         internal override IDictionary<string, object> ToApiKeys()
         {
-            var apiKeys = base.ToApiKeys();
+
+            var apiKeys = new Dictionary<string, object>()
+            {
+                [Constants.DS_API_ITEM] = DS,
+                [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config?.EnvId,
+                [Constants.T_API_ITEM] = $"{Type}",
+                [Constants.QT_API_ITEM] = (DateTime.Now - CreatedAt).Milliseconds
+            };
 
             var apiKeysHits = new Collection<IDictionary<string, object>>();
 
@@ -34,13 +41,6 @@ namespace Flagship.Hit
             {
                 var hitKeys = hit.ToApiKeys();
 
-                hitKeys.Remove(Constants.VISITOR_ID_API_ITEM);
-                hitKeys.Remove(Constants.CUSTOMER_ENV_ID_API_ITEM);
-                hitKeys.Remove(Constants.USER_IP_API_ITEM);
-                hitKeys.Remove(Constants.SCREEN_RESOLUTION_API_ITEM);
-                hitKeys.Remove(Constants.USER_LANGUAGE);
-                hitKeys.Remove(Constants.SESSION_NUMBER);
-                hitKeys.Remove(Constants.CUSTOMER_UID);
                 hitKeys.Remove(Constants.DS_API_ITEM);
 
                 apiKeysHits.Add(hitKeys);

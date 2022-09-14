@@ -14,7 +14,7 @@ namespace Flagship.Hit
     {
 
         [JsonProperty("Key")]
-        public string Key { get; set; }
+        internal string Key { get; set; }
         [JsonProperty("VisitorId")]
         internal string VisitorId { get; set; }
         internal FlagshipConfig Config { get; set; }
@@ -47,20 +47,27 @@ namespace Flagship.Hit
         /// Session number
         /// </summary>
         public string SessionNumber { get; set; }
+        
+        [JsonProperty("CreatedAt")]
+        internal DateTime CreatedAt { get; set; }
 
         public HitAbstract(HitType type)
         {
             Type = type;
+            CreatedAt = DateTime.Now;
         }
 
         internal virtual IDictionary<string, object> ToApiKeys()
         {
+
             var apiKeys = new Dictionary<string, object>()
             {
-                [Constants.VISITOR_ID_API_ITEM] = VisitorId,
+                [Constants.VISITOR_ID_API_ITEM] = AnonymousId ?? VisitorId,
                 [Constants.DS_API_ITEM] = DS,
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config?.EnvId,
-                [Constants.T_API_ITEM] = $"{Type}"
+                [Constants.T_API_ITEM] = $"{Type}",
+                [Constants.CUSTOMER_UID] = null,
+                [Constants.QT_API_ITEM] = (DateTime.Now - CreatedAt).Milliseconds
             };
 
             if (UserIp!=null)
@@ -88,11 +95,7 @@ namespace Flagship.Hit
                 apiKeys[Constants.VISITOR_ID_API_ITEM] = AnonymousId;
                 apiKeys[Constants.CUSTOMER_UID] = VisitorId;
             }
-            else
-            {
-                apiKeys[Constants.VISITOR_ID_API_ITEM] = AnonymousId ?? VisitorId;
-                apiKeys[Constants.CUSTOMER_UID] = null;
-            }
+
             return apiKeys;
         }
 

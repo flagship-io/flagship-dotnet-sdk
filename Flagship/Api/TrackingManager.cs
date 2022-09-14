@@ -5,6 +5,7 @@ using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 
@@ -20,64 +22,172 @@ namespace Flagship.Api
 
     internal class TrackingManager : ITrackingManager
     {
+        public const string PROCESS_LOOKUP_HIT = "LOOKUP HIT";
+        public const string HIT_DATA_LOADED = "Hits data has been loaded from database: {0}";
+
+        private Dictionary<string, HitAbstract> _hitsPoolQueue;
+        private BatchingCachingStrategyAbstract _strategy;
         public FlagshipConfig Config { get; set; }
         public HttpClient HttpClient { get; set; }
+        public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
+        protected Timer _timer;
+        protected bool _isPolling;
+
 
         public TrackingManager(FlagshipConfig config, HttpClient httpClient)
         {
             Config = config;
             HttpClient = httpClient;
+            _hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            _strategy = InitStrategy();
+            _ = LookupHitsAsync();
         }
 
-        public async Task SendActive(VisitorDelegateAbstract visitor, FlagDTO flag)
+        protected BatchingCachingStrategyAbstract InitStrategy()
         {
-
-            var url = $"{Constants.BASE_API_URL}activate";
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
-
-            requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
-            requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
-            requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
-            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
-
-            var postData = new Dictionary<string, object>
+            BatchingCachingStrategyAbstract strategy;
+            switch (Config.TrackingMangerConfig.BatchStrategy)
             {
-                [Constants.VISITOR_ID_API_ITEM] = visitor.VisitorId,
-                [Constants.VARIATION_ID_API_ITEM] = flag.VariationId,
-                [Constants.VARIATION_GROUP_ID_API_ITEM] = flag.VariationGroupId,
-                [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config.EnvId
-            };
-
-            if (!string.IsNullOrWhiteSpace(visitor.AnonymousId) && !string.IsNullOrWhiteSpace(visitor.VisitorId))
-            {
-                postData[Constants.VISITOR_ID_API_ITEM] = visitor.VisitorId;
-                postData[Constants.ANONYMOUS_ID] = visitor.AnonymousId;
+                case BatchStrategy.PERIODIC_CACHING:
+                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    break;
+                case BatchStrategy.NO_BATCHING:
+                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    break;
+                default:
+                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    break;
             }
-            else
-            {
-                postData[Constants.VISITOR_ID_API_ITEM] = visitor.AnonymousId ?? visitor.VisitorId;
-                postData[Constants.ANONYMOUS_ID] = null;
-            }
-
-            var postDatajson = JsonConvert.SerializeObject(postData);
-
-            var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
-
-            requestMessage.Content = stringContent;
-
-            await HttpClient.SendAsync(requestMessage);
+            return strategy;
         }
 
-        public async Task SendHit(HitAbstract hit)
+        public void StartBatchingLoop()
         {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, Constants.HIT_API_URL);
-            var postDatajson = JsonConvert.SerializeObject(hit.ToApiKeys());
+            var batchIntervals = Config.TrackingMangerConfig.BatchIntervals;
+            Log.LogInfo(Config, "Batching Loop have been started", "startBatchingLoop");
 
-            var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+            if (_timer != null)
+            {
+                _timer.Dispose();
+            }
 
-            requestMessage.Content = stringContent;
+            _timer = new Timer(async (e) =>
+            {
+                await BatchingLoop();
+            }, null, batchIntervals, batchIntervals);
+        }
 
-            await HttpClient.SendAsync(requestMessage);
+        public async Task BatchingLoop()
+        {
+            if (_isPolling)
+            {
+                return;
+            }
+
+            _isPolling = true;
+            await _strategy.SendBatch();
+            _isPolling = false;
+        }
+
+        public void StopBatchingLoop()
+        {
+
+            if (_timer != null)
+            {
+                _timer.Dispose();
+            }
+            _isPolling = false;
+            Log.LogInfo(Config, "Batching Loop have been stopped", "stopBatchingLoop");
+        }
+
+        public Task Add(HitAbstract hit)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected bool CheckHitTime(DateTime time) => (DateTime.Now - time).TotalSeconds <= Constants.DEFAULT_HIT_CACHE_TIME;
+
+        protected virtual bool ChecKLookupHitData1(JToken item)
+        {
+            return item != null && item["Version"].ToObject<int>() == 1 && item["Data"] != null && item["Data"]["Type"] != null;
+        }
+
+        protected HitAbstract GetHitFromContent(JObject content)
+        {
+            HitAbstract hit = null;
+            switch (content["Type"].ToObject<HitType>())
+            {
+                case HitType.EVENT:
+                    hit = content.ToObject<Event>();
+                    break;
+                case HitType.ITEM:
+                    hit = content.ToObject<Item>();
+                    break;
+                case HitType.PAGEVIEW:
+                    hit = content.ToObject<Page>();
+                    break;
+                case HitType.SCREENVIEW:
+                    hit = content.ToObject<Screen>();
+                    break;
+                case HitType.TRANSACTION:
+                    hit = content.ToObject<Transaction>();
+                    break;
+                case HitType.ACTIVATE:
+                    hit = content.ToObject<Activate>();
+                    break;
+                case HitType.CONTEXT:
+                    hit = content.ToObject<Segment>();
+                    break;
+            }
+
+            return hit;
+        }
+        public async Task LookupHitsAsync()
+        {
+            try
+            {
+                var hitCacheInstance = Config?.HitCacheImplementation;
+                if (hitCacheInstance == null || Config.DisableCache)
+                {
+                    return;
+                }
+
+                var hitsCache = await hitCacheInstance.LookupHits();
+
+                if (hitsCache == null)
+                {
+                    return;
+                }
+
+                Log.LogInfo(Config, string.Format(HIT_DATA_LOADED, JsonConvert.SerializeObject(hitsCache)), PROCESS_LOOKUP_HIT);
+
+                var wrongHitKeys = new List<string>();
+
+                foreach (var item in hitsCache)
+                {
+                    if (!ChecKLookupHitData1(item.Value) || !CheckHitTime(item.Value["Data"]["Time"].Value<DateTime>()))
+                    {
+                        wrongHitKeys.Add(item.Key);
+                        continue;
+                    }
+
+                    var hitCache = item.Value.ToObject<HitCacheDTOV1>();
+
+                    var hit = GetHitFromContent((JObject)hitCache.Data.Content);
+                    HitsPoolQueue.Add(hit.Key, hit);
+                }
+
+                if (wrongHitKeys.Any())
+                {
+                    await _strategy.FlushHitsAsync(wrongHitKeys.ToArray());
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(Config, ex.Message, PROCESS_LOOKUP_HIT);
+            }
+            
+
         }
     }
 }

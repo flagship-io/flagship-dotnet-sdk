@@ -9,8 +9,8 @@ namespace Flagship.Api
 {
     internal interface ITrackingManagerCommon
     {
-        public FlagshipConfig Config { get; set; }
+        FlagshipConfig Config { get; set; }
 
-        public Task Add(Hit.HitAbstract hit);
+        Task Add(Hit.HitAbstract hit);
     } 
 }

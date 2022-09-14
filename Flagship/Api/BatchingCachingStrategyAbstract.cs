@@ -18,9 +18,14 @@ namespace Flagship.Api
         public const string HIT_DATA_CACHED = "Hit data has been saved into database : {0}";
         public const string PROCESS_FLUSH_HIT = "FLUSH HIT";
         public const string HIT_DATA_FLUSHED = "The following hit keys have been flushed from database : {0}";
-        public const string FS_CONSENT = "fs_consent";
         public const string ADD_HIT = "ADD HIT";
         public const string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
+        public const string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
+        public const string SEND_BATCH = "SEND BATCH";
+        public const string SEND_ACTIVATE = "SEND ACTIVATE";
+        public const string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
+        public const string HIT_SENT_SUCCESS = "hit has been sent : {0}";
+
         public FlagshipConfig Config { get ; set ; }
         public HttpClient HttpClient { get; set; }
 
@@ -38,6 +43,8 @@ namespace Flagship.Api
         abstract public Task SendBatch();  
 
         abstract public Task NotConsent(string visitorId);
+
+        abstract public Task SendActivateAndSegmentHit(IEnumerable<HitAbstract> hits);
 
         public async Task CacheHitAsync(Dictionary<string, HitAbstract> hits)
         {

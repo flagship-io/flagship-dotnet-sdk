@@ -16,6 +16,8 @@ namespace Flagship.Enums
 
         public const int DEFAULT_BATCH_LENGTH = 20;
 
+        public const int BATCH_MAX_SIZE = 2500000;
+
         /// <summary>
         /// Default request timeout in second
         /// </summary>
@@ -24,6 +26,8 @@ namespace Flagship.Enums
         public const string BASE_API_URL = "https://decision.flagship.io/v2/";
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
+
+        public const string HIT_EVENT_URL = "https://events.flagship.io/"; 
 
         public const string BUCKETING_API_URL = "https://cdn.flagship.io/{0}/bucketing.json";
 
@@ -41,6 +45,8 @@ namespace Flagship.Enums
         public const string HEADER_X_SDK_VERSION = "x-sdk-version";
         public const string HEADER_APPLICATION_JSON = "application/json";
         public const string SDK_LANGUAGE = ".NET";
+
+        public const string FS_CONSENT = "fs_consent";
 
         public const string CONTEXT_PARAM_ERROR = "params {0} must be a non null String, and 'value' must be one of the following types string, Number, Boolean";
 
@@ -109,6 +115,7 @@ namespace Flagship.Enums
         public const string SESSION_NUMBER = "sn";
         public const string VARIATION_GROUP_ID_API_ITEM_ACTIVATE = "caid";
         public const string CUSTOMER_ENV_ID_API_ACTIVATE = "cid";
+        public const string QT_API_ITEM = "qt";
 
         public const string HIT_EVENT_ERROR_MESSSAGE = "event category and event action are required";
 
@@ -120,7 +127,7 @@ namespace Flagship.Enums
 
         public const string HIT_TRANSACTION_ERROR_MESSAGE = "Transaction Id and Transaction affiliation are required";
 
-       
+
     }
 
 }

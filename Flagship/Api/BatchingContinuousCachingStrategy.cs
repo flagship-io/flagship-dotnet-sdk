@@ -28,7 +28,7 @@ namespace Flagship.Api
             {
                 await NotConsent(hit.VisitorId);
             }
-            Logger.Log.LogInfo(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
+            Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
         }
 
         protected async Task AddHitWithKey(string key, HitAbstract hit)
@@ -90,7 +90,7 @@ namespace Flagship.Api
 
                     hitKeys.Add(hit.Key);
 
-                    Logger.Log.LogInfo(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), tag);
+                    Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), tag);
                 }
                 catch (Exception ex)
                 {
@@ -173,7 +173,7 @@ namespace Flagship.Api
 
                 await HttpClient.SendAsync(requestMessage);
 
-                Logger.Log.LogInfo(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
+                Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
 
                 await FlushHitsAsync(hitKeysToRemove.ToArray());
             }

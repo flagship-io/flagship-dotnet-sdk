@@ -32,9 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Flagship, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Flagship.SDK.3.0.2\lib\net45\Flagship.dll</HintPath>
-    </Reference>
     <Reference Include="MurmurHash, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ff7eff5eb27df7b9, processorArchitecture=MSIL">
       <HintPath>..\packages\murmurhash-signed.1.0.3\lib\net45\MurmurHash.dll</HintPath>
     </Reference>
@@ -57,6 +54,12 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Flagship\Flagship.csproj">
+      <Project>{2e16c32c-6545-448f-980b-2652bb104376}</Project>
+      <Name>Flagship</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -27,20 +27,6 @@ namespace Flagship.FsVisitor
             //
         }
 
-        public override void LookupHits()
-        {
-            //
-        }
-
-        public override void CacheHit(FlagDTO flagDTO)
-        {
-            //
-        }
-
-        public override void CacheHit(HitAbstract hit)
-        {
-            //
-        }
         public override Task FetchFlags()
         {
             return Task.Factory.StartNew(() => { Log("FetchFlags"); });

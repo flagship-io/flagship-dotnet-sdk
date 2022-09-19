@@ -44,7 +44,6 @@ namespace Flagship.FsVisitor
                 _anonymousId = Guid.NewGuid().ToString();
             }
 
-            GetStrategy().LookupHits();
             GetStrategy().LookupVisitor();
         }
        
@@ -59,7 +58,7 @@ namespace Flagship.FsVisitor
         {
             _context[PredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
             _context[PredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
-            //_context[FsPredefinedContext.FLAGSHIP_VISITOR] = VisitorId; 
+            _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;  
         }
 
         virtual public VisitorStrategyAbstract GetStrategy()

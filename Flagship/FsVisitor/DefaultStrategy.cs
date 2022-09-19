@@ -136,12 +136,12 @@ namespace Flagship.FsVisitor
         {
             try
             {
-                await TrackingManager.SendActive(Visitor, flag);
+                var activate = new Activate(flag.VariationGroupId, flag.VariationId);
+                await SendHit(activate);
             }
             catch (Exception ex)
             {
                 Log.LogError(Config, ex.Message, "UserExposed");
-                Visitor.GetStrategy().CacheHit(flag);
             }
         }
         public override async Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
@@ -235,11 +235,10 @@ namespace Flagship.FsVisitor
                     return;
                 }
 
-                await TrackingManager.SendHit(hit);
+                await TrackingManager.Add(hit);
             }
             catch (Exception ex)
             {
-                Visitor.GetStrategy().CacheHit(hit);
                 Log.LogError(Config, ex.Message, functionName);
             }
         }

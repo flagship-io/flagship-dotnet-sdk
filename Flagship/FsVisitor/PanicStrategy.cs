@@ -27,21 +27,6 @@ namespace Flagship.FsVisitor
             //
         }
 
-        public override void LookupHits()
-        {
-            //
-        }
-
-        public override void CacheHit(FlagDTO flagDTO)
-        {
-            //
-        }
-
-        public override void CacheHit(HitAbstract hit)
-        {
-            //
-        }
-
         protected override ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
         {
             return new Collection<Campaign>();

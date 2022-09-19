@@ -25,6 +25,8 @@ namespace Flagship.Api
         public const string SEND_ACTIVATE = "SEND ACTIVATE";
         public const string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
         public const string HIT_SENT_SUCCESS = "hit has been sent : {0}";
+        public const string URL_ACTIVATE = "activate";
+        public const string URL_EVENT = "events";
 
         public FlagshipConfig Config { get ; set ; }
         public HttpClient HttpClient { get; set; }
@@ -44,7 +46,7 @@ namespace Flagship.Api
 
         abstract public Task NotConsent(string visitorId);
 
-        abstract public Task SendActivateAndSegmentHit(IEnumerable<HitAbstract> hits);
+        abstract public Task SendActivateAndSegmentHits(IEnumerable<HitAbstract> hits);
 
         public async Task CacheHitAsync(Dictionary<string, HitAbstract> hits)
         {

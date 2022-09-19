@@ -26,7 +26,7 @@ namespace Flagship.Api
         public const string HIT_DATA_LOADED = "Hits data has been loaded from database: {0}";
 
         private Dictionary<string, HitAbstract> _hitsPoolQueue;
-        private BatchingCachingStrategyAbstract _strategy;
+        private readonly BatchingCachingStrategyAbstract _strategy;
         public FlagshipConfig Config { get; set; }
         public HttpClient HttpClient { get; set; }
         public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
@@ -49,16 +49,22 @@ namespace Flagship.Api
             switch (Config.TrackingMangerConfig.BatchStrategy)
             {
                 case BatchStrategy.PERIODIC_CACHING:
-                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    strategy = new BatchingPeriodicCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
                     break;
                 case BatchStrategy.NO_BATCHING:
-                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    strategy = new NoBatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
                     break;
+                case BatchStrategy.CONTINUOUS_CACHING:
                 default:
                     strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
                     break;
             }
             return strategy;
+        }
+
+        public async Task Add(HitAbstract hit)
+        {
+            await _strategy.Add(hit);
         }
 
         public void StartBatchingLoop()
@@ -98,11 +104,6 @@ namespace Flagship.Api
             }
             _isPolling = false;
             Log.LogInfo(Config, "Batching Loop have been stopped", "stopBatchingLoop");
-        }
-
-        public Task Add(HitAbstract hit)
-        {
-            throw new NotImplementedException();
         }
 
         protected bool CheckHitTime(DateTime time) => (DateTime.Now - time).TotalSeconds <= Constants.DEFAULT_HIT_CACHE_TIME;

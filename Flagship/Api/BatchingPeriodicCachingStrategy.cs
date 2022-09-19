@@ -23,7 +23,7 @@ namespace Flagship.Api
         {
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
-            HitsPoolQueue.Add(hitKey, hit);
+            HitsPoolQueue[hitKey] = hit;
             if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:false")
             {
                 await NotConsent(hit.VisitorId);
@@ -46,7 +46,7 @@ namespace Flagship.Api
             await CacheHitAsync(HitsPoolQueue);
         }
 
-        public async override Task SendActivateAndSegmentHit(IEnumerable<HitAbstract> hits)
+        public async override Task SendActivateAndSegmentHits(IEnumerable<HitAbstract> hits)
         {
             var requestMessage = new HttpRequestMessage()
             {
@@ -66,7 +66,7 @@ namespace Flagship.Api
                 var requestBody = hit.ToApiKeys();
                 var isActivateHit = hit.Type == HitType.ACTIVATE;
                 var url = Constants.BASE_API_URL;
-                url += isActivateHit ? "activate" : $"{Config.EnvId}/events";
+                url += isActivateHit ? URL_ACTIVATE : $"{Config.EnvId}/{URL_EVENT}"; ;
                 requestMessage.RequestUri = new Uri(url, UriKind.RelativeOrAbsolute);
                 var tag = isActivateHit ? SEND_ACTIVATE : SEND_SEGMENT_HIT;
 
@@ -84,7 +84,7 @@ namespace Flagship.Api
                 }
                 catch (Exception ex)
                 {
-                    HitsPoolQueue.Add(hit.Key, hit);
+                    HitsPoolQueue[hit.Key] = hit;
                     Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                     {
                         url,
@@ -130,7 +130,7 @@ namespace Flagship.Api
                 hitKeysToRemove.Add(item.Key);
             }
 
-            await SendActivateAndSegmentHit(activateAndSegmentHits);
+            await SendActivateAndSegmentHits(activateAndSegmentHits);
 
             if (!batch.Hits.Any())
             {
@@ -168,7 +168,7 @@ namespace Flagship.Api
             {
                 foreach (var item in batch.Hits)
                 {
-                    HitsPoolQueue.Add(item.Key, item);
+                    HitsPoolQueue[item.Key] = item;
                 }
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {

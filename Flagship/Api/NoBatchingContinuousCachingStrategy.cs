@@ -13,31 +13,126 @@ using System.Threading.Tasks;
 
 namespace Flagship.Api
 {
-    internal class BatchingContinuousCachingStrategy : BatchingCachingStrategyAbstract
+    internal class NoBatchingContinuousCachingStrategy : BatchingCachingStrategyAbstract
     {
-        public BatchingContinuousCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue) : base(config, httpClient, ref hitsPoolQueue)
+
+        readonly Dictionary<string, string> _cacheHitKeys;
+        public NoBatchingContinuousCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue) : base(config, httpClient, ref hitsPoolQueue)
         {
+            _cacheHitKeys = new Dictionary<string, string>();
         }
 
         public override async Task Add(HitAbstract hit)
         {
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
-            await AddHitWithKey(hitKey, hit);
+
             if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:false")
             {
                 await NotConsent(hit.VisitorId);
             }
-            Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
+
+            await CacheHitAsync(new Dictionary<string, HitAbstract>() { { hitKey, hit } });
+
+            if (hit.Type == HitType.ACTIVATE || hit.Type == HitType.CONTEXT)
+            {
+                await SendActivateAndSegmentHit(hit);
+                return;
+            }
+
+            await SendHit(hit);
         }
 
-        protected async Task AddHitWithKey(string key, HitAbstract hit)
+        public async Task SendHit(HitAbstract hit)
         {
-            HitsPoolQueue[key] = hit;
-            await CacheHitAsync(new Dictionary<string, HitAbstract>() { { key, hit } });
+
+            var requestBody = hit.ToApiKeys();
+
+            try
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, Constants.HIT_EVENT_URL);
+
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var postDatajson = JsonConvert.SerializeObject(requestBody);
+
+                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+
+                requestMessage.Content = stringContent;
+
+                await HttpClient.SendAsync(requestMessage);
+
+                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
+
+                await FlushHitsAsync(new string[] { hit.Key });
+            }
+            catch (Exception ex)
+            {
+                if (!(hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT))
+                {
+                    _cacheHitKeys[hit.Key] = hit.Key;
+                }
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    url = Constants.HIT_EVENT_URL,
+                    body = requestBody
+                }), SEND_BATCH);
+            }
         }
 
-        public override async Task NotConsent(string visitorId)
+        public async Task SendActivateAndSegmentHit(HitAbstract hit)
+        {
+            var requestMessage = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+            };
+
+            var sdkVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+            requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
+            requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
+            requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, sdkVersion);
+            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+            var requestBody = hit.ToApiKeys();
+            var isActivateHit = hit.Type == HitType.ACTIVATE;
+            var url = Constants.BASE_API_URL;
+            url += isActivateHit ? URL_ACTIVATE : $"{Config.EnvId}/{URL_EVENT}";
+            requestMessage.RequestUri = new Uri(url, UriKind.RelativeOrAbsolute);
+            var tag = isActivateHit ? SEND_ACTIVATE : SEND_SEGMENT_HIT;
+
+            try
+            {
+                var postDatajson = JsonConvert.SerializeObject(requestBody);
+
+                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+
+                requestMessage.Content = stringContent;
+
+                await HttpClient.SendAsync(requestMessage);
+
+                await FlushHitsAsync(new string[] { hit.Key });
+
+                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), tag);
+            }
+            catch (Exception ex)
+            {
+                _cacheHitKeys[hit.Key] = hit.Key;
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    url,
+                    headers = new Dictionary<string, string>
+                        {
+                            {Constants.HEADER_X_API_KEY, Config.ApiKey},
+                            {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
+                            {Constants.HEADER_X_SDK_VERSION, sdkVersion }
+                        },
+                    body = requestBody
+                }), tag);
+            }
+        }
+
+        public async override Task NotConsent(string visitorId)
         {
             var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) && x.Key.Contains(visitorId)).Select(x => x.Key);
 
@@ -49,10 +144,13 @@ namespace Flagship.Api
             {
                 return;
             }
-            await FlushHitsAsync(keys.ToArray());
+            var mergedKeys = new List<string>(keys);
+            mergedKeys.AddRange(_cacheHitKeys.Keys);
+
+            await FlushHitsAsync(mergedKeys.ToArray());
         }
 
-        public override async Task SendActivateAndSegmentHits(IEnumerable<HitAbstract> hits)
+        public async override Task SendActivateAndSegmentHits(IEnumerable<HitAbstract> hits)
         {
             var requestMessage = new HttpRequestMessage()
             {
@@ -94,7 +192,7 @@ namespace Flagship.Api
                 }
                 catch (Exception ex)
                 {
-                    await AddHitWithKey(hit.Key, hit);
+                    HitsPoolQueue[hit.Key] = hit;
                     Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                     {
                         url,
@@ -115,7 +213,7 @@ namespace Flagship.Api
             }
         }
 
-        public override async Task SendBatch()
+        public async override Task SendBatch()
         {
             var batch = new Batch()
             {
@@ -181,7 +279,7 @@ namespace Flagship.Api
             {
                 foreach (var item in batch.Hits)
                 {
-                    await AddHitWithKey(item.Key, item);
+                    HitsPoolQueue[item.Key] = item;
                 }
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {

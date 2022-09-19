@@ -55,6 +55,7 @@ namespace Flagship.Hit
         {
             Type = type;
             CreatedAt = DateTime.Now;
+            DS = Constants.SDK_APP;
         }
 
         internal virtual IDictionary<string, object> ToApiKeys()

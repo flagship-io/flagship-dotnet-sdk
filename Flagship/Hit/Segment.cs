@@ -10,9 +10,9 @@ namespace Flagship.Hit
     internal class Segment : HitAbstract
     {
         public const string ERROR_MESSAGE = "data property is required";
-        public Dictionary<string, object> Data { get; set; }
+        public IDictionary<string, object> Data { get; set; }
 
-        public Segment(Dictionary<string, object> data):base(HitType.CONTEXT)
+        public Segment(IDictionary<string, object> data):base(HitType.CONTEXT)
         {
             Data = data;
         }

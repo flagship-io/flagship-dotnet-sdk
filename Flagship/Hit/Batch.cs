@@ -17,6 +17,8 @@ namespace Flagship.Hit
         public ICollection<HitAbstract> Hits { get; set; } 
         public Batch() : base(HitType.BATCH)
         {
+            Hits = new List<HitAbstract>();
+            DS = Constants.SDK_APP;
         }
 
         internal override bool IsReady(bool checkParent = true)
@@ -40,9 +42,6 @@ namespace Flagship.Hit
             foreach (var hit in Hits)
             {
                 var hitKeys = hit.ToApiKeys();
-
-                hitKeys.Remove(Constants.DS_API_ITEM);
-
                 apiKeysHits.Add(hitKeys);
             }
 

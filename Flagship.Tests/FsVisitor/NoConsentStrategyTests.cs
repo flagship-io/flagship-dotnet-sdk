@@ -52,14 +52,12 @@ namespace Flagship.FsVisitor.Tests
             config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
             config.HitCacheImplementation = HitCaheImplementation.Object;
 
-            noConsentStategy.CacheHit(flagDTO: null);
-            noConsentStategy.CacheHit(hit: null);
+
             noConsentStategy.CacheVisitorAsync();
-            noConsentStategy.LookupHits();
             noConsentStategy.LookupVisitor();
 
             VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
-            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+
 
             var privateNoConsentStrategy = new PrivateObject(noConsentStategy);
 

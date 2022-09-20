@@ -280,17 +280,23 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDto), Times.Once());
+            var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
+
+            trackingManagerMock.Verify(x => x.Add(activate), Times.Once());
 
             var flagDtoValueNull = CampaignsData.GetFlag()[1];
 
             await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDtoValueNull), Times.Once());
+            var actiateNull = new Activate(flagDtoValueNull.VariationGroupId, flagDtoValueNull.VariationId);
+
+            trackingManagerMock.Verify(x => x.Add(actiateNull), Times.Once());
 
             var error = new Exception("userExposed error");
 
-            trackingManagerMock.Setup(x => x.SendActive(visitorDelegate, flagDto)).Throws(error);
+            activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
+
+            trackingManagerMock.Setup(x => x.Add(activate)).Throws(error);
             await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(error.Message, functionName), Times.Once());
@@ -321,6 +327,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(defaultValueString, value2);
 
             fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDtoValueNull.Key), functionName), Times.Once());
+            var activate = new Activ
             trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDtoValueNull), Times.Once());
         }
 
@@ -855,7 +862,7 @@ namespace Flagship.FsVisitor.Tests
                 {
                     VisitorId = visitorDelegate.VisitorId,
                     AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.ACTIVATE,
+                    Type = HitType.ACTIVATE,
                     Content = hit,
                     Time = DateTime.Now
                 }

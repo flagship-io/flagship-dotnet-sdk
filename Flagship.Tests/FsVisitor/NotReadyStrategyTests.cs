@@ -53,14 +53,10 @@ namespace Flagship.FsVisitor.Tests
             config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
             config.HitCacheImplementation = HitCaheImplementation.Object;
 
-            notReadyStategy.CacheHit(flagDTO: null);
-            notReadyStategy.CacheHit(hit: null);
             notReadyStategy.CacheVisitorAsync();
-            notReadyStategy.LookupHits();
             notReadyStategy.LookupVisitor();
 
             VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
-            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
         }
 
         [TestMethod()]

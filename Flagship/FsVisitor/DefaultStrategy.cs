@@ -152,7 +152,7 @@ namespace Flagship.FsVisitor
                 Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
                 return;
             }
-            if (flag.Value != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
+            if (flag.Value != null && defaultValue!=null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
                 Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
                 return;
@@ -171,17 +171,16 @@ namespace Flagship.FsVisitor
                 return defaultValue;
             }
 
-            if (flag.Value == null && defaultValue != null)
+            if (flag.Value == null)
             {
                 if (userExposed)
                 {
                     _ = UserExposed(key, defaultValue, flag);
                 }
-                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;
             }
 
-            if (!Utils.Utils.HasSameType(flag.Value, defaultValue))
+            if (defaultValue != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
                 Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
                 return defaultValue;

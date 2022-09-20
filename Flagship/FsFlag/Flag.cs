@@ -42,7 +42,7 @@ namespace Flagship.FsFlag
                     return metadata;
                 }
 
-                return _visitorDelegateAbstract.GetFlagMetadata(metadata, _key, Utils.Utils.HasSameType(flagDTO.Value, _defaultValue));
+                return _visitorDelegateAbstract.GetFlagMetadata(metadata, _key, flagDTO.Value==null || _defaultValue==null ||  Utils.Utils.HasSameType(flagDTO.Value, _defaultValue));
             }
         }
 

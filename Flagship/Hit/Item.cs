@@ -35,7 +35,7 @@ namespace Flagship.Hit
         /// <summary>
         /// Specifies the number of items purchased.
         /// </summary>
-        public double? Quantity { get; set; }
+        public int? Quantity { get; set; }
 
         /// <summary>
         /// Specifies the category that the item belongs to.
@@ -61,7 +61,7 @@ namespace Flagship.Hit
             var apiKeys = base.ToApiKeys();
             apiKeys[Constants.TID_API_ITEM] = TransactionId;
             apiKeys[Constants.IN_API_ITEM] = Name;
-            apiKeys[Constants.ICN_API_ITEM]= Code;
+            apiKeys[Constants.IC_API_ITEM] = Code;
 
             if (Price.HasValue)
             {

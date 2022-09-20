@@ -13,7 +13,6 @@ namespace Flagship.Hit
     {
         public const string ERROR_MESSAGE = "Please check required fields";
 
-        [JsonConverter(typeof(BatchConverter))]
         public ICollection<HitAbstract> Hits { get; set; } 
         public Batch() : base(HitType.BATCH)
         {

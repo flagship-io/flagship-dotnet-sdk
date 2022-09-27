@@ -1,5 +1,6 @@
 ﻿using Flagship.Enums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,16 +24,37 @@ namespace Flagship.Hit.Tests
 
             var visitorId = "VisitorId";
 
-            var batch = new Batch()
+            var currentTime = DateTime.Now;
+            var batchMock = new Mock<Batch>()
             {
-                Config = config,
-                VisitorId = visitorId,
-                DS = Constants.SDK_APP
+                CallBase = true,
             };
+
+            batchMock.SetupGet(x=> x.CurrentDateTime).Returns(currentTime);
+
+            var batch = batchMock.Object;
+
+            batch.DS = Constants.SDK_APP;
+            batch.VisitorId = visitorId;
+            batch.Config = config;
+            batch.CreatedAt = currentTime;
+
+            var pageMock = new Mock<Page>("home")
+            {
+                CallBase=true,
+            };
+
+            pageMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+            var page = pageMock.Object;
+
+            page.CreatedAt = currentTime;
+            page.VisitorId = visitorId;
+            page.Config = config;
+            
 
             var hits = new List<HitAbstract>()
             {
-                new Page("home")
+                page
             };
             batch.Hits = hits;
 
@@ -42,24 +64,19 @@ namespace Flagship.Hit.Tests
 
             var apiKeys = new Dictionary<string, object>()
             {
-                [Constants.VISITOR_ID_API_ITEM] = visitorId,
                 [Constants.DS_API_ITEM] = Constants.SDK_APP,
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
                 [Constants.T_API_ITEM] = $"{HitType.BATCH}",
-                [Constants.CUSTOMER_UID] = null,
-                ["h"] = new Collection<IDictionary<string, object>>(){
-                    new Dictionary<string, object>()
-                {
-                    [Constants.T_API_ITEM] = $"{HitType.PAGEVIEW}",
-                    [Constants.DL_API_ITEM] = "home"
-
-                }
+                [Constants.QT_API_ITEM] = (currentTime - currentTime).Milliseconds,
+                ["h"] = new Collection<IDictionary<string, object>>() { 
+                    page.ToApiKeys()
                 }
             };
 
             var apiKeysJson = Newtonsoft.Json.JsonConvert.SerializeObject(apiKeys);
 
             Assert.AreEqual(apiKeysJson, keys);
+
 
             Assert.IsTrue(batch.IsReady());
 

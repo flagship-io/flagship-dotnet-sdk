@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Hit
 {
-    
+
     public abstract class HitAbstract
     {
 
@@ -47,16 +47,18 @@ namespace Flagship.Hit
         /// Session number
         /// </summary>
         public string SessionNumber { get; set; }
-        
+
         [JsonProperty("CreatedAt")]
         internal DateTime CreatedAt { get; set; }
 
         public HitAbstract(HitType type)
         {
             Type = type;
-            CreatedAt = DateTime.Now;
+            CreatedAt = CurrentDateTime;
             DS = Constants.SDK_APP;
         }
+
+        internal virtual DateTime CurrentDateTime { get => DateTime.Now; }
 
         internal virtual IDictionary<string, object> ToApiKeys()
         {
@@ -68,10 +70,10 @@ namespace Flagship.Hit
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config?.EnvId,
                 [Constants.T_API_ITEM] = $"{Type}",
                 [Constants.CUSTOMER_UID] = null,
-                [Constants.QT_API_ITEM] = (DateTime.Now - CreatedAt).Milliseconds
+                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds
             };
 
-            if (UserIp!=null)
+            if (UserIp != null)
             {
                 apiKeys[Constants.USER_IP_API_ITEM] = UserIp;
             }
@@ -81,12 +83,12 @@ namespace Flagship.Hit
                 apiKeys[Constants.SCREEN_RESOLUTION_API_ITEM] = ScreenResolution;
             }
 
-            if (Locale!=null)
+            if (Locale != null)
             {
                 apiKeys[Constants.USER_LANGUAGE] = Locale;
             }
 
-            if (SessionNumber!=null)
+            if (SessionNumber != null)
             {
                 apiKeys[Constants.SESSION_NUMBER] = SessionNumber;
             }
@@ -100,14 +102,14 @@ namespace Flagship.Hit
             return apiKeys;
         }
 
-        internal virtual  bool IsReady(bool checkParent = true)
+        internal virtual bool IsReady(bool checkParent = true)
         {
-            return !string.IsNullOrWhiteSpace(VisitorId) && 
-                !string.IsNullOrWhiteSpace(DS) && 
-                Config!=null && 
+            return !string.IsNullOrWhiteSpace(VisitorId) &&
+                !string.IsNullOrWhiteSpace(DS) &&
+                Config != null &&
                 !string.IsNullOrWhiteSpace(Config.EnvId);
         }
-            
-        abstract internal  string GetErrorMessage();
+
+        abstract internal string GetErrorMessage();
     }
 }

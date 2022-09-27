@@ -33,7 +33,7 @@ namespace Flagship.Hit
                 [Constants.DS_API_ITEM] = DS,
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config?.EnvId,
                 [Constants.T_API_ITEM] = $"{Type}",
-                [Constants.QT_API_ITEM] = (DateTime.Now - CreatedAt).Milliseconds
+                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds
             };
 
             var apiKeysHits = new Collection<IDictionary<string, object>>();

@@ -35,7 +35,7 @@ namespace Flagship.FsVisitor.Tests
             Builder.HasConsented(false).IsAuthenticated(false).WithContext(context);
             visitor = Builder.Build();
 
-            Assert.AreEqual(3, visitor.Context.Count);
+            Assert.AreEqual(4, visitor.Context.Count);
             Assert.IsFalse(visitor.HasConsented);
 
             var context2 = new Dictionary<string, object>()
@@ -46,7 +46,7 @@ namespace Flagship.FsVisitor.Tests
 
             Builder.WithContext(context2);
             visitor = Builder.Build();
-            Assert.AreEqual(3, visitor.Context.Count);
+            Assert.AreEqual(4, visitor.Context.Count);
 
             var context3 = new Dictionary<string, object>()
             {
@@ -55,7 +55,7 @@ namespace Flagship.FsVisitor.Tests
 
             Builder.WithContext(context3);
             visitor = Builder.Build();
-            Assert.AreEqual(3, visitor.Context.Count);
+            Assert.AreEqual(4, visitor.Context.Count);
 
 
             Builder = VisitorBuilder.Builder(configManager.Object, visitorId, Enums.InstanceType.SINGLE_INSTANCE);

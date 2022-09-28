@@ -88,6 +88,7 @@
     <Compile Include="Api\TrackingManager.cs" />
     <Compile Include="Config\BucketingConfigTests.cs" />
     <Compile Include="Config\DecisionApiConfigTests.cs" />
+    <Compile Include="Config\TrackingManagerConfigTests.cs" />
     <Compile Include="Data\CampaignsData.cs" />
     <Compile Include="Decision\ApiManagerTests.cs" />
     <Compile Include="Decision\BucketingManagerTests.cs" />

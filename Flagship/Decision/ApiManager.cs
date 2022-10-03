@@ -29,10 +29,7 @@ namespace Flagship.Decision
             {
                 
                 var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true";
-                if (!visitor.HasConsented)
-                {
-                    url += $"&{Constants.SEND_CONTEXT_EVENT}=false";
-                }
+
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
 
@@ -47,7 +44,8 @@ namespace Flagship.Decision
                     ["visitorId"] = visitor.VisitorId,
                     ["anonymousId"] = visitor.AnonymousId,
                     ["trigger_hit"] = false,
-                    ["context"] = visitor.Context
+                    ["context"] = visitor.Context,
+                    ["visitor_consent"] = visitor.HasConsented
                 };
 
                 var postDatajson = JsonConvert.SerializeObject(postData);

@@ -36,7 +36,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent(GetCampaigns(), Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true&{Constants.SEND_CONTEXT_EVENT}=false";
+            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
@@ -93,7 +93,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent("{'visitorId':'anonymeId','campaigns':[],'panic':true}", Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true&{Constants.SEND_CONTEXT_EVENT}=false";
+            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
@@ -144,7 +144,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent("{'visitorId':'anonymeId','campaigns':[],'panic':true}", Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true&{Constants.SEND_CONTEXT_EVENT}=false";
+            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
@@ -196,7 +196,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent(responseContent, Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true&{Constants.SEND_CONTEXT_EVENT}=false";
+            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 

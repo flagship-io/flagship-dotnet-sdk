@@ -80,6 +80,7 @@ namespace Flagship.Enums
 
         public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
 
+        public const string BATCH = "batch";
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
         public const string CUSTOMER_UID = "cuid";
         public const string ANONYMOUS_ID = "aid";

@@ -26,10 +26,13 @@ namespace Flagship.Api
         public const string HIT_DATA_LOADED = "Hits data has been loaded from database: {0}";
 
         private Dictionary<string, HitAbstract> _hitsPoolQueue;
+        private Dictionary<string, Activate> _activatePoolQueue;
         private readonly BatchingCachingStrategyAbstract _strategy;
         public FlagshipConfig Config { get; set; }
         public HttpClient HttpClient { get; set; }
         public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
+        public Dictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
+
         protected Timer _timer;
         protected bool _isPolling;
 
@@ -39,6 +42,7 @@ namespace Flagship.Api
             Config = config;
             HttpClient = httpClient;
             _hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            _activatePoolQueue = new Dictionary<string, Activate>();
             _strategy = InitStrategy();
             _ = LookupHitsAsync();
         }

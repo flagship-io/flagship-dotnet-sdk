@@ -31,22 +31,27 @@ namespace Flagship.Api
         public FlagshipConfig Config { get ; set ; }
         public HttpClient HttpClient { get; set; }
 
-        public Dictionary<string,HitAbstract> HitsPoolQueue { get; set; } 
+        public Dictionary<string,HitAbstract> HitsPoolQueue { get; set; }
+        public Dictionary<string, Activate> ActivatePoolQueue { get; set; }
 
-        public BatchingCachingStrategyAbstract(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue)
+
+        public BatchingCachingStrategyAbstract(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue)
         {
             Config = config;
             HttpClient = httpClient;
             HitsPoolQueue = hitsPoolQueue;
+            ActivatePoolQueue = activatePoolQueue;
         }
 
-        abstract public Task Add(HitAbstract hit); 
-         
+        abstract public Task Add(HitAbstract hit);
+
+        abstract public Task ActivateFlag(Activate hit);
+
+        abstract protected Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate);
+
         abstract public Task SendBatch();  
 
         abstract public Task NotConsent(string visitorId);
-
-        abstract public Task SendActivateAndSegmentHits(IEnumerable<HitAbstract> hits);
 
         public async Task CacheHitAsync(Dictionary<string, HitAbstract> hits)
         {

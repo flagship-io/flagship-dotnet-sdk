@@ -8,7 +8,7 @@
     <Authors>Flagship Team</Authors>
     <Company>ABTasty</Company>
     <Product>Flagship</Product>
-    <Version>3.0.3</Version>
+    <Version>3.0.4</Version>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/flagship-io/flagship-dotnet-sdk</PackageProjectUrl>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

@@ -53,14 +53,14 @@ namespace Flagship.Api
             switch (Config.TrackingMangerConfig.BatchStrategy)
             {
                 case BatchStrategy.PERIODIC_CACHING:
-                    strategy = new BatchingPeriodicCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    strategy = new BatchingPeriodicCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;
                 case BatchStrategy.NO_BATCHING:
-                    strategy = new NoBatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    strategy = new NoBatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;
                 case BatchStrategy.CONTINUOUS_CACHING:
                 default:
-                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue);
+                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;
             }
             return strategy;
@@ -69,6 +69,11 @@ namespace Flagship.Api
         public async Task Add(HitAbstract hit)
         {
             await _strategy.Add(hit);
+        }
+
+        public async Task ActivateFlag(Activate hit)
+        {
+            await _strategy.ActivateFlag(hit);
         }
 
         public void StartBatchingLoop()
@@ -140,7 +145,7 @@ namespace Flagship.Api
                 case HitType.ACTIVATE:
                     hit = content.ToObject<Activate>();
                     break;
-                case HitType.CONTEXT:
+                case HitType.SEGMENT:
                     hit = content.ToObject<Segment>();
                     break;
             }
@@ -194,5 +199,7 @@ namespace Flagship.Api
             
 
         }
+
+
     }
 }

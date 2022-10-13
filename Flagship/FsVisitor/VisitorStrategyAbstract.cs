@@ -55,7 +55,7 @@ namespace Flagship.FsVisitor
                     AnonymousId = Visitor.AnonymousId
                 };
 
-                await SendHit(hitEvent);
+                await TrackingManager.Add(hitEvent);
             }
             catch (Exception ex)
             {
@@ -220,31 +220,6 @@ namespace Flagship.FsVisitor
         protected virtual bool ChecKLookupHitData1(JToken item)
         {
             return item != null && item["Version"].ToObject<int>() == 1 && item["Data"] != null && item["Data"]["Type"] != null;
-        }
-
-        protected HitAbstract GetHitFromContent(JObject content)
-        {
-            HitAbstract hit = null;
-            switch (content["Type"].ToObject<HitType>())
-            {
-                case HitType.EVENT:
-                    hit = content.ToObject<Event>();
-                    break;
-                case HitType.ITEM:
-                    hit = content.ToObject<Item>();
-                    break;
-                case HitType.PAGEVIEW:
-                    hit = content.ToObject<Page>();
-                    break;
-                case HitType.SCREENVIEW:
-                    hit = content.ToObject<Screen>();
-                    break;
-                case HitType.TRANSACTION:
-                    hit = content.ToObject<Transaction>();
-                    break;
-            }
-
-            return hit;
         }
 
         abstract public void ClearContext();

@@ -136,8 +136,11 @@ namespace Flagship.FsVisitor
         {
             try
             {
-                var activate = new Activate(flag.VariationGroupId, flag.VariationId);
-                await SendHit(activate);
+                var activate = new Activate(flag.VariationGroupId, flag.VariationId)
+                {
+                    Config=Config
+                };
+                await TrackingManager.ActivateFlag(activate);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
 ﻿using Flagship.Config;
+using Flagship.Hit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace Flagship.Api
     {
         FlagshipConfig Config { get; set; }
 
-        Task Add(Hit.HitAbstract hit);
+        Task Add(HitAbstract hit);
+
+        Task ActivateFlag(Activate hit);
     } 
 }

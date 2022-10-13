@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,26 +18,23 @@ namespace Flagship.Api
         {
         }
 
-        public override  Task Add(HitAbstract hit)
+        public async override Task Add(HitAbstract hit)
         {
-            return Task.Factory.StartNew(async () =>
-            {
-                var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
-                hit.Key = hitKey;
-                await AddHitWithKey(hitKey, hit);
-                if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:false")
-                {
-                    await NotConsent(hit.VisitorId);
-                }
-                Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
-            });
-            
-        }
 
-        protected async Task AddHitWithKey(string key, HitAbstract hit)
-        {
-            HitsPoolQueue[key] = hit;
-            await CacheHitAsync(new Dictionary<string, HitAbstract>() { { key, hit } });
+            var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
+            hit.Key = hitKey;
+
+            HitsPoolQueue[hitKey] = hit;
+
+            await CacheHitAsync(new Dictionary<string, HitAbstract>() { { hitKey, hit } });
+
+            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:false")
+            {
+                await NotConsent(hit.VisitorId);
+            }
+            Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
+
+
         }
 
         public override async Task NotConsent(string visitorId)
@@ -49,7 +45,7 @@ namespace Flagship.Api
             {
                 HitsPoolQueue.Remove(item);
             }
-            if (keys.Any())
+            if (!keys.Any())
             {
                 return;
             }
@@ -58,6 +54,16 @@ namespace Flagship.Api
 
         public override async Task SendBatch()
         {
+            if (ActivatePoolQueue.Any())
+            {
+                var activateHits = ActivatePoolQueue.Values.ToList();
+                var keys = activateHits.Select(x => x.Key);
+                foreach (var item in keys)
+                {
+                    ActivatePoolQueue.Remove(item);
+                }
+                await SendActivate(activateHits, null);
+            }
             var batch = new Batch()
             {
                 Config = Config
@@ -104,7 +110,19 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    var message = new Dictionary<string, object>()
+                    {
+                        {"StatusCode:", response.StatusCode},
+                        {"ReasonPhrase", response.ReasonPhrase },
+                        {"response", await response.Content.ReadAsStringAsync() }
+                    };
+
+                    throw new Exception(JsonConvert.SerializeObject(message));
+                }
 
                 Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
 
@@ -114,7 +132,7 @@ namespace Flagship.Api
             {
                 foreach (var item in batch.Hits)
                 {
-                    await AddHitWithKey(item.Key, item);
+                    HitsPoolQueue[item.Key] = item;
                 }
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {
@@ -124,25 +142,24 @@ namespace Flagship.Api
             }
         }
 
-        public override Task ActivateFlag(Activate hit)
+        public async override Task ActivateFlag(Activate hit)
         {
-            return Task.Factory.StartNew(async () =>
-            {
-                var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
-                hit.Key = hitKey;
-                var activateHitPool = new List<Activate>();
-                if (ActivatePoolQueue.Count > 0)
-                {
-                    activateHitPool = ActivatePoolQueue.Values.ToList();
-                    var keys = activateHitPool.Select(x => x.Key);
-                    foreach (var item in keys)
-                    {
-                        ActivatePoolQueue.Remove(item); 
-                    }
-                }
 
-                await SendActivate(activateHitPool, hit);
-            });
+            var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
+            hit.Key = hitKey;
+            var activateHitPool = new List<Activate>();
+            if (ActivatePoolQueue.Any())
+            {
+                activateHitPool = ActivatePoolQueue.Values.ToList();
+                var keys = activateHitPool.Select(x => x.Key);
+                foreach (var item in keys)
+                {
+                    ActivatePoolQueue.Remove(item);
+                }
+            }
+
+            await SendActivate(activateHitPool, hit);
+
         }
 
         protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate)
@@ -172,10 +189,22 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                await HttpClient.SendAsync(requestMessage);
+                var response =  await HttpClient.SendAsync(requestMessage);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    var message = new Dictionary<string, object>()
+                    {
+                        {"StatusCode:", response.StatusCode},
+                        {"ReasonPhrase", response.ReasonPhrase },
+                        {"response", await response.Content.ReadAsStringAsync() }
+                    };
+
+                    throw new Exception(JsonConvert.SerializeObject(message));
+                }
 
                 var hitKeysToRemove = activateHitsPool.Select(x => x.Key).ToArray();
-                if (hitKeysToRemove.Length > 0)
+                if (hitKeysToRemove.Any())
                 {
                     await FlushHitsAsync(hitKeysToRemove);
                 }

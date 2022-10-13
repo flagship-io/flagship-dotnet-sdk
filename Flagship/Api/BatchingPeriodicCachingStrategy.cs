@@ -15,7 +15,7 @@ namespace Flagship.Api
 {
     internal class BatchingPeriodicCachingStrategy : BatchingCachingStrategyAbstract
     {
-        public BatchingPeriodicCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue) : base(config, httpClient, ref hitsPoolQueue)
+        public BatchingPeriodicCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
         {
         }
 
@@ -39,69 +39,116 @@ namespace Flagship.Api
             {
                 HitsPoolQueue.Remove(item);
             }
-            if (keys.Any())
+            if (!keys.Any())
             {
                 return;
             }
             await CacheHitAsync(HitsPoolQueue);
         }
 
-        public async override Task SendActivateAndSegmentHits(IEnumerable<HitAbstract> hits)
-        {
-            var requestMessage = new HttpRequestMessage()
-            {
-                Method = HttpMethod.Post,
-            };
 
-            var sdkVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        public async override Task ActivateFlag(Activate hit)
+        {
+
+            var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
+            hit.Key = hitKey;
+            var activateHitPool = new List<Activate>();
+            if (ActivatePoolQueue.Any())
+            {
+                activateHitPool = ActivatePoolQueue.Values.ToList();
+                var keys = activateHitPool.Select(x => x.Key);
+                foreach (var item in keys)
+                {
+                    ActivatePoolQueue.Remove(item);
+                }
+            }
+
+            await SendActivate(activateHitPool, hit);
+
+        }
+
+        protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate)
+        {
+            var url = Constants.BASE_API_URL + URL_ACTIVATE;
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
 
             requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
-            requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, sdkVersion);
+            requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
             requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-            foreach (var hit in hits)
+            var activateBatch = new ActivateBatch(activateHitsPool, Config);
+
+            if (currentActivate != null)
             {
-                HitsPoolQueue.Remove(hit.Key);
-                var requestBody = hit.ToApiKeys();
-                var isActivateHit = hit.Type == HitType.ACTIVATE;
-                var url = Constants.BASE_API_URL;
-                url += isActivateHit ? URL_ACTIVATE : $"{Config.EnvId}/{URL_EVENT}"; ;
-                requestMessage.RequestUri = new Uri(url, UriKind.RelativeOrAbsolute);
-                var tag = isActivateHit ? SEND_ACTIVATE : SEND_SEGMENT_HIT;
+                activateBatch.Hits.Add(currentActivate);
+            }
 
-                try
+            var requestBody = activateBatch.ToApiKeys();
+
+            try
+            {
+                var postDatajson = JsonConvert.SerializeObject(requestBody);
+
+                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+
+                requestMessage.Content = stringContent;
+
+
+                var response = await HttpClient.SendAsync(requestMessage);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {
-                    var postDatajson = JsonConvert.SerializeObject(requestBody);
-
-                    var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
-
-                    requestMessage.Content = stringContent;
-
-                    await HttpClient.SendAsync(requestMessage);
-
-                    Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), tag);
-                }
-                catch (Exception ex)
-                {
-                    HitsPoolQueue[hit.Key] = hit;
-                    Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                    var message = new Dictionary<string, object>()
                     {
-                        url,
-                        headers = new Dictionary<string, string>
+                        {"StatusCode:", response.StatusCode},
+                        {"ReasonPhrase", response.ReasonPhrase },
+                        {"response", await response.Content.ReadAsStringAsync() }
+                    };
+
+                    throw new Exception(JsonConvert.SerializeObject(message));
+                }
+
+                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, postDatajson), SEND_ACTIVATE);
+            }
+            catch (Exception ex)
+            {
+                foreach (var item in activateBatch.Hits)
+                {
+                    ActivatePoolQueue[item.Key] = item;
+                }
+
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    url,
+                    headers = new Dictionary<string, string>
                         {
                             {Constants.HEADER_X_API_KEY, Config.ApiKey},
                             {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
-                            {Constants.HEADER_X_SDK_VERSION, sdkVersion }
+                            {Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION }
                         },
-                        body = requestBody
-                    }), tag);
-                }
+                    body = requestBody
+                }), SEND_ACTIVATE);
             }
         }
 
+
         public async override Task SendBatch()
         {
+            var hasActivateHit = false;
+
+            if (ActivatePoolQueue.Any())
+            {
+                var activateHits = ActivatePoolQueue.Values.ToList();
+                var keys = activateHits.Select(x => x.Key);
+                foreach (var item in keys)
+                {
+                    ActivatePoolQueue.Remove(item);
+                }
+                await SendActivate(activateHits, null);
+                hasActivateHit = true;
+            }
+
             var batch = new Batch()
             {
                 Config = Config
@@ -109,17 +156,11 @@ namespace Flagship.Api
 
             var count = 0;
 
-            var activateAndSegmentHits = new List<HitAbstract>();
 
             var hitKeysToRemove = new List<string>();
 
             foreach (var item in HitsPoolQueue)
             {
-                if (item.Value.Type == HitType.ACTIVATE || item.Value.Type == HitType.CONTEXT)
-                {
-                    activateAndSegmentHits.Add(item.Value);
-                    continue;
-                }
                 count++;
                 var batchSize = JsonConvert.SerializeObject(batch).Length;
                 if (batchSize > Constants.BATCH_MAX_SIZE || count > Config.TrackingMangerConfig.BatchLength)
@@ -130,13 +171,12 @@ namespace Flagship.Api
                 hitKeysToRemove.Add(item.Key);
             }
 
-            await SendActivateAndSegmentHits(activateAndSegmentHits);
 
             if (!batch.Hits.Any())
             {
-                if (activateAndSegmentHits.Any())
+                if (hasActivateHit)
                 {
-                    await CacheHitAsync(HitsPoolQueue);
+                    await CacheHitAsync(ActivatePoolQueue);
                 }
                 return;
             }
@@ -160,7 +200,20 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                await HttpClient.SendAsync(requestMessage);
+
+                var response = await HttpClient.SendAsync(requestMessage);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    var message = new Dictionary<string, object>()
+                    {
+                        {"StatusCode:", response.StatusCode},
+                        {"ReasonPhrase", response.ReasonPhrase },
+                        {"response", await response.Content.ReadAsStringAsync() }
+                    };
+
+                    throw new Exception(JsonConvert.SerializeObject(message));
+                }
 
                 Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
             }
@@ -177,7 +230,13 @@ namespace Flagship.Api
                 }), SEND_BATCH);
             }
 
-            await CacheHitAsync(HitsPoolQueue);
+            var mergedQueue = new Dictionary<string, HitAbstract>(HitsPoolQueue);
+            foreach (var item in ActivatePoolQueue)
+            {
+                mergedQueue.Add(item.Key, item.Value);
+            }
+
+            await CacheHitAsync(mergedQueue);
         }
     }
 }

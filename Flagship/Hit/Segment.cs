@@ -10,26 +10,24 @@ namespace Flagship.Hit
     internal class Segment : HitAbstract
     {
         public const string ERROR_MESSAGE = "data property is required";
-        public IDictionary<string, object> Data { get; set; }
+        public const string S_API_ITEM = "s";
+        public IDictionary<string, object> Context { get; set; }
 
-        public Segment(IDictionary<string, object> data):base(HitType.CONTEXT)
+        public Segment(IDictionary<string, object> context) :base(HitType.SEGMENT)
         {
-            Data = data;
+            Context = context;
         }
 
         internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady(checkParent) && Data!=null;
+            return base.IsReady(checkParent) && Context!=null;
         }
 
         internal override IDictionary<string, object> ToApiKeys()
         {
-            return new Dictionary<string, object>()
-            {
-                ["visitorId"] = VisitorId,
-                ["data"] = Data,
-                ["type"] = $"{Type}",
-            };
+            var apiKeys = base.ToApiKeys();
+            apiKeys[S_API_ITEM] = Context;
+            return apiKeys;
         }
 
         internal override string GetErrorMessage()

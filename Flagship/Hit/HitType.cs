@@ -15,6 +15,6 @@ namespace Flagship.Hit
         EVENT,
         BATCH,
         ACTIVATE,
-        CONTEXT
+        SEGMENT
     }
 }

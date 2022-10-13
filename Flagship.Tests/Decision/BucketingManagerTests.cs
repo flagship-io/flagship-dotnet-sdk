@@ -863,15 +863,15 @@ namespace Flagship.Decision.Tests
                 CallBase = true
             };
 
-            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Data["age"] == context["age"])));
+            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])));
 
             decisionManagerMock.SendContextAsync(visitorDelegate.Object);
 
-            visitorDelegate.Verify(x => x.SendHit(It.Is<Segment>(y => y.Data["age"] == context["age"])), Times.Once());
+            visitorDelegate.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
 
             var exception = new Exception("sendHit error");
 
-            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Data["age"] == context["age"]))).Throws(exception);
+            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);
 
             decisionManagerMock.SendContextAsync(visitorDelegate.Object);
 

@@ -22,6 +22,7 @@ namespace Flagship.Api
         public const string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
         public const string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
         public const string SEND_BATCH = "SEND BATCH";
+        public const string SEND_HIT = "SEND HIT";
         public const string SEND_ACTIVATE = "SEND ACTIVATE";
         public const string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
         public const string HIT_SENT_SUCCESS = "hit has been sent : {0}";
@@ -52,6 +53,44 @@ namespace Flagship.Api
         abstract public Task SendBatch();  
 
         abstract public Task NotConsent(string visitorId);
+
+        public async Task CacheHitAsync(Dictionary<string, Activate> hits)
+        {
+            try
+            {
+                var hitCacheInstance = Config?.HitCacheImplementation;
+                if (hitCacheInstance == null || Config.DisableCache)
+                {
+                    return;
+                }
+
+                var data = new JObject();
+                foreach (var keyValue in hits)
+                {
+                    var hitData = new HitCacheDTOV1
+                    {
+                        Version = 1,
+                        Data = new HitCacheData
+                        {
+                            AnonymousId = keyValue.Value.AnonymousId,
+                            VisitorId = keyValue.Value.VisitorId,
+                            Type = keyValue.Value.Type,
+                            Content = keyValue.Value,
+                            Time = DateTime.Now
+                        }
+                    };
+
+                    data[keyValue.Key] = JObject.FromObject(hitData);
+                }
+
+                await hitCacheInstance.CacheHit(data);
+                Logger.Log.LogInfo(Config, string.Format(HIT_DATA_CACHED, JsonConvert.SerializeObject(data)), PROCESS_CACHE_HIT);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.LogError(Config, ex.Message, PROCESS_CACHE_HIT);
+            }
+        }
 
         public async Task CacheHitAsync(Dictionary<string, HitAbstract> hits)
         {

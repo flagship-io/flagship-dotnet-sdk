@@ -149,7 +149,7 @@ namespace Flagship.Api
                     hit = content.ToObject<Segment>();
                     break;
             }
-
+            hit.Config = Config;
             return hit;
         }
         public async Task LookupHitsAsync()

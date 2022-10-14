@@ -34,7 +34,6 @@ namespace Flagship.Api
             }
             Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
 
-
         }
 
         public override async Task NotConsent(string visitorId)

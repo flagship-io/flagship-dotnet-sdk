@@ -72,7 +72,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
             await notReadyStategy.SendHit(new Hit.Screen("Home")).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FlagshipStatus.NOT_INITIALIZED), "SendHit"), Times.Exactly(2));
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FlagshipStatus.NOT_INITIALIZED), "SendHit"), Times.Once());
         }
 
         [TestMethod()]

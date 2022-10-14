@@ -38,29 +38,22 @@ namespace Flagship.FsVisitor
 
         virtual public async Task SendConsentHitAsync(bool hasConsented)
         {
-            const string method = "SendConsentHit";
-            try
+            if (!hasConsented)
             {
-                if (!hasConsented)
-                {
-                    Visitor.GetStrategy().FlushVisitorAsync();
-                }
-
-                var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, Constants.FS_CONSENT)
-                {
-                    Label = $"{Constants.SDK_LANGUAGE}:{hasConsented}",
-                    VisitorId = Visitor.VisitorId,
-                    DS = Constants.SDK_APP,
-                    Config = Config,
-                    AnonymousId = Visitor.AnonymousId
-                };
-
-                await TrackingManager.Add(hitEvent);
+                Visitor.GetStrategy().FlushVisitorAsync();
             }
-            catch (Exception ex)
+
+            var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, Constants.FS_CONSENT)
             {
-                Logger.Log.LogError(Config, ex.Message, method);
-            }
+                Label = $"{Constants.SDK_LANGUAGE}:{hasConsented}",
+                VisitorId = Visitor.VisitorId,
+                DS = Constants.SDK_APP,
+                Config = Config,
+                AnonymousId = Visitor.AnonymousId
+            };
+
+            await TrackingManager.Add(hitEvent);
+
         }
 
         protected virtual void MigrateVisitorCacheData(JObject visitorData)

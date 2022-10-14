@@ -14,20 +14,20 @@ namespace Flagship.Api
 {
     internal abstract class BatchingCachingStrategyAbstract : ITrackingManagerCommon
     {
-        public const string PROCESS_CACHE_HIT = "CACHE HIT";
-        public const string HIT_DATA_CACHED = "Hit data has been saved into database : {0}";
-        public const string PROCESS_FLUSH_HIT = "FLUSH HIT";
-        public const string HIT_DATA_FLUSHED = "The following hit keys have been flushed from database : {0}";
-        public const string ADD_HIT = "ADD HIT";
-        public const string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
-        public const string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
-        public const string SEND_BATCH = "SEND BATCH";
-        public const string SEND_HIT = "SEND HIT";
-        public const string SEND_ACTIVATE = "SEND ACTIVATE";
-        public const string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
-        public const string HIT_SENT_SUCCESS = "hit has been sent : {0}";
-        public const string URL_ACTIVATE = "activate";
-        public const string URL_EVENT = "events";
+        static public string PROCESS_CACHE_HIT = "CACHE HIT";
+        static public string HIT_DATA_CACHED = "Hit data has been saved into database : {0}";
+        static public string PROCESS_FLUSH_HIT = "FLUSH HIT";
+        static public string HIT_DATA_FLUSHED = "The following hit keys have been flushed from database : {0}";
+        static public string ADD_HIT = "ADD HIT";
+        static public string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
+        static public string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
+        static public string SEND_BATCH = "SEND BATCH";
+        static public string SEND_HIT = "SEND HIT";
+        static public string SEND_ACTIVATE = "SEND ACTIVATE";
+        static public string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
+        static public string HIT_SENT_SUCCESS = "hit has been sent : {0}";
+        static public string URL_ACTIVATE = "activate";
+        static public string URL_EVENT = "events";
 
         public FlagshipConfig Config { get ; set ; }
         public HttpClient HttpClient { get; set; }
@@ -54,7 +54,7 @@ namespace Flagship.Api
 
         abstract public Task NotConsent(string visitorId);
 
-        public async Task CacheHitAsync(Dictionary<string, Activate> hits)
+        public virtual async Task CacheHitAsync(Dictionary<string, Activate> hits)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace Flagship.Api
             }
         }
 
-        public async Task CacheHitAsync(Dictionary<string, HitAbstract> hits)
+        public virtual async Task CacheHitAsync(Dictionary<string, HitAbstract> hits)
         {
             try
             {
@@ -130,7 +130,7 @@ namespace Flagship.Api
             }
         }
 
-        public async Task FlushHitsAsync(string[] hitKeys)
+        public virtual async Task FlushHitsAsync(string[] hitKeys)
         {
             try
             {

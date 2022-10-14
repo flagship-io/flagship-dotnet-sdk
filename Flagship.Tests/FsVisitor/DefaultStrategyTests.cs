@@ -15,6 +15,7 @@ using Flagship.Cache;
 using Flagship.Model;
 using System.Collections.ObjectModel;
 using Flagship.Hit;
+using Flagship.Config;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -25,10 +26,11 @@ namespace Flagship.FsVisitor.Tests
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
+        private DecisionApiConfig config;
         public DefaultStrategyTests()
         {
             fsLogManagerMock = new Mock<IFsLogManager>();
-            var config = new Flagship.Config.DecisionApiConfig()
+            config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -282,24 +284,17 @@ namespace Flagship.FsVisitor.Tests
 
             var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
 
-            trackingManagerMock.Verify(x => x.Add(activate), Times.Once());
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)), Times.Once());
 
             var flagDtoValueNull = CampaignsData.GetFlag()[1];
 
             await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
-            var actiateNull = new Activate(flagDtoValueNull.VariationGroupId, flagDtoValueNull.VariationId);
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)
+                ), Times.Once());
 
-            trackingManagerMock.Verify(x => x.Add(actiateNull), Times.Once());
-
-            var error = new Exception("userExposed error");
-
-            activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
-
-            trackingManagerMock.Setup(x => x.Add(activate)).Throws(error);
-            await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
-
-            fsLogManagerMock.Verify(x => x.Error(error.Message, functionName), Times.Once());
         }
 
         [TestMethod()]
@@ -326,9 +321,8 @@ namespace Flagship.FsVisitor.Tests
             var value2 = defaultStrategy.GetFlagValue(flagDtoValueNull.Key, defaultValueString, flagDtoValueNull);
             Assert.AreEqual(defaultValueString, value2);
 
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDtoValueNull.Key), functionName), Times.Once());
-            var activate = new Activate(flagDtoValueNull.VariationGroupId, flagDtoValueNull.VariationId);
-            trackingManagerMock.Verify(x => x.Add(activate), Times.Once());
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)), Times.Once());
         }
 
         [TestMethod()]
@@ -354,8 +348,8 @@ namespace Flagship.FsVisitor.Tests
 
             var value = defaultStrategy.GetFlagValue(flagDto.Key, "Default", flagDto, false);
             Assert.AreEqual(flagDto.Value, value);
-            var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
-            trackingManagerMock.Verify(x => x.Add(activate), Times.Never());
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)), Times.Never());
         }
 
         [TestMethod()]
@@ -366,8 +360,10 @@ namespace Flagship.FsVisitor.Tests
 
             var value = defaultStrategy.GetFlagValue(flagDto.Key, "Default", flagDto);
             Assert.AreEqual(flagDto.Value, value);
-            var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
-            trackingManagerMock.Verify(x => x.Add(activate), Times.Once());
+       
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y=>y.VariationGroupId== flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)
+                ), Times.Once());
         }
 
         [TestMethod()]
@@ -463,23 +459,6 @@ namespace Flagship.FsVisitor.Tests
                 item.DS == Constants.SDK_APP &&
                 item.AnonymousId == visitorDelegate.AnonymousId
                 )), Times.Once());
-        }
-
-        [TestMethod()]
-        public async Task SendConsentHitAsyncFailedTest()
-        {
-            const string functionName = "SendConsentHit";
-            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate) { CallBase = true };
-
-            var defaultStrategy = defaultStrategyMock.Object;
-
-            const string errorMessage = "error sendHit";
-
-            defaultStrategyMock.Setup(x => x.SendHit(It.IsAny<Hit.Event>())).Throws(new Exception(errorMessage));
-
-            await defaultStrategy.SendConsentHitAsync(true).ConfigureAwait(false);
-
-            fsLogManagerMock.Verify(x => x.Error(errorMessage, functionName), Times.Once());
         }
 
         [TestMethod]

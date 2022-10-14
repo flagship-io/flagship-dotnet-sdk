@@ -134,19 +134,12 @@ namespace Flagship.FsVisitor
 
         protected override async Task SendActivate(FlagDTO flag)
         {
-            try
+            var activate = new Activate(flag.VariationGroupId, flag.VariationId)
             {
-                var activate = new Activate(flag.VariationGroupId, flag.VariationId)
-                {
-                    VisitorId = Visitor.VisitorId,
-                    Config=Config
-                };
-                await TrackingManager.ActivateFlag(activate);
-            }
-            catch (Exception ex)
-            {
-                Log.LogError(Config, ex.Message, "UserExposed");
-            }
+                VisitorId = Visitor.VisitorId,
+                Config = Config
+            };
+            await TrackingManager.ActivateFlag(activate);
         }
         public override async Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
         {

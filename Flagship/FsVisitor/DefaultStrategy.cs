@@ -138,6 +138,7 @@ namespace Flagship.FsVisitor
             {
                 var activate = new Activate(flag.VariationGroupId, flag.VariationId)
                 {
+                    VisitorId = Visitor.VisitorId,
                     Config=Config
                 };
                 await TrackingManager.ActivateFlag(activate);

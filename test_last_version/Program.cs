@@ -4,11 +4,60 @@ using System.Threading.Tasks;
 using Flagship.Config;
 using Flagship.Hit;
 using Flagship.Main;
+using Newtonsoft.Json.Linq;
+using StackExchange.Redis;
 
 namespace test_last_version
 {
     class Program
     {
+        class RedisHitCache : Flagship.Cache.IHitCacheImplementation
+        {
+            const string FS_HIT_PREFIX = "FS_DEFAULT_HIT_CACHE";
+            private ConnectionMultiplexer _redis;
+            public RedisHitCache(string host)
+            {
+                _redis = ConnectionMultiplexer.Connect(new ConfigurationOptions
+                {
+                    EndPoints = { host }
+                });
+            }
+            public TimeSpan? LookupTimeout { get ; set ; } = TimeSpan.FromSeconds(3);
+
+            public async Task CacheHit(JObject data)
+            {
+                var db = _redis.GetDatabase();
+                var localDatabaseJson = await db.StringGetAsync(FS_HIT_PREFIX);
+                JObject result = data;
+               
+                if (localDatabaseJson.HasValue)
+                {
+                    result = JObject.Parse(localDatabaseJson.ToString());
+                    result.Merge(data);
+                }
+                await db.StringSetAsync(FS_HIT_PREFIX, result.ToString());
+            }
+
+            public async Task FlushHits(string[] hitKeys)
+            {
+                var db = _redis.GetDatabase();
+                var localDatabaseJson = await db.StringGetAsync(FS_HIT_PREFIX);
+                var localDatabase = JObject.Parse(localDatabaseJson);
+                foreach (var item in hitKeys)
+                {
+                    localDatabase.Remove(item);
+                }
+                db.StringSet(FS_HIT_PREFIX, localDatabase.ToString());
+            }
+
+            public async Task<JObject> LookupHits()
+            {
+                var db = _redis.GetDatabase();
+                var data = await db.StringGetAsync(FS_HIT_PREFIX);
+                var result = data.HasValue? JObject.Parse(data.ToString()): null;
+                return result;
+            }
+        }
         static async Task TestCache1()
         {
             var visitor = Fs.NewVisitor("visitor_5678")
@@ -146,13 +195,14 @@ namespace test_last_version
 
         static void Main(string[] args)
         {
-            Fs.Start("c1ndrd07m0300ro0jf20", "QzdTI1M9iqaIhnJ66a34C5xdzrrvzq6q8XSVOsS6",
+            Fs.Start("", "",
                 new DecisionApiConfig
                 {
+                    HitCacheImplementation = new RedisHitCache("localhost:6379"),
                     //LogManager = new sentryCustomLog(),
                     LogLevel = Flagship.Enums.LogLevel.ALL,
                     Timeout = TimeSpan.FromSeconds(10),
-                    TrackingMangerConfig = new TrackingManagerConfig(Flagship.Enums.BatchStrategy.NO_BATCHING)
+                    TrackingMangerConfig = new TrackingManagerConfig(Flagship.Enums.BatchStrategy.PERIODIC_CACHING)
 
                 });
 

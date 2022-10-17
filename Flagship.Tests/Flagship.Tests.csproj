@@ -64,6 +64,9 @@
     <Reference Include="Moq, Version=4.13.0.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.13.1\lib\net45\Moq.dll</HintPath>
     </Reference>
+    <Reference Include="mscorlib.4.0.0.0.Fakes">
+      <HintPath>FakesAssemblies\mscorlib.4.0.0.0.Fakes.dll</HintPath>
+    </Reference>
     <Reference Include="MurmurHash, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ff7eff5eb27df7b9, processorArchitecture=MSIL">
       <HintPath>..\packages\murmurhash-signed.1.0.3\lib\net45\MurmurHash.dll</HintPath>
     </Reference>
@@ -74,6 +77,9 @@
       <HintPath>..\packages\RichardSzalay.MockHttp.6.0.0\lib\net45\RichardSzalay.MockHttp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.4.0.0.0.Fakes">
+      <HintPath>FakesAssemblies\System.4.0.0.0.Fakes.dll</HintPath>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net.Http" />
@@ -129,6 +135,8 @@
     <None Include="Bucketing.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Fakes Include="Fakes\System.fakes" />
+    <Fakes Include="Fakes\mscorlib.fakes" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

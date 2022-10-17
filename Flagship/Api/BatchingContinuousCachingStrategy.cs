@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Flagship.Api
@@ -28,7 +29,7 @@ namespace Flagship.Api
 
             await CacheHitAsync(new Dictionary<string, HitAbstract>() { { hitKey, hit } });
 
-            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:false")
+            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
                 await NotConsent(hit.VisitorId);
             }
@@ -38,7 +39,7 @@ namespace Flagship.Api
 
         public override async Task NotConsent(string visitorId)
         {
-            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) && x.Key.Contains(visitorId)).Select(x => x.Key);
+            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) && Regex.IsMatch(x.Key,$"^{visitorId}:.*")).Select(x => x.Key).ToArray();
 
             foreach (var item in keys)
             {
@@ -48,7 +49,7 @@ namespace Flagship.Api
             {
                 return;
             }
-            await FlushHitsAsync(keys.ToArray());
+            await FlushHitsAsync(keys);
         }
 
         public override async Task SendBatch()

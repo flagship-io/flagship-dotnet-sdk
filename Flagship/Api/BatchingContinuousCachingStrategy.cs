@@ -172,7 +172,7 @@ namespace Flagship.Api
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
             requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-            var activateBatch = new ActivateBatch(activateHitsPool, Config);
+            var activateBatch = new ActivateBatch(activateHitsPool.ToList(), Config);
 
             if (currentActivate != null)
             {

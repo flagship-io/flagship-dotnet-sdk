@@ -54,42 +54,14 @@ namespace Flagship.Api
 
         abstract public Task NotConsent(string visitorId);
 
-        public virtual async Task CacheHitAsync(Dictionary<string, Activate> hits)
+        public virtual async Task CacheHitAsync(Dictionary<string, Activate> activatesHits)
         {
-            try
+            var hit = new Dictionary<string, HitAbstract>();
+            foreach (var item in activatesHits)
             {
-                var hitCacheInstance = Config?.HitCacheImplementation;
-                if (hitCacheInstance == null || Config.DisableCache)
-                {
-                    return;
-                }
-
-                var data = new JObject();
-                foreach (var keyValue in hits)
-                {
-                    var hitData = new HitCacheDTOV1
-                    {
-                        Version = 1,
-                        Data = new HitCacheData
-                        {
-                            AnonymousId = keyValue.Value.AnonymousId,
-                            VisitorId = keyValue.Value.VisitorId,
-                            Type = keyValue.Value.Type,
-                            Content = keyValue.Value,
-                            Time = DateTime.Now
-                        }
-                    };
-
-                    data[keyValue.Key] = JObject.FromObject(hitData);
-                }
-
-                await hitCacheInstance.CacheHit(data);
-                Logger.Log.LogInfo(Config, string.Format(HIT_DATA_CACHED, JsonConvert.SerializeObject(data)), PROCESS_CACHE_HIT);
+                hit[item.Key] = item.Value;
             }
-            catch (Exception ex)
-            {
-                Logger.Log.LogError(Config, ex.Message, PROCESS_CACHE_HIT);
-            }
+            await CacheHitAsync(hit);
         }
 
         public virtual async Task CacheHitAsync(Dictionary<string, HitAbstract> hits)

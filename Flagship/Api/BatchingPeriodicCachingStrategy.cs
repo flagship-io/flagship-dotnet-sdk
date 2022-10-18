@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Flagship.Api
@@ -24,7 +25,7 @@ namespace Flagship.Api
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
             HitsPoolQueue[hitKey] = hit;
-            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:false")
+            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
                 await NotConsent(hit.VisitorId);
             }
@@ -33,7 +34,8 @@ namespace Flagship.Api
 
         public async override Task NotConsent(string visitorId)
         {
-            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) && x.Key.Contains(visitorId)).Select(x => x.Key);
+            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
+            Regex.IsMatch(x.Key, $"^{visitorId}:.*")).Select(x => x.Key).ToList();
 
             foreach (var item in keys)
             {
@@ -233,7 +235,7 @@ namespace Flagship.Api
             var mergedQueue = new Dictionary<string, HitAbstract>(HitsPoolQueue);
             foreach (var item in ActivatePoolQueue)
             {
-                mergedQueue.Add(item.Key, item.Value);
+                mergedQueue[item.Key]= item.Value;
             }
 
             await CacheHitAsync(mergedQueue);

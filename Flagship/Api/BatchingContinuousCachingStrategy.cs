@@ -39,7 +39,8 @@ namespace Flagship.Api
 
         public override async Task NotConsent(string visitorId)
         {
-            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) && Regex.IsMatch(x.Key,$"^{visitorId}:.*")).Select(x => x.Key).ToArray();
+            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
+            Regex.IsMatch(x.Key, $"^{visitorId}:.*")).Select(x => x.Key).ToArray();
 
             foreach (var item in keys)
             {
@@ -189,7 +190,7 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                var response =  await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage);
 
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {

@@ -35,7 +35,7 @@ namespace Flagship.Api
         public async override Task NotConsent(string visitorId)
         {
             var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-            Regex.IsMatch(x.Key, $"^{visitorId}:.*")).Select(x => x.Key).ToList();
+            x.Value.VisitorId == visitorId).Select(x => x.Key).ToList();
 
             foreach (var item in keys)
             {

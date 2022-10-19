@@ -68,7 +68,7 @@ namespace Flagship.Api
         {
             try
             {
-                var hitCacheInstance = Config?.HitCacheImplementation;
+                var hitCacheInstance = Config.HitCacheImplementation;
                 if (hitCacheInstance == null || Config.DisableCache)
                 {
                     return;
@@ -106,7 +106,7 @@ namespace Flagship.Api
         {
             try
             {
-                var hitCacheInstance = Config?.HitCacheImplementation;
+                var hitCacheInstance = Config.HitCacheImplementation;
                 if (hitCacheInstance == null || Config.DisableCache)
                 {
                     return;

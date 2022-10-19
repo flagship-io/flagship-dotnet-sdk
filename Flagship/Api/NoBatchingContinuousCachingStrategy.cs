@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Flagship.Api
@@ -27,7 +28,7 @@ namespace Flagship.Api
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
 
-            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:false")
+            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
                 await NotConsent(hit.VisitorId);
             }
@@ -87,15 +88,24 @@ namespace Flagship.Api
 
         public async override Task NotConsent(string visitorId)
         {
-            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) && x.Key.Contains(visitorId)).Select(x => x.Key);
+            var keysHit = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
+            x.Value.VisitorId==visitorId).Select(x => x.Key).ToArray();
 
-            foreach (var item in keys)
+            var keysActivate = ActivatePoolQueue.Where(x => x.Value.VisitorId == visitorId).Select(x => x.Key).ToArray();
+
+            foreach (var item in keysHit)
             {
                 HitsPoolQueue.Remove(item);
             }
 
-            var mergedKeys = new List<string>(keys);
+            foreach (var item in keysActivate)
+            {
+                ActivatePoolQueue.Remove(item);
+            }
+
+            var mergedKeys = new List<string>(keysHit);
             mergedKeys.AddRange(_cacheHitKeys.Keys);
+            mergedKeys.AddRange(keysActivate);
 
             if (!mergedKeys.Any())
             {
@@ -113,7 +123,6 @@ namespace Flagship.Api
             var activateHitPool = new List<Activate>();
           
             await SendActivate(activateHitPool, hit);
-
         }
 
         protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate)
@@ -126,7 +135,7 @@ namespace Flagship.Api
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
             requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-            var activateBatch = new ActivateBatch(activateHitsPool, Config);
+            var activateBatch = new ActivateBatch(activateHitsPool.ToList(), Config);
 
             if (currentActivate != null)
             {
@@ -213,17 +222,10 @@ namespace Flagship.Api
 
             var count = 0;
 
-            var activateAndSegmentHits = new List<HitAbstract>();
-
             var hitKeysToRemove = new List<string>();
 
             foreach (var item in HitsPoolQueue)
             {
-                if (item.Value.Type == HitType.ACTIVATE || item.Value.Type == HitType.SEGMENT)
-                {
-                    activateAndSegmentHits.Add(item.Value);
-                    continue;
-                }
                 count++;
                 var batchSize = JsonConvert.SerializeObject(batch).Length;
                 if (batchSize > Constants.BATCH_MAX_SIZE || count > Config.TrackingMangerConfig.BatchLength)

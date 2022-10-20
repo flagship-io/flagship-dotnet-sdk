@@ -228,7 +228,8 @@ namespace Flagship.Api.Tests
             var eventHit = new Event(EventCategory.ACTION_TRACKING, "click")
             {
                 VisitorId = visitorId,
-                Config = config
+                Config = config,
+                Key= $"{visitorId}:{Guid.NewGuid()}"
             };
 
             var hitsPoolQueue = new Dictionary<string, HitAbstract>()

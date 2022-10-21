@@ -18,7 +18,7 @@ namespace Flagship.Config
         /// Define the maximum number of tracking hit that each batch can contain.
         /// </summary>
         int BatchLength { get; set; }
-        BatchStrategy BatchStrategy { get; set; }
+        BatchStrategy BatchStrategy { get; }
 
     }
 }

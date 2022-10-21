@@ -12,7 +12,7 @@ namespace Flagship.Config
 
         public TimeSpan BatchIntervals { get; set; }
         public int BatchLength { get; set; }
-        public BatchStrategy BatchStrategy { get; set; }
+        public BatchStrategy BatchStrategy { get;}
 
         public TrackingManagerConfig(BatchStrategy batchStrategy, int batchLength, TimeSpan batchIntervals)
         {

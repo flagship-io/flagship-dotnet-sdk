@@ -27,7 +27,7 @@ namespace Flagship.Api
 
         private Dictionary<string, HitAbstract> _hitsPoolQueue;
         private Dictionary<string, Activate> _activatePoolQueue;
-        private readonly BatchingCachingStrategyAbstract _strategy;
+        protected virtual BatchingCachingStrategyAbstract Strategy { get; set; }
         public FlagshipConfig Config { get; set; }
         public HttpClient HttpClient { get; set; }
         public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
@@ -43,7 +43,7 @@ namespace Flagship.Api
             HttpClient = httpClient;
             _hitsPoolQueue = new Dictionary<string, HitAbstract>();
             _activatePoolQueue = new Dictionary<string, Activate>();
-            _strategy = InitStrategy();
+            Strategy = InitStrategy();
             _ = LookupHitsAsync();
         }
 
@@ -66,14 +66,14 @@ namespace Flagship.Api
             return strategy;
         }
 
-        public async Task Add(HitAbstract hit)
+        public virtual async Task Add(HitAbstract hit)
         {
-            await _strategy.Add(hit);
+            await Strategy.Add(hit);
         }
 
-        public async Task ActivateFlag(Activate hit)
+        public virtual async Task ActivateFlag(Activate hit)
         {
-            await _strategy.ActivateFlag(hit);
+            await Strategy.ActivateFlag(hit);
         }
 
         public void StartBatchingLoop()
@@ -100,7 +100,7 @@ namespace Flagship.Api
             }
 
             _isPolling = true;
-            await _strategy.SendBatch();
+            await Strategy.SendBatch();
             _isPolling = false;
         }
 
@@ -189,17 +189,13 @@ namespace Flagship.Api
 
                 if (wrongHitKeys.Any())
                 {
-                    await _strategy.FlushHitsAsync(wrongHitKeys.ToArray());
+                    await Strategy.FlushHitsAsync(wrongHitKeys.ToArray());
                 }
             }
             catch (Exception ex)
             {
                 Log.LogError(Config, ex.Message, PROCESS_LOOKUP_HIT);
             }
-            
-
         }
-
-
     }
 }

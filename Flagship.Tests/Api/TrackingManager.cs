@@ -1,4 +1,6 @@
-﻿using Flagship.Enums;
+﻿using Flagship.Api;
+using Flagship.Enums;
+using Flagship.Hit;
 using Flagship.Logger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -12,6 +14,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Moq.Protected;
+using Newtonsoft.Json.Linq;
+using Flagship.Model;
 
 namespace Flagship.Tests.Api
 {
@@ -19,151 +24,216 @@ namespace Flagship.Tests.Api
     public class TrackingManager
     {
         [TestMethod]
-        public async Task SendActive()
+        public void InitStrategy()
         {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
-            //HttpResponseMessage httpResponse = new HttpResponseMessage
-            //{
-            //    StatusCode = System.Net.HttpStatusCode.OK,
-            //    Content = new StringContent("", Encoding.UTF8, "application/json")
-            //};
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig()
+            };
 
-            //Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            var trackingManager = new Flagship.Api.TrackingManager(config, httpClientMock.Object);
 
-            //mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-            //     "SendAsync",
-            //      ItExpr.IsAny<HttpRequestMessage>(),
-            //      ItExpr.IsAny<CancellationToken>()
-            //    ).ReturnsAsync(httpResponse);
+            var trackingManagerPrivate = new PrivateObject(trackingManager);
 
+            object strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
-            //var fsLogManagerMock = new Mock<IFsLogManager>();
+            Assert.IsInstanceOfType(strategy, typeof(BatchingContinuousCachingStrategy));
 
-            //var config = new Flagship.Config.DecisionApiConfig
-            //{
-            //    ApiKey = "apiKey",
-            //    EnvId = "envId",
-            //    LogManager = fsLogManagerMock.Object,
-            //};
+            config.TrackingMangerConfig = new Config.TrackingManagerConfig(BatchStrategy.PERIODIC_CACHING);
 
-            //var httpClient = new HttpClient(mockHandler.Object);
-            //var trackingManager = new Flagship.Api.TrackingManager(config, httpClient);
+            strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
-            //var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
-            //var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManager);
+            Assert.IsInstanceOfType(strategy, typeof(BatchingPeriodicCachingStrategy));
 
-            //var context = new Dictionary<string, object>();
+            config.TrackingMangerConfig = new Config.TrackingManagerConfig(BatchStrategy.NO_BATCHING);
 
-            //var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, true, configManager);
+            strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
-            //var flag = new Flagship.Model.FlagDTO()
-            //{
-            //    VariationGroupId = "varGroupID",
-            //    VariationId = "varID",
+            Assert.IsInstanceOfType(strategy, typeof(NoBatchingContinuousCachingStrategy));
 
-            //};
+            config.TrackingMangerConfig = new Config.TrackingManagerConfig(BatchStrategy.CONTINUOUS_CACHING);
 
-            //var postData = new Dictionary<string, object>
-            //{
-            //    [Constants.VISITOR_ID_API_ITEM] = visitorDelegate.VisitorId,
-            //    [Constants.VARIATION_ID_API_ITEM] = flag.VariationId,
-            //    [Constants.VARIATION_GROUP_ID_API_ITEM] = flag.VariationGroupId,
-            //    [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
-            //    [Constants.ANONYMOUS_ID] = null
-            //};
+            strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
-            
-
-            //Func<HttpRequestMessage, bool> action = (HttpRequestMessage x) => {
-
-            //    var postDataString = JsonConvert.SerializeObject(postData);
-            //    var headers = new HttpRequestMessage().Headers;
-            //    headers.Add(Constants.HEADER_X_API_KEY, config.ApiKey);
-            //    headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
-            //    headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
-            //    headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
-
-            //    var result = x.Content.ReadAsStringAsync().Result ;
-            //    return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post;
-            //};
-
-            //var errorSendAsyn = new Exception("Error Send");
-
-            //mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-            //     "SendAsync",
-            //      ItExpr.Is<HttpRequestMessage>(x => action(x)),
-            //      ItExpr.IsAny<CancellationToken>()
-            //    ).ReturnsAsync(httpResponse).Verifiable();
-
-            //await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
-
-            //// XC test
-
-            //mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-            //     "SendAsync",
-            //      ItExpr.Is<HttpRequestMessage>(x => action(x)),
-            //      ItExpr.IsAny<CancellationToken>()
-            //    ).ReturnsAsync(httpResponse).Verifiable();
+            Assert.IsInstanceOfType(strategy, typeof(BatchingContinuousCachingStrategy));
+        }
 
 
-            //var newVisitorId = "newVisitorId";
-            //visitorDelegate.Authenticate(newVisitorId);
 
-            //postData[Constants.VISITOR_ID_API_ITEM] = visitorDelegate.VisitorId;
-            //postData[Constants.ANONYMOUS_ID]= visitorDelegate.AnonymousId;
+        [TestMethod]
+        public async Task Add()
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig()
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
 
 
-            //await trackingManager.SendActive(visitorDelegate, flag).ConfigureAwait(false);
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
 
-            //mockHandler.Verify();
+            var strategyMock = new Mock<BatchingCachingStrategyAbstract>(config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue);
 
-            //httpResponse.Dispose();
-            //httpClient.Dispose();
+            trackingManagerMock.Protected().SetupGet<BatchingCachingStrategyAbstract>("Strategy").Returns(strategyMock.Object);
+
+            var page = new Page("https://myurl.com");
+
+            await trackingManager.Add(page).ConfigureAwait(false);
+
+            strategyMock.Verify(x => x.Add(page), Times.Once());
         }
 
         [TestMethod]
-        public async Task SendHit()
+        public async Task ActivateFlag()
         {
-            //HttpResponseMessage httpResponse = new HttpResponseMessage
-            //{
-            //    StatusCode = System.Net.HttpStatusCode.OK,
-            //    Content = new StringContent("", Encoding.UTF8, "application/json")
-            //};
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
 
-            //Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig()
+            };
 
-            //mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-            //     "SendAsync",
-            //      ItExpr.IsAny<HttpRequestMessage>(),
-            //      ItExpr.IsAny<CancellationToken>()
-            //    ).ReturnsAsync(httpResponse);
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
 
-
-            //var fsLogManagerMock = new Mock<IFsLogManager>();
-
-            //var config = new Flagship.Config.DecisionApiConfig
-            //{
-            //    LogManager = fsLogManagerMock.Object,
-            //};
-
-            //var httpClient = new HttpClient(mockHandler.Object);
-            //var trackingManager = new Flagship.Api.TrackingManager(config, httpClient);
+            var trackingManager = trackingManagerMock.Object;
 
 
-            //var hit = new Hit.Screen("Screen")
-            //{
-            //    Config = config,
-            //};
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
 
-            //await trackingManager.SendHit(hit).ConfigureAwait(false);
+            var strategyMock = new Mock<BatchingCachingStrategyAbstract>(config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue);
 
-            //await trackingManager.SendHit(hit).ConfigureAwait(false);
+            trackingManagerMock.Protected().SetupGet<BatchingCachingStrategyAbstract>("Strategy").Returns(strategyMock.Object);
 
-            //mockHandler.Protected().Verify("SendAsync", Times.Exactly(2), new object[] { ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>() });
+            var activate = new Activate("variationGroupId", "variationId");
 
-            //httpResponse.Dispose();
-            //httpClient.Dispose();
+            await trackingManager.ActivateFlag(activate).ConfigureAwait(false);
 
+            strategyMock.Verify(x => x.ActivateFlag(activate), Times.Once());
+        }
+
+        public async Task LookupHitsAsync()
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                HitCacheImplementation = hitCacheImplementation.Object,
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
+
+            var visitorId = "visitorId";
+
+            var screen = new Screen("home")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var page = new Page("https://myurl.com")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var Event = new Event(EventCategory.USER_ENGAGEMENT, "click")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var transaction = new Transaction("transId", "Aff")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var item = new Item("transId", "name", "code")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var segment = new Segment(new Dictionary<string, object>() { {"key","value"} })
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var activate = new Activate("variationGrId", "varationId")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var hits = new Dictionary<string, HitAbstract>()
+            {
+                { screen.Key, screen },
+                {page.Key, page },
+                {Event.Key, Event },
+                {transaction.Key, transaction },
+                { item.Key, item },
+                {segment.Key, segment },
+                { activate.Key, activate }
+            };
+
+            var data = new JObject();
+            foreach (var keyValue in hits)
+            {
+                var hitData = new HitCacheDTOV1
+                {
+                    Version = 1,
+                    Data = new HitCacheData
+                    {
+                        AnonymousId = keyValue.Value.AnonymousId,
+                        VisitorId = keyValue.Value.VisitorId,
+                        Type = keyValue.Value.Type,
+                        Content = keyValue.Value,
+                        Time = DateTime.Now
+                    }
+                };
+
+                data[keyValue.Key] = JObject.FromObject(hitData);
+            }
+
+            await trackingManager.LookupHitsAsync().ConfigureAwait(false);
         }
     }
 }

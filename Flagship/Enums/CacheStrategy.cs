@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Enums
 {
-    public enum BatchStrategy
+    public enum CacheStrategy
     {
         CONTINUOUS_CACHING,
         PERIODIC_CACHING,

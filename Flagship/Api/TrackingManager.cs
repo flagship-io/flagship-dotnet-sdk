@@ -50,15 +50,15 @@ namespace Flagship.Api
         protected BatchingCachingStrategyAbstract InitStrategy()
         {
             BatchingCachingStrategyAbstract strategy;
-            switch (Config.TrackingMangerConfig.BatchStrategy)
+            switch (Config.TrackingMangerConfig.CacheStrategy)
             {
-                case BatchStrategy.PERIODIC_CACHING:
+                case CacheStrategy.PERIODIC_CACHING:
                     strategy = new BatchingPeriodicCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;
-                case BatchStrategy.NO_BATCHING:
+                case CacheStrategy.NO_BATCHING:
                     strategy = new NoBatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;
-                case BatchStrategy.CONTINUOUS_CACHING:
+                case CacheStrategy.CONTINUOUS_CACHING:
                 default:
                     strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;

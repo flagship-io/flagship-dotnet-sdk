@@ -165,7 +165,7 @@ namespace Flagship.Api
             {
                 count++;
                 var batchSize = JsonConvert.SerializeObject(batch).Length;
-                if (batchSize > Constants.BATCH_MAX_SIZE || count > Config.TrackingMangerConfig.BatchLength)
+                if (batchSize > Constants.BATCH_MAX_SIZE || count > Config.TrackingMangerConfig.PoolMaxSize)
                 {
                     break;
                 }

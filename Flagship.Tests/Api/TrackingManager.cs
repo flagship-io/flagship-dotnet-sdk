@@ -43,19 +43,19 @@ namespace Flagship.Tests.Api
 
             Assert.IsInstanceOfType(strategy, typeof(BatchingContinuousCachingStrategy));
 
-            config.TrackingMangerConfig = new Config.TrackingManagerConfig(BatchStrategy.PERIODIC_CACHING);
+            config.TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.PERIODIC_CACHING);
 
             strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
             Assert.IsInstanceOfType(strategy, typeof(BatchingPeriodicCachingStrategy));
 
-            config.TrackingMangerConfig = new Config.TrackingManagerConfig(BatchStrategy.NO_BATCHING);
+            config.TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.NO_BATCHING);
 
             strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
             Assert.IsInstanceOfType(strategy, typeof(NoBatchingContinuousCachingStrategy));
 
-            config.TrackingMangerConfig = new Config.TrackingManagerConfig(BatchStrategy.CONTINUOUS_CACHING);
+            config.TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.CONTINUOUS_CACHING);
 
             strategy = trackingManagerPrivate.Invoke("InitStrategy");
 

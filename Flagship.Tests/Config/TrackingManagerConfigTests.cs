@@ -17,16 +17,16 @@ namespace Flagship.Config.Tests
         {
             var trackingManagerConfig = new TrackingManagerConfig();
 
-            Assert.AreEqual(Enums.BatchStrategy.CONTINUOUS_CACHING, trackingManagerConfig.BatchStrategy);
-            Assert.AreEqual(Constants.DEFAULT_BATCH_LENGTH, trackingManagerConfig.BatchLength);
+            Assert.AreEqual(Enums.CacheStrategy.CONTINUOUS_CACHING, trackingManagerConfig.CacheStrategy);
+            Assert.AreEqual(Constants.DEFAULT_BATCH_LENGTH, trackingManagerConfig.PoolMaxSize);
             Assert.AreEqual(TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL), trackingManagerConfig.BatchIntervals);
 
-            trackingManagerConfig = new TrackingManagerConfig(BatchStrategy.NO_BATCHING);
-            Assert.AreEqual(BatchStrategy.NO_BATCHING, trackingManagerConfig.BatchStrategy);
+            trackingManagerConfig = new TrackingManagerConfig(CacheStrategy.NO_BATCHING);
+            Assert.AreEqual(CacheStrategy.NO_BATCHING, trackingManagerConfig.CacheStrategy);
              
-            trackingManagerConfig = new TrackingManagerConfig(BatchStrategy.PERIODIC_CACHING, 45);
-            Assert.AreEqual(Enums.BatchStrategy.PERIODIC_CACHING, trackingManagerConfig.BatchStrategy);
-            Assert.AreEqual(45L, trackingManagerConfig.BatchLength);
+            trackingManagerConfig = new TrackingManagerConfig(CacheStrategy.PERIODIC_CACHING, 45);
+            Assert.AreEqual(Enums.CacheStrategy.PERIODIC_CACHING, trackingManagerConfig.CacheStrategy);
+            Assert.AreEqual(45L, trackingManagerConfig.PoolMaxSize);
 
         }
     }

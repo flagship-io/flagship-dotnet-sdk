@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Flagship.Config;
 using Flagship.Hit;
@@ -192,23 +193,31 @@ namespace test_last_version
             Console.WriteLine("flagValue: {0}", flag.GetValue());
         }
 
+        static void sendHits(int index)
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:3000?visitorId=" +index);
+            var http = new HttpClient();
+            var now = DateTime.Now;
+            http.SendAsync(requestMessage).ContinueWith((res) =>
+            {
+                  Console.WriteLine(index +":"+ res.Result.Content.ReadAsStringAsync().Result+", duration:"+ (DateTime.Now - now).TotalMilliseconds);
+                  
+            });
+        }
 
         static void Main(string[] args)
         {
-            Fs.Start("", "",
-                new DecisionApiConfig
+            while (true)
+            {
+                Console.WriteLine("Begin");
+                Console.ReadLine();
+                Console.WriteLine("Start");
+                for (int i = 0; i < 3; i++)
                 {
-                    HitCacheImplementation = new RedisHitCache("localhost:6379"),
-                    //LogManager = new sentryCustomLog(),
-                    LogLevel = Flagship.Enums.LogLevel.ALL,
-                    Timeout = TimeSpan.FromSeconds(10),
-                    TrackingMangerConfig = new TrackingManagerConfig(Flagship.Enums.BatchStrategy.PERIODIC_CACHING)
+                    sendHits(i);
+                }
+            }
 
-                });
-
-            Console.ReadKey();
-            TestCache1().Wait();
-            Console.ReadLine();
         }
     }
 }

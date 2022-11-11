@@ -1,4 +1,5 @@
 ﻿using Flagship.Config;
+using Flagship.Enums;
 using Flagship.Hit;
 using Flagship.Model;
 using Newtonsoft.Json;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -46,11 +48,124 @@ namespace Flagship.Api
 
         abstract public Task Add(HitAbstract hit);
 
-        abstract public Task ActivateFlag(Activate hit);
+        virtual public async  Task ActivateFlag(Activate hit)
+        {
 
-        abstract protected Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate);
+            var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
+            hit.Key = hitKey;
+            var activateHitPool = new List<Activate>();
+            if (ActivatePoolQueue.Any())
+            {
+                activateHitPool = ActivatePoolQueue.Values.ToList();
+                var keys = activateHitPool.Select(x => x.Key);
+                foreach (var item in keys)
+                {
+                    ActivatePoolQueue.Remove(item);
+                }
+            }
 
-        abstract public Task SendBatch();  
+            await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength);
+        }
+
+        abstract protected Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy);
+
+        virtual public async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
+        {
+            if (ActivatePoolQueue.Any())
+            {
+                var activateHits = ActivatePoolQueue.Values.ToList();
+                var keys = activateHits.Select(x => x.Key);
+                foreach (var item in keys)
+                {
+                    ActivatePoolQueue.Remove(item);
+                }
+                await SendActivate(activateHits, null, batchTriggeredBy);
+            }
+            var batch = new Batch()
+            {
+                Config = Config
+            };
+
+            var hitKeysToRemove = new List<string>();
+
+            foreach (var item in HitsPoolQueue)
+            {
+                if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
+                {
+                    hitKeysToRemove.Add(item.Key);
+                    continue;
+                }
+
+                var batchSize = JsonConvert.SerializeObject(batch).Length;
+                if (batchSize > Constants.BATCH_MAX_SIZE)
+                {
+                    break;
+                }
+                batch.Hits.Add(item.Value);
+                hitKeysToRemove.Add(item.Key);
+            }
+
+            foreach (var key in hitKeysToRemove)
+            {
+                HitsPoolQueue.Remove(key);
+            }
+
+            if (!batch.Hits.Any())
+            {
+                return;
+            }
+
+            var requestBody = batch.ToApiKeys();
+            var now = DateTime.Now;
+
+            try
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, Constants.HIT_EVENT_URL);
+
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var postDatajson = JsonConvert.SerializeObject(requestBody);
+
+                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+
+                requestMessage.Content = stringContent;
+
+                var response = await HttpClient.SendAsync(requestMessage);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    var message = new Dictionary<string, object>()
+                    {
+                        {"StatusCode:", response.StatusCode},
+                        {"ReasonPhrase", response.ReasonPhrase },
+                        {"response", await response.Content.ReadAsStringAsync() }
+                    };
+
+                    throw new Exception(JsonConvert.SerializeObject(message));
+                }
+
+                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody["batchTriggeredBy"] = $"{batchTriggeredBy}";
+
+                Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
+
+                await FlushHitsAsync(hitKeysToRemove.ToArray());
+            }
+            catch (Exception ex)
+            {
+                foreach (var item in batch.Hits)
+                {
+                    HitsPoolQueue[item.Key] = item;
+                }
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    url = Constants.HIT_EVENT_URL,
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds,
+                    batchTriggeredBy = $"{batchTriggeredBy}"
+                }), SEND_BATCH);
+            }
+        }
 
         abstract public Task NotConsent(string visitorId);
 

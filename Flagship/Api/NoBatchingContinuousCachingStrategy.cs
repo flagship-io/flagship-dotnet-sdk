@@ -40,6 +40,7 @@ namespace Flagship.Api
         {
 
             var requestBody = hit.ToApiKeys();
+            var now = DateTime.Now;
 
             try
             {
@@ -67,6 +68,8 @@ namespace Flagship.Api
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
+                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody["batchTriggeredBy"] = $"{CacheTriggeredBy.DirectHit}";
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_HIT);
             }
             catch (Exception ex)
@@ -81,7 +84,9 @@ namespace Flagship.Api
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {
                     url = Constants.HIT_EVENT_URL,
-                    body = requestBody
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds,
+                    batchTriggeredBy = $"{CacheTriggeredBy.DirectHit}"
                 }), SEND_BATCH);
             }
         }
@@ -89,7 +94,7 @@ namespace Flagship.Api
         public async override Task NotConsent(string visitorId)
         {
             var keysHit = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-            x.Value.VisitorId==visitorId).Select(x => x.Key).ToArray();
+            (x.Value.VisitorId==visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
 
             var keysActivate = ActivatePoolQueue.Where(x => x.Value.VisitorId == visitorId).Select(x => x.Key).ToArray();
 
@@ -125,7 +130,7 @@ namespace Flagship.Api
             await SendActivate(activateHitPool, hit);
         }
 
-        protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate)
+        protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
         {
             var url = Constants.BASE_API_URL + URL_ACTIVATE;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
@@ -143,6 +148,7 @@ namespace Flagship.Api
             }
 
             var requestBody = activateBatch.ToApiKeys();
+            var now = DateTime.Now;
 
             try
             {
@@ -173,6 +179,8 @@ namespace Flagship.Api
                     await FlushHitsAsync(hitKeysToRemove);
                 }
 
+                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody["batchTriggeredBy"] = $"{batchTriggeredBy}";
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, postDatajson), SEND_ACTIVATE);
             }
             catch (Exception ex)
@@ -196,13 +204,15 @@ namespace Flagship.Api
                             {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
                             {Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION }
                         },
-                    body = requestBody
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds,
+                    batchTriggeredBy = $"{batchTriggeredBy}"
                 }), SEND_ACTIVATE);
             }
         }
 
 
-        public async override Task SendBatch()
+        public async override Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
             if (ActivatePoolQueue.Any())
             {
@@ -212,7 +222,7 @@ namespace Flagship.Api
                 {
                     ActivatePoolQueue.Remove(item);
                 }
-                await SendActivate(activateHits, null);
+                await SendActivate(activateHits, null, batchTriggeredBy);
             }
 
             var batch = new Batch()
@@ -220,20 +230,27 @@ namespace Flagship.Api
                 Config = Config
             };
 
-            var count = 0;
-
             var hitKeysToRemove = new List<string>();
 
             foreach (var item in HitsPoolQueue)
             {
-                count++;
+                if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
+                {
+                    hitKeysToRemove.Add(item.Key);
+                    continue;
+                }
                 var batchSize = JsonConvert.SerializeObject(batch).Length;
-                if (batchSize > Constants.BATCH_MAX_SIZE || count > Config.TrackingMangerConfig.PoolMaxSize)
+                if (batchSize > Constants.BATCH_MAX_SIZE)
                 {
                     break;
                 }
                 batch.Hits.Add(item.Value);
                 hitKeysToRemove.Add(item.Key);
+            }
+
+            foreach (var key in hitKeysToRemove)
+            {
+                HitsPoolQueue.Remove(key);
             }
 
 
@@ -242,12 +259,8 @@ namespace Flagship.Api
                 return;
             }
 
-            foreach (var key in hitKeysToRemove)
-            {
-                HitsPoolQueue.Remove(key);
-            }
-
             var requestBody = batch.ToApiKeys();
+            var now = DateTime.Now;
 
             try
             {
@@ -274,6 +287,9 @@ namespace Flagship.Api
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
+
+                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody["batchTriggeredBy"] = $"{batchTriggeredBy}";
 
                 Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
 

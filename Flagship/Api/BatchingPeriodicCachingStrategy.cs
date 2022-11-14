@@ -16,6 +16,8 @@ namespace Flagship.Api
 {
     internal class BatchingPeriodicCachingStrategy : BatchingCachingStrategyAbstract
     {
+
+
         public BatchingPeriodicCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
         {
         }
@@ -40,17 +42,32 @@ namespace Flagship.Api
         public async override Task NotConsent(string visitorId)
         {
             var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-            x.Value.VisitorId == visitorId).Select(x => x.Key).ToList();
+            (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToList();
+
+            var activateKeys = ActivatePoolQueue.Where(x => x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId).Select(x => x.Key).ToArray();
 
             foreach (var item in keys)
             {
                 HitsPoolQueue.Remove(item);
             }
-            if (!keys.Any())
+
+            foreach (var item in activateKeys)
+            {
+                ActivatePoolQueue.Remove(item);
+            }
+            if (!keys.Any() && !activateKeys.Any())
             {
                 return;
             }
-            await CacheHitAsync(HitsPoolQueue);
+
+            var mergedQueue = new Dictionary<string, HitAbstract>(HitsPoolQueue);
+            foreach (var item in ActivatePoolQueue)
+            {
+                mergedQueue[item.Key] = item.Value;
+            }
+
+            await FlushAllHitsAsync();
+            await CacheHitAsync(mergedQueue);
         }
 
         protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
@@ -88,16 +105,16 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {"StatusCode:", response.StatusCode},
-                        {"ReasonPhrase", response.ReasonPhrase },
-                        {"response", await response.Content.ReadAsStringAsync() }
+                        {STATUS_CODE, response.StatusCode},
+                        {REASON_PHRASE, response.ReasonPhrase },
+                        {RESPONSE, await response.Content.ReadAsStringAsync() }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
-                requestBody["batchTriggeredBy"] = $"{batchTriggeredBy}";
+                requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_ACTIVATE);
             }
             catch (Exception ex)
@@ -143,7 +160,6 @@ namespace Flagship.Api
             {
                 Config = Config
             };
-
 
             var hitKeysToRemove = new List<string>();
 
@@ -201,16 +217,16 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {"StatusCode:", response.StatusCode},
-                        {"ReasonPhrase", response.ReasonPhrase },
-                        {"response", await response.Content.ReadAsStringAsync() }
+                        {STATUS_CODE, response.StatusCode},
+                        {REASON_PHRASE, response.ReasonPhrase },
+                        {RESPONSE, await response.Content.ReadAsStringAsync() }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
-                requestBody["batchTriggeredBy"] = $"{batchTriggeredBy}";
+                requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
 
                 Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
             }
@@ -235,6 +251,7 @@ namespace Flagship.Api
                 mergedQueue[item.Key]= item.Value;
             }
 
+            await FlushAllHitsAsync();
             await CacheHitAsync(mergedQueue);
         }
     }

@@ -32,6 +32,12 @@ namespace Flagship.Cache
         /// This method will be called to erase the visitor hits cache corresponding to visitor ID from your database.
         /// </summary>
         /// <param name="visitorId">visitor ID</param>
-        Task FlushHits(string[] hitKeys); 
+        Task FlushHits(string[] hitKeys);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        Task FlushAllHits();
     }
 }

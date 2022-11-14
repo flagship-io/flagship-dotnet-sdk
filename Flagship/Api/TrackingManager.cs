@@ -76,6 +76,11 @@ namespace Flagship.Api
             await Strategy.ActivateFlag(hit);
         }
 
+        public async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
+        {
+            await Strategy.SendBatch(batchTriggeredBy);
+        }
+
         public void StartBatchingLoop()
         {
             var batchIntervals = Config.TrackingMangerConfig.BatchIntervals;

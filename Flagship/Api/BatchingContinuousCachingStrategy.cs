@@ -39,27 +39,38 @@ namespace Flagship.Api
             {
                 _ = SendBatch(CacheTriggeredBy.BatchLength);
             }
-
         }
 
         public override async Task NotConsent(string visitorId)
         {
-            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-            x.Value.VisitorId == visitorId).Select(x => x.Key).ToArray();
+            var hitKeys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
+            (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
 
-            foreach (var item in keys)
+            var activateKeys = ActivatePoolQueue.Where(x => x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId).Select(x => x.Key).ToArray();
+
+            foreach (var item in hitKeys)
             {
                 HitsPoolQueue.Remove(item);
             }
-            if (!keys.Any())
+
+            foreach (var item in activateKeys)
+            {
+                ActivatePoolQueue.Remove(item);
+            }
+
+            var keysToFlush = new List<string>(hitKeys);
+
+            keysToFlush.AddRange(activateKeys);
+
+            if (!keysToFlush.Any())
             {
                 return;
             }
-            await FlushHitsAsync(keys);
+            await FlushHitsAsync(keysToFlush.ToArray());
         }
 
-       
-        protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
+
+        override protected async Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
         {
             var url = Constants.BASE_API_URL + URL_ACTIVATE;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
@@ -93,9 +104,9 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {"StatusCode:", response.StatusCode},
-                        {"ReasonPhrase", response.ReasonPhrase },
-                        {"response", await response.Content.ReadAsStringAsync() }
+                        {STATUS_CODE, response.StatusCode},
+                        {REASON_PHRASE, response.ReasonPhrase },
+                        {RESPONSE, await response.Content.ReadAsStringAsync() }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -107,8 +118,8 @@ namespace Flagship.Api
                     await FlushHitsAsync(hitKeysToRemove);
                 }
 
-                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
-                requestBody["batchTriggeredBy"] = $"{batchTriggeredBy}";
+                requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_ACTIVATE);
             }
             catch (Exception ex)

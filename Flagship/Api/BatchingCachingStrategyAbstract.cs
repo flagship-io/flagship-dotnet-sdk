@@ -20,6 +20,7 @@ namespace Flagship.Api
         static public string HIT_DATA_CACHED = "Hit data has been saved into database : {0}";
         static public string PROCESS_FLUSH_HIT = "FLUSH HIT";
         static public string HIT_DATA_FLUSHED = "The following hit keys have been flushed from database : {0}";
+        static public string FLUSH_ALL_HITS = "All hits have been flushed from database";
         static public string ADD_HIT = "ADD HIT";
         static public string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
         static public string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
@@ -30,6 +31,11 @@ namespace Flagship.Api
         static public string HIT_SENT_SUCCESS = "hit has been sent : {0}";
         static public string URL_ACTIVATE = "activate";
         static public string URL_EVENT = "events";
+        static public string STATUS_CODE = "StatusCode:";
+        static public  string REASON_PHRASE = "ReasonPhrase";
+        static public string RESPONSE = "response";
+        static public string ITEM_DURATION = "duration";
+        static public string ITEM_BATCH_TRIGGERED_BY = "batchTriggeredBy";
 
         public FlagshipConfig Config { get ; set ; }
         public HttpClient HttpClient { get; set; }
@@ -68,7 +74,6 @@ namespace Flagship.Api
         }
 
         abstract protected Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy);
-
         virtual public async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
             if (ActivatePoolQueue.Any())
@@ -136,16 +141,16 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {"StatusCode:", response.StatusCode},
-                        {"ReasonPhrase", response.ReasonPhrase },
-                        {"response", await response.Content.ReadAsStringAsync() }
+                        {STATUS_CODE, response.StatusCode},
+                        {REASON_PHRASE, response.ReasonPhrase },
+                        {RESPONSE, await response.Content.ReadAsStringAsync() }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                requestBody["duration"] = (DateTime.Now - now).TotalMilliseconds;
-                requestBody["batchTriggeredBy"] = $"{batchTriggeredBy}";
+                requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
+                requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
 
                 Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
 
@@ -228,6 +233,24 @@ namespace Flagship.Api
                 }
                 await hitCacheInstance.FlushHits(hitKeys);
                 Logger.Log.LogInfo(Config, string.Format(HIT_DATA_FLUSHED, JsonConvert.SerializeObject(hitKeys)), PROCESS_FLUSH_HIT);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.LogError(Config, ex.Message, PROCESS_FLUSH_HIT);
+            }
+        }
+
+        public virtual async Task FlushAllHitsAsync()
+        {
+            try
+            {
+                var hitCacheInstance = Config.HitCacheImplementation;
+                if (hitCacheInstance == null || Config.DisableCache)
+                {
+                    return;
+                }
+                await hitCacheInstance.FlushAllHits();
+                Logger.Log.LogInfo(Config, FLUSH_ALL_HITS, PROCESS_FLUSH_HIT);
             }
             catch (Exception ex)
             {

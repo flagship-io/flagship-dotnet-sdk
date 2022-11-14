@@ -170,6 +170,14 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                 Constants.PROCESS_INITIALIZATION);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static async Task Dispose()
+        {
+            await instance?._configManager?.TrackingManager?.SendBatch(CacheTriggeredBy.Flush);
+        }
         private static void DecisionManager_StatusChange(FlagshipStatus status)
         {
             GetInstance().SetStatus(status);

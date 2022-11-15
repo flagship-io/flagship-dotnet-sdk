@@ -55,6 +55,7 @@ namespace Flagship.Api
             {
                 ActivatePoolQueue.Remove(item);
             }
+
             if (!keys.Any() && !activateKeys.Any())
             {
                 return;
@@ -97,7 +98,6 @@ namespace Flagship.Api
                 var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
 
                 requestMessage.Content = stringContent;
-
 
                 var response = await HttpClient.SendAsync(requestMessage);
 

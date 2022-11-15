@@ -132,6 +132,41 @@ namespace Flagship.Tests.Api
             strategyMock.Verify(x => x.ActivateFlag(activate), Times.Once());
         }
 
+        [TestMethod]
+        public async Task SendBatchTest() 
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig()
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
+
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingCachingStrategyAbstract>(config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue);
+
+            trackingManagerMock.Protected().SetupGet<BatchingCachingStrategyAbstract>("Strategy").Returns(strategyMock.Object);
+            
+            strategyMock.Setup(x => x.SendBatch(CacheTriggeredBy.BatchLength)).Returns(Task.CompletedTask);
+
+            await trackingManager.SendBatch().ConfigureAwait(false);
+
+            strategyMock.Verify(x => x.SendBatch(CacheTriggeredBy.BatchLength), Times.Once());
+        }
+
+        [TestMethod]
         public async Task LookupHitsAsync()
         {
             var httpClientMock = new Mock<HttpClient>();
@@ -233,7 +268,12 @@ namespace Flagship.Tests.Api
                 data[keyValue.Key] = JObject.FromObject(hitData);
             }
 
+            hitCacheImplementation.Setup(x => x.LookupHits()).Returns(Task.FromResult(data));
+
             await trackingManager.LookupHitsAsync().ConfigureAwait(false);
+
+            hitCacheImplementation.Verify(x => x.LookupHits(), Times.Exactly(2));
+            Assert.AreEqual(7,trackingManager.HitsPoolQueue.Count);
         }
     }
 }

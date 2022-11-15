@@ -26,8 +26,6 @@ namespace Flagship.Api.Tests
     {
         public BatchingContinuousCachingStrategyTests()
         {
-
-
         }
 
         [TestMethod()]
@@ -143,10 +141,9 @@ namespace Flagship.Api.Tests
 
             var activateXp = new Activate("varGroupId", "varId")
             {
-                VisitorId = visitorId,
-                AnonymousId = Guid.NewGuid().ToString(),
+                VisitorId = Guid.NewGuid().ToString(),
+                AnonymousId = visitorId,
                 Key = visitorId + "key-activate-xp",
-
             };
 
             activatePoolQueue[activate.Key] = activate;
@@ -390,7 +387,6 @@ namespace Flagship.Api.Tests
             httpResponse.Dispose();
             shimeContext.Dispose();
         }
-
 
         [TestMethod()]
         public async Task SendBatchHitExpiredTest() 

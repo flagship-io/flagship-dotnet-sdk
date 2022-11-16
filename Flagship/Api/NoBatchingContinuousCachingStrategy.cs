@@ -56,7 +56,7 @@ namespace Flagship.Api
 
                 var response = await HttpClient.SendAsync(requestMessage);
 
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
                     var message = new Dictionary<string, object>()
                     {
@@ -161,7 +161,7 @@ namespace Flagship.Api
 
                 var response = await HttpClient.SendAsync(requestMessage);
 
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
                     var message = new Dictionary<string, object>()
                     {

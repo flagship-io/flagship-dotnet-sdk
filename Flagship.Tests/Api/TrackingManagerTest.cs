@@ -219,11 +219,11 @@ namespace Flagship.Tests.Api
 
             var trackingManager = trackingManagerMock.Object;
 
-            trackingManagerMock.Setup(x => x.SendBatch(CacheTriggeredBy.BatchLength)).Returns(Task.CompletedTask).Verifiable();
+            trackingManagerMock.Setup(x => x.SendBatch(CacheTriggeredBy.Timer)).Returns(Task.CompletedTask).Verifiable();
 
             await trackingManager.BatchingLoop().ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.SendBatch(CacheTriggeredBy.BatchLength), Times.Once());
+            trackingManagerMock.Verify(x => x.SendBatch(CacheTriggeredBy.Timer), Times.Once());
 
         }
 
@@ -247,7 +247,7 @@ namespace Flagship.Tests.Api
 
             var trackingManager = trackingManagerMock.Object;
 
-            trackingManagerMock.Setup(x => x.SendBatch(CacheTriggeredBy.BatchLength)).Returns(async () =>
+            trackingManagerMock.Setup(x => x.SendBatch(CacheTriggeredBy.Timer)).Returns(async () =>
             {
                 await Task.Delay(200).ConfigureAwait(false);
             }) ;
@@ -260,7 +260,7 @@ namespace Flagship.Tests.Api
 
             await Task.Delay(500).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.SendBatch(CacheTriggeredBy.BatchLength), Times.Once());
+            trackingManagerMock.Verify(x => x.SendBatch(CacheTriggeredBy.Timer), Times.Once());
 
         }
         [TestMethod]

@@ -105,7 +105,7 @@ namespace Flagship.Api
             }
 
             _isPolling = true;
-            await SendBatch();
+            await SendBatch(CacheTriggeredBy.Timer);
             _isPolling = false;
         }
 

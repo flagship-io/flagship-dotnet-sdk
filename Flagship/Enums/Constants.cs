@@ -14,7 +14,7 @@ namespace Flagship.Enums
 
         public const int DEFAULT_BATCH_TIME_INTERVAL = 10000;
 
-        public const int DEFAULT_BATCH_LENGTH = 20;
+        public const int DEFAULT_POOL_MAX_SIZE = 100;
 
         public const int BATCH_MAX_SIZE = 2500000;
 

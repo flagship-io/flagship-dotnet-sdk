@@ -14,24 +14,24 @@ namespace Flagship.Config
         public int PoolMaxSize { get; set; }
         public CacheStrategy CacheStrategy { get;}
 
-        public TrackingManagerConfig(CacheStrategy batchStrategy, int batchLength, TimeSpan batchIntervals)
+        public TrackingManagerConfig(CacheStrategy cacheStrategy, int poolMaxSize, TimeSpan batchIntervals)
         {
             BatchIntervals = batchIntervals;
-            PoolMaxSize = batchLength;
-            CacheStrategy = batchStrategy;
+            PoolMaxSize = poolMaxSize;
+            CacheStrategy = cacheStrategy;
         }
 
         public TrackingManagerConfig():this(CacheStrategy.CONTINUOUS_CACHING,
-            Constants.DEFAULT_BATCH_LENGTH, TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL))
+            Constants.DEFAULT_POOL_MAX_SIZE, TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL))
         {
         }
 
-        public TrackingManagerConfig(CacheStrategy batchStrategy):this(batchStrategy, Constants.DEFAULT_BATCH_LENGTH, TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL))
+        public TrackingManagerConfig(CacheStrategy batchStrategy):this(batchStrategy, Constants.DEFAULT_POOL_MAX_SIZE, TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL))
         {
            
         }
 
-        public TrackingManagerConfig(CacheStrategy batchStrategy, int batchLength) : this(batchStrategy, batchLength, TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL))
+        public TrackingManagerConfig(CacheStrategy batchStrategy, int poolMaxSize) : this(batchStrategy, poolMaxSize, TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL))
         {
 
         }

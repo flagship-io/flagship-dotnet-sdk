@@ -173,8 +173,8 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        public static async Task Dispose()
+        /// <returns></returns> 
+        public static async Task Dispose() 
         {
             await instance?._configManager?.TrackingManager?.SendBatch(CacheTriggeredBy.Flush);
         }

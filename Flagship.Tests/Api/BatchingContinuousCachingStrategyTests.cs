@@ -1270,5 +1270,80 @@ namespace Flagship.Api.Tests
 
 
         }
+
+        [TestMethod]
+        public async Task FlushAllHitsAsync()
+        { 
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                HitCacheImplementation = hitCacheImplementation.Object
+            };
+
+
+            hitCacheImplementation.Setup(x => x.FlushAllHits()).Returns(Task.CompletedTask);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategy = new BatchingContinuousCachingStrategy(config, httpClientMock.Object, ref hitsPoolQueue, ref activatePoolQueue);
+
+            await strategy.FlushAllHitsAsync().ConfigureAwait(false);
+
+            hitCacheImplementation.Verify(x => x.FlushAllHits(), Times.Once());
+
+            config.DisableCache = true;
+
+            await strategy.FlushAllHitsAsync().ConfigureAwait(false);
+
+            hitCacheImplementation.Verify(x => x.FlushAllHits(), Times.Once());
+
+            config.DisableCache = false;
+            config.HitCacheImplementation = null;
+
+            await strategy.FlushAllHitsAsync().ConfigureAwait(false);
+
+            hitCacheImplementation.Verify(x => x.FlushAllHits(), Times.Once());
+        }
+
+        [TestMethod]
+        public async Task FlushAllHitsFailedAsync()
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                HitCacheImplementation = hitCacheImplementation.Object
+            };
+
+           
+            var exception = new Exception("error");
+
+            hitCacheImplementation.Setup(x => x.FlushAllHits()).ThrowsAsync(exception);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategy = new BatchingContinuousCachingStrategy(config, httpClientMock.Object, ref hitsPoolQueue, ref activatePoolQueue);
+
+
+            await strategy.FlushAllHitsAsync().ConfigureAwait(false);
+
+            hitCacheImplementation.Verify(x => x.FlushAllHits(), Times.Once());
+
+            fsLogManagerMock.Verify(x => x.Error(exception.Message, BatchingCachingStrategyAbstract.PROCESS_FLUSH_HIT), Times.Once());
+
+
+        }
+
     }
 }

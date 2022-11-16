@@ -39,6 +39,12 @@ namespace test_last_version
                 await db.StringSetAsync(FS_HIT_PREFIX, result.ToString());
             }
 
+            public async Task FlushAllHits()
+            {
+                var db = _redis.GetDatabase();
+                await db.KeyDeleteAsync(FS_HIT_PREFIX);
+            }
+
             public async Task FlushHits(string[] hitKeys)
             {
                 var db = _redis.GetDatabase();
@@ -207,16 +213,10 @@ namespace test_last_version
 
         static void Main(string[] args)
         {
-            while (true)
+            Fs.Start("", "", new DecisionApiConfig()
             {
-                Console.WriteLine("Begin");
-                Console.ReadLine();
-                Console.WriteLine("Start");
-                for (int i = 0; i < 3; i++)
-                {
-                    sendHits(i);
-                }
-            }
+                TrackingMangerConfig = new TrackingManagerConfig(Flagship.Enums.CacheStrategy.PERIODIC_CACHING, 5)
+            });
 
         }
     }

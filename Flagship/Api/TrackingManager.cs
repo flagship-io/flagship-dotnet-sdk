@@ -76,7 +76,7 @@ namespace Flagship.Api
             await Strategy.ActivateFlag(hit);
         }
 
-        public async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
+        public virtual async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
             await Strategy.SendBatch(batchTriggeredBy);
         }
@@ -97,7 +97,7 @@ namespace Flagship.Api
             }, null, batchIntervals, batchIntervals);
         }
 
-        public async Task BatchingLoop()
+        public virtual async Task BatchingLoop()
         {
             if (_isPolling)
             {
@@ -105,7 +105,7 @@ namespace Flagship.Api
             }
 
             _isPolling = true;
-            await Strategy.SendBatch();
+            await SendBatch();
             _isPolling = false;
         }
 
@@ -124,7 +124,7 @@ namespace Flagship.Api
 
         protected virtual bool ChecKLookupHitData1(JToken item)
         {
-            return item != null && item["Version"].ToObject<int>() == 1 && item["Data"] != null && item["Data"]["Type"] != null;
+            return item != null && item["Version"].ToObject<int>() == 1 && item["Data"].ToObject<HitCacheData>() != null && item["Data"]["Type"] != null;
         }
 
         protected HitAbstract GetHitFromContent(JObject content)
@@ -161,7 +161,7 @@ namespace Flagship.Api
         {
             try
             {
-                var hitCacheInstance = Config?.HitCacheImplementation;
+                var hitCacheInstance = Config.HitCacheImplementation;
                 if (hitCacheInstance == null || Config.DisableCache)
                 {
                     return;
@@ -189,7 +189,15 @@ namespace Flagship.Api
                     var hitCache = item.Value.ToObject<HitCacheDTOV1>();
 
                     var hit = GetHitFromContent((JObject)hitCache.Data.Content);
-                    HitsPoolQueue.Add(hit.Key, hit);
+                    if (hit is Activate activate)
+                    {
+                        ActivatePoolQueue[activate.Key] = activate;
+                    }
+                    else
+                    {
+                        HitsPoolQueue[hit.Key]= hit;
+                    }
+
                 }
 
                 if (wrongHitKeys.Any())

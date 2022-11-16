@@ -94,7 +94,7 @@
     <Compile Include="Api\BatchingContinuousCachingStrategyTests.cs" />
     <Compile Include="Api\BatchingPeriodicCachingStrategyTests.cs" />
     <Compile Include="Api\NoBatchingContinuousCachingStrategyTests.cs" />
-    <Compile Include="Api\TrackingManager.cs" />
+    <Compile Include="Api\TrackingManagerTest.cs" />
     <Compile Include="Config\BucketingConfigTests.cs" />
     <Compile Include="Config\DecisionApiConfigTests.cs" />
     <Compile Include="Config\TrackingManagerConfigTests.cs" />

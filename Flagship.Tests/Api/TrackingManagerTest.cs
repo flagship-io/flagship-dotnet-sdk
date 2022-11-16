@@ -21,7 +21,7 @@ using Flagship.Model;
 namespace Flagship.Tests.Api
 {
     [TestClass]
-    public class TrackingManager
+    public class TrackingManagerTest
     {
         [TestMethod]
         public void InitStrategy()
@@ -167,6 +167,103 @@ namespace Flagship.Tests.Api
         }
 
         [TestMethod]
+        public async Task StartBatchingLoopTest()
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.CONTINUOUS_CACHING,
+                5, TimeSpan.FromMilliseconds(500)),
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
+
+            trackingManagerMock.Setup(x => x.BatchingLoop()).Returns(Task.CompletedTask).Verifiable();
+
+            trackingManager.StartBatchingLoop();
+            trackingManager.StartBatchingLoop();
+
+            await Task.Delay(800).ConfigureAwait(false);
+
+            trackingManager.StopBatchingLoop();
+
+            trackingManagerMock.Verify(x => x.BatchingLoop(), Times.Once());
+        }
+
+        [TestMethod]
+        public async Task BatchingLoopTest()
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
+
+            trackingManagerMock.Setup(x => x.SendBatch(CacheTriggeredBy.BatchLength)).Returns(Task.CompletedTask).Verifiable();
+
+            await trackingManager.BatchingLoop().ConfigureAwait(false);
+
+            trackingManagerMock.Verify(x => x.SendBatch(CacheTriggeredBy.BatchLength), Times.Once());
+
+        }
+
+        [TestMethod]
+        public async Task BatchingLoopDuplicateTest()
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new Flagship.Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
+
+            trackingManagerMock.Setup(x => x.SendBatch(CacheTriggeredBy.BatchLength)).Returns(async () =>
+            {
+                await Task.Delay(200).ConfigureAwait(false);
+            }) ;
+
+            _ = trackingManager.BatchingLoop();
+
+            await Task.Delay(100).ConfigureAwait(false);
+
+            _ = trackingManager.BatchingLoop();
+
+            await Task.Delay(500).ConfigureAwait(false);
+
+            trackingManagerMock.Verify(x => x.SendBatch(CacheTriggeredBy.BatchLength), Times.Once());
+
+        }
+        [TestMethod]
         public async Task LookupHitsAsync()
         {
             var httpClientMock = new Mock<HttpClient>();
@@ -273,7 +370,135 @@ namespace Flagship.Tests.Api
             await trackingManager.LookupHitsAsync().ConfigureAwait(false);
 
             hitCacheImplementation.Verify(x => x.LookupHits(), Times.Exactly(2));
-            Assert.AreEqual(7,trackingManager.HitsPoolQueue.Count);
+
+            Assert.AreEqual(6,trackingManager.HitsPoolQueue.Count);
+            Assert.AreEqual(1,trackingManager.ActivatePoolQueue.Count);
+        }
+
+        [TestMethod]
+        public async Task LookupHitsBadFormatAsync()
+        {
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                HitCacheImplementation = hitCacheImplementation.Object,
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
+
+            var visitorId = "visitorId";
+
+            var screen = new Screen("home")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var hits = new Dictionary<string, HitAbstract>()
+            {
+                { screen.Key, screen }
+            };
+
+            var data = new JObject();
+            foreach (var keyValue in hits)
+            {
+                var hitData = new HitCacheDTOV1
+                {
+                    Version = 1,
+                    Data = null
+                };
+
+                data[keyValue.Key] = JObject.FromObject(hitData);
+            }
+
+            hitCacheImplementation.Setup(x => x.LookupHits()).Returns(Task.FromResult(data));
+
+            await trackingManager.LookupHitsAsync().ConfigureAwait(false);
+
+            hitCacheImplementation.Verify(x => x.LookupHits(), Times.Exactly(2));
+
+            Assert.AreEqual(0, trackingManager.HitsPoolQueue.Count);
+            Assert.AreEqual(0, trackingManager.ActivatePoolQueue.Count);
+
+            hitCacheImplementation.Verify(x => x.FlushHits(new string[] { screen.Key }), Times.Once());
+        }
+
+        [TestMethod]
+        public async Task LookupHitsAsyncThrowErrorTest()
+        { 
+            var httpClientMock = new Mock<HttpClient>();
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var hitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
+
+            var config = new Config.DecisionApiConfig
+            {
+                LogManager = fsLogManagerMock.Object,
+                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                HitCacheImplementation = hitCacheImplementation.Object,
+            };
+
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            {
+                CallBase = true,
+            };
+
+            var trackingManager = trackingManagerMock.Object;
+
+            var visitorId = "visitorId";
+
+            var screen = new Screen("home")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config
+            };
+
+            var hits = new Dictionary<string, HitAbstract>()
+            {
+                { screen.Key, screen }
+            };
+
+            var data = new JObject();
+            foreach (var keyValue in hits)
+            {
+                var hitData = new HitCacheDTOV1
+                {
+                    Version = 1,
+                    Data = new HitCacheData
+                    {
+                        AnonymousId = keyValue.Value.AnonymousId,
+                        VisitorId = keyValue.Value.VisitorId,
+                        Type = keyValue.Value.Type,
+                        Content = keyValue.Value,
+                        Time = DateTime.Now
+                    }
+                };
+
+                data[keyValue.Key] = JObject.FromObject(hitData);
+            }
+
+            var error = new Exception("Error");
+
+            hitCacheImplementation.Setup(x => x.LookupHits()).Throws(error);
+
+            await trackingManager.LookupHitsAsync().ConfigureAwait(false);
+
+            hitCacheImplementation.Verify(x => x.LookupHits(), Times.Exactly(2));
+
+            Assert.AreEqual(0, trackingManager.HitsPoolQueue.Count);
+            Assert.AreEqual(0, trackingManager.ActivatePoolQueue.Count);
+            fsLogManagerMock.Verify(x => x.Error(error.Message, TrackingManager.PROCESS_LOOKUP_HIT), Times.Once());
         }
     }
 }

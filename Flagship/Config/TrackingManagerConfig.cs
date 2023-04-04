@@ -12,7 +12,7 @@ namespace Flagship.Config
 
         public TimeSpan BatchIntervals { get; set; }
         public int PoolMaxSize { get; set; }
-        public CacheStrategy CacheStrategy { get;}
+        public CacheStrategy CacheStrategy { get; set; }
 
         public TrackingManagerConfig(CacheStrategy cacheStrategy, int poolMaxSize, TimeSpan batchIntervals)
         {

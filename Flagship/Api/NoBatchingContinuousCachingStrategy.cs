@@ -68,9 +68,13 @@ namespace Flagship.Api
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
-                requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{CacheTriggeredBy.DirectHit}";
-                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_HIT);
+                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new
+                {
+                    url = Constants.HIT_EVENT_URL,
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds,
+                    batchTriggeredBy = $"{CacheTriggeredBy.DirectHit}"
+                })), SEND_HIT);
             }
             catch (Exception ex)
             {
@@ -181,7 +185,19 @@ namespace Flagship.Api
 
                 requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
                 requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
-                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, postDatajson), SEND_ACTIVATE);
+                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new
+                {
+                    url,
+                    headers = new Dictionary<string, string>
+                        {
+                            {Constants.HEADER_X_API_KEY, Config.ApiKey},
+                            {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
+                            {Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION }
+                        },
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds,
+                    batchTriggeredBy = $"{batchTriggeredBy}"
+                })), SEND_ACTIVATE); ;
             }
             catch (Exception ex)
             {

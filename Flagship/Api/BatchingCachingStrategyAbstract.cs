@@ -149,10 +149,13 @@ namespace Flagship.Api
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
-                requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
-
-                Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(requestBody)), SEND_BATCH);
+                Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(new
+                {
+                    url = Constants.HIT_EVENT_URL,
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds,
+                    batchTriggeredBy = $"{batchTriggeredBy}"
+                })), SEND_BATCH);
 
                 await FlushHitsAsync(hitKeysToRemove.ToArray());
             }

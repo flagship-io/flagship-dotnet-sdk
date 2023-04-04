@@ -32,17 +32,16 @@ namespace Flagship.FsVisitor
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
             ConfigManager = configManager;
+            if (isAuthenticated && configManager.Config.DecisionMode == DecisionMode.DECISION_API)
+            {
+                AnonymousId = Guid.NewGuid().ToString();
+            }
             _context = new Dictionary<string, object>();
             UpdateContext(context);
             Flags = new HashSet<FlagDTO>();
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
             LoadPredefinedContext();
-
-            if (isAuthenticated && configManager.Config.DecisionMode== DecisionMode.DECISION_API)
-            {
-                _anonymousId = Guid.NewGuid().ToString();
-            }
 
             GetStrategy().LookupVisitor();
         }

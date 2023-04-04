@@ -3,6 +3,7 @@ using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +16,10 @@ namespace Flagship.FsVisitor
 {
     internal class DefaultStrategy : VisitorStrategyAbstract
     {
+        public static string FETCH_FLAGS_STARTED = "visitor {0} fetchFlags process is started";
+        public static string FETCH_CAMPAIGNS_SUCCESS = "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns {3} in {4} ms";
+        public static string FETCH_CAMPAIGNS_FROM_CACHE = "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns from cache {3} in {4} ms";
+        public static string FETCH_FLAGS_FROM_CAMPAIGNS = "Visitor {0}, anonymousId {1} with context {2} has just fetched flags {3} from Campaigns";
         public DefaultStrategy(VisitorDelegateAbstract visitor) : base(visitor)
         {
         }
@@ -79,15 +84,15 @@ namespace Flagship.FsVisitor
         protected virtual ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
         {
             var campaigns = new Collection<Campaign>();
-            if (visitor.VisitorCache == null || visitor.VisitorCache.Data ==null)
+            if (visitor.VisitorCache == null || visitor.VisitorCache.Data == null)
             {
                 return campaigns;
             }
             if (visitor.VisitorCache.Version == 1)
             {
-                  var data= (VisitorCacheDTOV1)visitor.VisitorCache.Data;
+                var data = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
                 visitor.UpdateContext(data.Data.Context?.ToDictionary(entry => entry.Key, entry => entry.Value));
-                
+
                 foreach (var item in data.Data.Campaigns)
                 {
                     campaigns.Add(new Campaign
@@ -115,16 +120,44 @@ namespace Flagship.FsVisitor
 
         async public override Task FetchFlags()
         {
+            const string FUNCTION_NAME = "FetchFlags";
+            Log.LogDebug(Config, string.Format(FETCH_FLAGS_STARTED, Visitor.VisitorId), FUNCTION_NAME);
+            ICollection<Campaign> campaigns = new List<Campaign>();
+            var now = DateTime.Now;
             try
             {
-                var campaigns = await DecisionManager.GetCampaigns(Visitor);
+                campaigns = await DecisionManager.GetCampaigns(Visitor);
+
+                Log.LogDebug(Config, string.Format(FETCH_CAMPAIGNS_SUCCESS,
+                    Visitor.VisitorId, Visitor.AnonymousId,
+                    JsonConvert.SerializeObject(Visitor.Context),
+                    JsonConvert.SerializeObject(campaigns), (DateTime.Now - now).Milliseconds), FUNCTION_NAME);
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(Config, ex.Message, FUNCTION_NAME);
+            }
+            try
+            {
                 if (campaigns.Count == 0)
                 {
                     campaigns = FetchVisitorCacheCampaigns(Visitor);
+                    if (campaigns.Count > 0)
+                    {
+                        Log.LogDebug(Config, string.Format(FETCH_CAMPAIGNS_FROM_CACHE,
+                    Visitor.VisitorId, Visitor.AnonymousId,
+                    JsonConvert.SerializeObject(Visitor.Context),
+                    JsonConvert.SerializeObject(campaigns), (DateTime.Now - now).Milliseconds), FUNCTION_NAME);
+                    }
                 }
                 Visitor.Campaigns = campaigns;
                 Visitor.Flags = await DecisionManager.GetFlags(campaigns);
                 Visitor.GetStrategy().CacheVisitorAsync();
+
+                Log.LogDebug(Config, string.Format(FETCH_FLAGS_FROM_CAMPAIGNS,
+                    Visitor.VisitorId, Visitor.AnonymousId,
+                    JsonConvert.SerializeObject(Visitor.Context),
+                    JsonConvert.SerializeObject(Visitor.Flags)), FUNCTION_NAME);
             }
             catch (Exception ex)
             {
@@ -137,6 +170,7 @@ namespace Flagship.FsVisitor
             var activate = new Activate(flag.VariationGroupId, flag.VariationId)
             {
                 VisitorId = Visitor.VisitorId,
+                AnonymousId = Visitor.AnonymousId,
                 Config = Config
             };
             await TrackingManager.ActivateFlag(activate);
@@ -149,7 +183,7 @@ namespace Flagship.FsVisitor
                 Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
                 return;
             }
-            if (flag.Value != null && defaultValue!=null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
+            if (flag.Value != null && defaultValue != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
                 Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
                 return;
@@ -205,8 +239,8 @@ namespace Flagship.FsVisitor
         public override async Task SendHit(IEnumerable<HitAbstract> hits)
         {
             foreach (var item in hits)
-            { 
-                 await SendHit(item);
+            {
+                await SendHit(item);
             }
         }
         public override async Task SendHit(HitAbstract hit)
@@ -242,7 +276,7 @@ namespace Flagship.FsVisitor
         public override void Authenticate(string visitorId)
         {
             const string methodName = "Authenticate";
-            if (Config.DecisionMode== DecisionMode.BUCKETING)
+            if (Config.DecisionMode == DecisionMode.BUCKETING)
             {
                 LogDeactivateOnBucketingMode(methodName);
                 return;
@@ -273,7 +307,7 @@ namespace Flagship.FsVisitor
                 return;
             }
 
-            Visitor.VisitorId= Visitor.AnonymousId;
+            Visitor.VisitorId = Visitor.AnonymousId;
             Visitor.AnonymousId = null;
 
         }

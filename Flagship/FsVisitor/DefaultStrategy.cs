@@ -91,7 +91,6 @@ namespace Flagship.FsVisitor
             if (visitor.VisitorCache.Version == 1)
             {
                 var data = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
-                visitor.UpdateContext(data.Data.Context?.ToDictionary(entry => entry.Key, entry => entry.Value));
 
                 foreach (var item in data.Data.Campaigns)
                 {

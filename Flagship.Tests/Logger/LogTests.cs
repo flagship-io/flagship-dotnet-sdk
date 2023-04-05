@@ -132,5 +132,64 @@ namespace Flagship.Logger.Tests
             stringWriter.Dispose();
 
         }
+
+
+        [TestMethod()]
+        public void LogDebugTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new Config.DecisionApiConfig()
+            {
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            var message = "test debug Info";
+            var tag = "test";
+
+            Log.LogDebug(config, message, tag);
+
+            fsLogManagerMock.Verify(x => x.Debug(message, tag), Times.Once());
+
+            config.LogLevel = LogLevel.CRITICAL;
+
+            Log.LogDebug(config, message, tag);
+
+            fsLogManagerMock.Verify(x => x.Debug(message, tag), Times.Once());
+
+            config.LogManager = null;
+
+            Log.LogDebug(config, message, tag);
+
+            fsLogManagerMock.Verify(x => x.Debug(message, tag), Times.Once());
+        }
+
+        [TestMethod()]
+        public void LogDebugFailedTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new Config.DecisionApiConfig()
+            {
+                LogManager = fsLogManagerMock.Object,
+            };
+
+            var message = "test debug info";
+            var tag = "test";
+
+            var error = new Exception("error");
+
+            fsLogManagerMock.Setup(x => x.Debug(message, tag)).Throws(error);
+
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            Log.LogDebug(config, message, tag);
+
+            fsLogManagerMock.Verify(x => x.Debug(message, tag), Times.Once());
+
+            Assert.IsTrue(stringWriter.ToString().Contains(error.Message));
+
+            stringWriter.Dispose();
+
+        }
     }
 }

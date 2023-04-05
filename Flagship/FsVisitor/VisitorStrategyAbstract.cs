@@ -208,13 +208,6 @@ namespace Flagship.FsVisitor
             }
         }
 
-        protected virtual bool CheckHitTime(DateTime time) => (DateTime.Now - time).TotalSeconds <= Constants.DEFAULT_HIT_CACHE_TIME;
-
-        protected virtual bool ChecKLookupHitData1(JToken item)
-        {
-            return item != null && item["Version"].ToObject<int>() == 1 && item["Data"] != null && item["Data"]["Type"] != null;
-        }
-
         abstract public void ClearContext();
 
         abstract public Task FetchFlags();

@@ -100,6 +100,8 @@ namespace Flagship.FsVisitor.Tests
             defaultStrategy.UpdateContext("key5", false);
             Assert.AreEqual(visitorDelegate.Context["key5"], false);
 
+            defaultStrategy.UpdateContext(null);
+
             var newContext4 = new Dictionary<string, object>()
             {
                 ["key6"] = new object(),
@@ -752,6 +754,10 @@ namespace Flagship.FsVisitor.Tests
             defaultStrategy.CacheVisitorAsync();
 
             fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheVisitor"), Times.Once());
+
+            visitorDelegate.Config.VisitorCacheImplementation = null;
+
+            defaultStrategy.CacheVisitorAsync();
         }
 
         [TestMethod]

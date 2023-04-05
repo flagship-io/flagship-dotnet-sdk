@@ -28,7 +28,7 @@ namespace Flagship.Hit
         {
             var apiKeys = new Dictionary<string, object>()
             {
-                [Constants.VISITOR_ID_API_ITEM] = AnonymousId ?? VisitorId,
+                [Constants.VISITOR_ID_API_ITEM] = VisitorId,
                 [Constants.VARIATION_ID_API_ITEM] = VariationId,
                 [Constants.VARIATION_GROUP_ID_API_ITEM_ACTIVATE] = VariationGroupId,
                 [Constants.CUSTOMER_ENV_ID_API_ACTIVATE] = Config.EnvId,

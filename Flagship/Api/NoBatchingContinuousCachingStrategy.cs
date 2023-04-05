@@ -91,7 +91,7 @@ namespace Flagship.Api
                     body = requestBody,
                     duration = (DateTime.Now - now).TotalMilliseconds,
                     batchTriggeredBy = $"{CacheTriggeredBy.DirectHit}"
-                }), SEND_BATCH);
+                }), SEND_HIT);
             }
         }
 

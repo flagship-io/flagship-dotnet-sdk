@@ -4,6 +4,7 @@ using Flagship.Hit;
 using Flagship.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -198,6 +199,10 @@ namespace Flagship.Api
                 }
 
                 var data = new JObject();
+                var jsonSerializer = new JsonSerializer
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                };
                 foreach (var keyValue in hits)
                 {
                     var hitData = new HitCacheDTOV1
@@ -213,10 +218,11 @@ namespace Flagship.Api
                         }
                     };
 
-                    data[keyValue.Key] = JObject.FromObject(hitData);
+                    data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
                 }
-
+                
                 await hitCacheInstance.CacheHit(data);
+              
                 Logger.Log.LogInfo(Config, string.Format(HIT_DATA_CACHED, JsonConvert.SerializeObject(data)), PROCESS_CACHE_HIT);
             }
             catch (Exception ex)

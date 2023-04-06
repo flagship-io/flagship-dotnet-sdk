@@ -18,6 +18,7 @@ using Flagship.Enums;
 using System.Net.Http.Headers;
 using Microsoft.QualityTools.Testing.Fakes;
 using Flagship.Model;
+using Newtonsoft.Json.Serialization;
 
 namespace Flagship.Api.Tests
 {
@@ -1031,6 +1032,10 @@ namespace Flagship.Api.Tests
             hitCacheImplementation.Setup(x => x.CacheHit(It.IsAny<JObject>())).Returns(Task.CompletedTask);
 
             var data = new JObject();
+            var jsonSerializer = new JsonSerializer
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
             foreach (var keyValue in hits)
             {
                 var hitData = new HitCacheDTOV1
@@ -1046,7 +1051,7 @@ namespace Flagship.Api.Tests
                     }
                 };
 
-                data[keyValue.Key] = JObject.FromObject(hitData);
+                data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
             }
 
             await strategy.CacheHitAsync(hits).ConfigureAwait(false);
@@ -1105,6 +1110,10 @@ namespace Flagship.Api.Tests
             hitCacheImplementation.Setup(x => x.CacheHit(It.IsAny<JObject>())).Returns(Task.CompletedTask);
 
             var data = new JObject();
+            var jsonSerializer = new JsonSerializer
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
             foreach (var keyValue in hits)
             {
                 var hitData = new HitCacheDTOV1
@@ -1120,7 +1129,7 @@ namespace Flagship.Api.Tests
                     }
                 };
 
-                data[keyValue.Key] = JObject.FromObject(hitData);
+                data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
             }
 
             await strategy.CacheHitAsync(hits).ConfigureAwait(false);
@@ -1163,6 +1172,10 @@ namespace Flagship.Api.Tests
             hitCacheImplementation.Setup(x => x.CacheHit(It.IsAny<JObject>())).ThrowsAsync(exception);
 
             var data = new JObject();
+            var jsonSerializer = new JsonSerializer
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
             foreach (var keyValue in hits)
             {
                 var hitData = new HitCacheDTOV1
@@ -1178,7 +1191,7 @@ namespace Flagship.Api.Tests
                     }
                 };
 
-                data[keyValue.Key] = JObject.FromObject(hitData);
+                data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
             }
 
             await strategy.CacheHitAsync(hits).ConfigureAwait(false);

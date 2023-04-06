@@ -21,7 +21,7 @@ namespace Flagship.Config
             CacheStrategy = cacheStrategy;
         }
 
-        public TrackingManagerConfig():this(CacheStrategy.CONTINUOUS_CACHING,
+        public TrackingManagerConfig():this(CacheStrategy.PERIODIC_CACHING,
             Constants.DEFAULT_POOL_MAX_SIZE, TimeSpan.FromMilliseconds(Constants.DEFAULT_BATCH_TIME_INTERVAL))
         {
         }

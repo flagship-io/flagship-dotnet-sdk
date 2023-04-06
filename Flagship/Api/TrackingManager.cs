@@ -6,6 +6,7 @@ using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -124,13 +125,13 @@ namespace Flagship.Api
 
         protected virtual bool ChecKLookupHitData1(JToken item)
         {
-            return item != null && item["Version"].ToObject<int>() == 1 && item["Data"].ToObject<HitCacheData>() != null && item["Data"]["Type"] != null;
+            return item != null && item["version"].ToObject<int>() == 1 && item["data"].ToObject<HitCacheData>() != null && item["data"]["type"] != null;
         }
 
         protected HitAbstract GetHitFromContent(JObject content)
         {
             HitAbstract hit = null;
-            switch (content["Type"].ToObject<HitType>())
+            switch (content["type"].ToObject<HitType>())
             {
                 case HitType.EVENT:
                     hit = content.ToObject<Event>();
@@ -178,9 +179,14 @@ namespace Flagship.Api
 
                 var wrongHitKeys = new List<string>();
 
+                var jsonSerializer = new JsonSerializer
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                };
+
                 foreach (var item in hitsCache)
                 {
-                    if (!ChecKLookupHitData1(item.Value) || !CheckHitTime(item.Value["Data"]["Time"].Value<DateTime>()))
+                    if (!ChecKLookupHitData1(item.Value) || !CheckHitTime(item.Value["data"]["time"].Value<DateTime>()))
                     {
                         wrongHitKeys.Add(item.Key);
                         continue;

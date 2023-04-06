@@ -25,7 +25,7 @@ namespace Flagship.Hit
         [Newtonsoft.Json.JsonProperty("DS")]
         internal string DS { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("AnonymousId")]
+        [JsonProperty("AnonymousId")]
         internal string AnonymousId { get; set; }
 
         /// <summary>

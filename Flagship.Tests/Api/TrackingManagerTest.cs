@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Moq.Protected;
 using Newtonsoft.Json.Linq;
 using Flagship.Model;
+using Newtonsoft.Json.Serialization;
 
 namespace Flagship.Tests.Api
 {
@@ -41,7 +42,7 @@ namespace Flagship.Tests.Api
 
             object strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
-            Assert.IsInstanceOfType(strategy, typeof(BatchingContinuousCachingStrategy));
+            Assert.IsInstanceOfType(strategy, typeof(BatchingPeriodicCachingStrategy));
 
             config.TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.PERIODIC_CACHING);
 
@@ -347,6 +348,10 @@ namespace Flagship.Tests.Api
             };
 
             var data = new JObject();
+            var jsonSerializer = new JsonSerializer
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
             foreach (var keyValue in hits)
             {
                 var hitData = new HitCacheDTOV1
@@ -362,7 +367,7 @@ namespace Flagship.Tests.Api
                     }
                 };
 
-                data[keyValue.Key] = JObject.FromObject(hitData);
+                data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
             }
 
             hitCacheImplementation.Setup(x => x.LookupHits()).Returns(Task.FromResult(data));
@@ -411,6 +416,10 @@ namespace Flagship.Tests.Api
             };
 
             var data = new JObject();
+            var jsonSerializer = new JsonSerializer
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
             foreach (var keyValue in hits)
             {
                 var hitData = new HitCacheDTOV1
@@ -419,7 +428,7 @@ namespace Flagship.Tests.Api
                     Data = null
                 };
 
-                data[keyValue.Key] = JObject.FromObject(hitData);
+                data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
             }
 
             hitCacheImplementation.Setup(x => x.LookupHits()).Returns(Task.FromResult(data));

@@ -2,6 +2,7 @@
 using Flagship.Hit;
 using Flagship.Main;
 using Newtonsoft.Json.Linq;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,129 +14,14 @@ namespace TestQA
 {
     class Program
     {
-        class HitCache : Flagship.Cache.IHitCacheImplementation
-        {
-            public TimeSpan? LookupTimeout { get; set; } = TimeSpan.FromSeconds(2);
+       
 
-            public Task CacheHit(string visitorId, JObject data)
-            {
-                return Task.Run(() =>
-                {
-                    var check = File.Exists("cacheHit");
-                    var array = new JObject();
-                    if (check)
-                    {
-                        array = JObject.Parse(File.ReadAllText("cacheHit"));
-                        var ob = array.Value<JArray>(visitorId);
-                        if (ob == null)
-                        {
-                            array[visitorId] = new JArray(data);
-                        }
-                        else
-                        {
-                            ob.Add(data);
-                        }
-                        
-                    }
-                    else
-                    {
-                        array[visitorId] = new JArray(data);
-                    }
-                    
-                    File.WriteAllText("cacheHit", array.ToString());
-                }); 
-            }
-
-            public Task FlushHits(string visitorId)
-            {
-                return Task.Run(() =>
-                {
-                    var check = File.Exists("cacheHit");
-                    if (!check)
-                    {
-                        return;
-                    }
-                    var file = JObject.Parse(File.ReadAllText("cacheHit"));
-                    file.Remove(visitorId);
-                    File.WriteAllText("cacheHit", file.ToString());
-                });
-            }
-
-            public Task<JArray> LookupHits(string visitorId)
-            {
-                return Task.Run(() =>
-                {
-                    var check = File.Exists("cacheHit");
-                    if (!check)
-                    {
-                        return null;
-                    }
-                    var file = JObject.Parse(File.ReadAllText("cacheHit"));
-                    var array = file.Value<JArray>(visitorId);
-                    file.Remove(visitorId);
-                    File.WriteAllText("cacheHit", file.ToString());
-                    return array;
-                });
-               
-            }
-        }
-
-        class VisitorCache : Flagship.Cache.IVisitorCacheImplementation
-        {
-            public TimeSpan? LookupTimeout { get ; set ; } = TimeSpan.FromSeconds(2);
-
-            public Task CacheVisitor(string visitorId, JObject data)
-            {
-                return Task.Run(() =>
-                {
-                    var check = File.Exists("cacheVisitor");
-                    var array = new JObject();
-                    if (check)
-                    {
-                        array = JObject.Parse(File.ReadAllText("cacheVisitor"));
-                    }
-                    array[visitorId] = data;
-                    File.WriteAllText("cacheVisitor", array.ToString());
-                });
-            }
-
-            public Task FlushVisitor(string visitorId)
-            {
-                return Task.Run(() =>
-                {
-                    var check = File.Exists("cacheVisitor");
-                    if (!check)
-                    {
-                        return;
-                    }
-                    var file = JObject.Parse(File.ReadAllText("cacheVisitor"));
-                    file.Remove(visitorId);
-                    File.WriteAllText("cacheVisitor", file.ToString());
-                });
-            }
-
-            public Task<JObject> LookupVisitor(string visitorId)
-            {
-                return Task.Run(() =>
-                {
-                    var check = File.Exists("cacheVisitor");
-                    if (!check)
-                    {
-                        return null;
-                    }
-                    var file = JObject.Parse(File.ReadAllText("cacheVisitor"));
-                    var ob = file.Value<JObject>(visitorId);
-                    file.Remove(visitorId);
-                    File.WriteAllText("cacheVisitor", file.ToString());
-                    return ob;
-                });
-            }
-        }
         static async Task TestGetFlag1()
         {
             Console.WriteLine("Test getFlag 1");
             var visitor = Fs.NewVisitor("visitor-A")
-                .WithContext(new Dictionary<string, object> {
+                .WithContext(new Dictionary<string, object>
+                {
                     ["qa_getflag"] = true
                 }).Build();
 
@@ -261,7 +147,7 @@ namespace TestQA
             await visitor.SendHit(new Screen("abtastylab")
             {
                 UserIp = "127.0.0.1",
-                ScreenResolution=  "800X600",
+                ScreenResolution = "800X600",
                 Locale = "fr",
                 SessionNumber = "1234"
             });
@@ -339,12 +225,12 @@ namespace TestQA
 
         static async Task TestQA_Report1()
         {
-            var visitor =   Fs.NewVisitor("visitor_a")
+            var visitor = Fs.NewVisitor("visitor_a")
                 .WithContext(new Dictionary<string, object>
-            {
-                ["qa_report"] = true,
-                ["is_net"] = true
-            }).Build();
+                {
+                    ["qa_report"] = true,
+                    ["is_net"] = true
+                }).Build();
 
             await visitor.FetchFlags();
 
@@ -483,135 +369,65 @@ namespace TestQA
 
         static async Task TestCache1()
         {
-            var visitor = Fs.NewVisitor("visitor_5678")
-                .WithContext(new Dictionary<string, object> {
-                    ["plan"] = "premium"
+            var visitor = Fs.NewVisitor("visitor-A")
+                .IsAuthenticated(true)
+                .WithContext(new Dictionary<string, object>
+                {
+                    ["testing_tracking_manager"] = true
                 }).Build();
-
 
             await visitor.FetchFlags();
 
-            var flag = visitor.GetFlag("myAwesomeFeature", 1);
+            Console.WriteLine("Fetched visitor A");
+
+            Console.ReadKey();
+
+            var flag = visitor.GetFlag("my_flag", "default-value");
 
             Console.WriteLine("flagValue: {0}", flag.GetValue());
+
+            //Console.ReadKey();
 
             await visitor.SendHit(new Screen("Screen 1"));
 
-            Console.WriteLine("Go offline");
+
+            Console.WriteLine("About to Close");
+
             Console.ReadKey();
 
-            await visitor.SendHit(new Screen("Screen 2"));
-            await visitor.SendHit(new Event(EventCategory.ACTION_TRACKING, "event 1"));
+            //await Fs.Close();
 
-            await visitor.GetFlag("perso_value", 1).UserExposed();
+            //Console.WriteLine("About to create visitor B");
 
-            Console.WriteLine("Go online");
+            //Console.ReadKey();
+
+            //var visitor2 = Fs.NewVisitor("visitor-B")
+            //    .WithContext(new Dictionary<string, object>
+            //    {
+            //        ["testing_tracking_manager"] = true
+            //    }).Build();
+
+            //await visitor2.FetchFlags();
+
+            //var flag2 = visitor2.GetFlag("my_flag", "default-value");
+
+            //Console.WriteLine("flagValue2: {0}", flag2.GetValue());
+
+            //await visitor2.SendHit(new Screen("Screen 1"));
+
+            //await visitor.SendHit(new Screen("Screen 2"));
+
+            //await visitor.SendHit(new Screen("Screen 3"));
+
+            //Console.ReadKey();
+
+            //await visitor.SendHit(new Screen("Screen 4"));
+
+            //await visitor.SendHit(new Screen("Screen 5"));
+
+            //visitor.SetConsent(false);
+
             Console.ReadKey();
-
-            await visitor.FetchFlags();
-
-            visitor = Fs.NewVisitor("visitor_5678")
-                .WithContext(new Dictionary<string, object>
-                {
-                    ["plan"] = "premium"
-                }).IsAuthenticated(true).HasConsented(true).Build();
-
-            await visitor.FetchFlags();
-
-            flag = visitor.GetFlag("myAwesomeFeature", 1);
-
-            Console.WriteLine("flagValue: {0}", flag.GetValue());
-
-            Console.WriteLine("update context");
-            Console.ReadKey();
-
-            visitor.UpdateContext(new Dictionary<string, object>
-            {
-                ["plan"] = "enterprise"
-            });
-
-            await visitor.FetchFlags();
-
-            Console.WriteLine("flagValue: {0}", flag.GetValue());
-
-            Console.WriteLine("SetConsent false");
-            Console.ReadKey();
-
-            visitor.SetConsent(false);
-
-            await visitor.SendHit(new Screen("Screen 3"));
-
-            Console.WriteLine("SetConsent true");
-            Console.ReadKey();
-            visitor.SetConsent(true);
-            await visitor.FetchFlags();
-
-            Console.WriteLine("Go offline");
-            Console.ReadKey();
-
-            visitor.UpdateContext(new Dictionary<string, object>
-            {
-                ["plan"] = "enterprise"
-            });
-
-            await visitor.FetchFlags();
-
-            flag = visitor.GetFlag("myAwesomeFeature", 1);
-
-            Console.WriteLine("flagValue: {0}", flag.GetValue());
-
-            Console.WriteLine("Go offline");
-            Console.ReadKey();
-
-            await visitor.SendHit(new Screen("Screen 4"));
-
-            visitor.SetConsent(false);
-
-            Console.WriteLine("Go online");
-            Console.WriteLine("Enable panic mode");
-            Console.ReadKey();
-
-            await visitor.FetchFlags();
-
-            visitor.SetConsent(true);
-
-            await visitor.SendHit(new Event(EventCategory.USER_ENGAGEMENT, "Event 2"));
-
-            await visitor.SendHit(new Transaction("#12345", "affiliation")
-            {
-                Taxes = 19.99,
-                Currency = "USD",
-                CouponCode = "code",
-                ItemCount = 1,
-                ShippingMethod = "road",
-                ShippingCosts = 5,
-                PaymentMethod = "credit_card",
-                TotalRevenue = 199.99
-            });
-
-            await visitor.SendHit(new Item("#12345", "product", "sku123")
-            {
-                Price = 199.99,
-                Quantity = 1,
-                Category = "test",
-            });
-
-            await visitor.SendHit(new Event(EventCategory.ACTION_TRACKING, "click")
-            {
-                Label = "label",
-                Value = 100,
-            });
-
-            await visitor.FetchFlags();
-
-            Console.WriteLine("Disabled panic mode");
-            Console.ReadKey();
-
-            await visitor.FetchFlags();
-
-            flag = visitor.GetFlag("myAwesomeFeature", 1);
-
-            Console.WriteLine("flagValue: {0}", flag.GetValue());
         }
 
         static async Task TestRealloc()
@@ -665,26 +481,26 @@ namespace TestQA
             Console.WriteLine("flagValue 2: {0}", flag2.GetValue());
         }
 
-        static async void lunchTest()
-        {
-            
-        }
+
         static void Main(string[] args)
         {
-            Fs.Start("lkk", "lkl", 
-                new BucketingConfig { 
-                HitCacheImplementation= new HitCache(),
-                VisitorCacheImplementation = new VisitorCache(),
-                //LogManager = new sentryCustomLog(),
-                LogLevel = Flagship.Enums.LogLevel.ALL,
-                Timeout = TimeSpan.FromSeconds(10),
-                PollingInterval = TimeSpan.FromSeconds(2)
-
+            Fs.Start("", "",
+                new DecisionApiConfig
+                {
+                    HitCacheImplementation = new FsRedisHitCache(new ConfigurationOptions
+                    {
+                        EndPoints = { "127.0.0.1:6379" }, DefaultDatabase= 2
+                    }),
+                    TrackingMangerConfig = new TrackingManagerConfig
+                    {
+                        CacheStrategy = Flagship.Enums.CacheStrategy.CONTINUOUS_CACHING,
+                        PoolMaxSize = 5,
+                        BatchIntervals = TimeSpan.FromSeconds(10)
+                    }
                 });
 
-            Console.ReadKey();
             TestCache1().Wait();
-            Console.ReadLine();
+            Console.ReadKey();
         }
     }
 }

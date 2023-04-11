@@ -269,20 +269,20 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public async Task UserExposedTest()
         {
-            const string functionName = "UserExposed";
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            string functionName = DefaultStrategy.FLAG_VISITOR_EXPOSED ;
             var key = "key1";
-            await defaultStrategy.UserExposed(key, "defaultValue", null).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(key, "defaultValue", null).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_FLAG_ERROR, key), functionName), Times.Once());
 
             var flagDto = CampaignsData.GetFlag()[0];
-            await defaultStrategy.UserExposed(flagDto.Key, 1, flagDto).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDto.Key, 1, flagDto).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.USER_EXPOSED_CAST_ERROR, flagDto.Key), functionName), Times.Once());
 
-            await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
 
             var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
 
@@ -291,7 +291,7 @@ namespace Flagship.FsVisitor.Tests
 
             var flagDtoValueNull = CampaignsData.GetFlag()[1];
 
-            await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
             trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
                 y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)
@@ -302,13 +302,12 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagValueWithFlagNullTest()
         {
-            const string functionName = "getFlag.value";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
             var defaultValueString = "defaultValueString";
             var key = "key 1";
             var value = defaultStrategy.GetFlagValue(key, defaultValueString, null);
             Assert.AreEqual(defaultValueString, value);
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_MISSING_ERROR, key), DefaultStrategy.FLAG_VALUE), Times.Once());
         }
 
         [TestMethod()]
@@ -337,7 +336,7 @@ namespace Flagship.FsVisitor.Tests
             var value3 = defaultStrategy.GetFlagValue(flagDto.Key, 1, flagDto);
             Assert.AreEqual(1, value3);
 
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDto.Key), functionName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDto.Key), DefaultStrategy.FLAG_VALUE), Times.Once());
             var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
             trackingManagerMock.Verify(x => x.Add(activate), Times.Never());
         }
@@ -371,14 +370,13 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagMetadataFailedTest()
         {
-            const string functionName = "flag.metadata";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null);
             var resultatMetadata = defaultStrategy.GetFlagMetadata(metadata, "key", false);
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultatMetadata));
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_CAST_ERROR, "key"), functionName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_CAST_ERROR, "key"), DefaultStrategy.FLAG_METADATA), Times.Once());
         }
 
         [TestMethod()]

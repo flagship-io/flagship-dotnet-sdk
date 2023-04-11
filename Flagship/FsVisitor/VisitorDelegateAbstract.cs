@@ -98,7 +98,7 @@ namespace Flagship.FsVisitor
         abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
         abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);
 
-        abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
         abstract public Task SendHit(HitAbstract hit); 

@@ -179,9 +179,9 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UserExposedTest()
         {
-            defaultStrategy.Setup(x => x.UserExposed("key", "default", null))
+            defaultStrategy.Setup(x => x.VisitorExposed("key", "default", null))
                 .Verifiable();
-            visitorDelegateMock.Object.UserExposed("key", "default", null);
+            visitorDelegateMock.Object.VisitorExposed("key", "default", null);
             defaultStrategy.Verify();
         }
 

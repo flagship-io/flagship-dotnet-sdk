@@ -112,15 +112,15 @@ namespace Flagship.FsVisitor.Tests
             var panicStrategy = new PanicStrategy(visitorDelegate);
             var value = panicStrategy.GetFlagValue("key", "defaultValue", null);
             Assert.AreEqual(value, "defaultValue");
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FlagshipStatus.READY_PANIC_ON), "Flag.value"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, DefaultStrategy.FLAG_VALUE, FlagshipStatus.READY_PANIC_ON), DefaultStrategy.FLAG_VALUE), Times.Once());
         }
 
         [TestMethod()]
         public async Task UserExposedTest()
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
-            await panicStrategy.UserExposed("key", "defaultValue", null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UserExposed", FlagshipStatus.READY_PANIC_ON), "UserExposed"), Times.Once());
+            await panicStrategy.VisitorExposed("key", "defaultValue", null).ConfigureAwait(false);
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, DefaultStrategy.FLAG_VISITOR_EXPOSED, FlagshipStatus.READY_PANIC_ON), DefaultStrategy.FLAG_VISITOR_EXPOSED), Times.Once());
         }
 
         [TestMethod()]
@@ -129,7 +129,7 @@ namespace Flagship.FsVisitor.Tests
             var panicStrategy = new PanicStrategy(visitorDelegate);
             var value = panicStrategy.GetFlagMetadata(null, "key", false);
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(value));
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.metadata", FlagshipStatus.READY_PANIC_ON), "Flag.metadata"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, DefaultStrategy.FLAG_METADATA, FlagshipStatus.READY_PANIC_ON), DefaultStrategy.FLAG_METADATA), Times.Once());
         }
     }
 }

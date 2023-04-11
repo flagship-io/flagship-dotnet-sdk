@@ -48,8 +48,13 @@ namespace Flagship.FsFlag
 
         public Task UserExposed()
         {
+            return VisitorExposed();
+        }
+
+        public Task VisitorExposed()
+        {
             var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
-            return _visitorDelegateAbstract.UserExposed(_key, _defaultValue, flagDTO);
+            return _visitorDelegateAbstract.VisitorExposed(_key, _defaultValue, flagDTO);
         }
 
         public T GetValue(bool userExposed = true)
@@ -57,5 +62,6 @@ namespace Flagship.FsFlag
             var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
             return _visitorDelegateAbstract.GetFlagValue(_key, (T)_defaultValue, flagDTO, userExposed);
         }
+
     }
 }

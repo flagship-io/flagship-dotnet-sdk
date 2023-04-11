@@ -32,12 +32,12 @@ namespace Flagship.FsVisitor
             return new Collection<Campaign>();
         }
 
-        public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
 
             return Task.Factory.StartNew(() =>
             {
-                Log("UserExposed");
+                Log(FLAG_VISITOR_EXPOSED);
             });
         }
 

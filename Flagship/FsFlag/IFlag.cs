@@ -22,10 +22,18 @@ namespace Flagship.FsFlag
         bool Exists { get; }
 
         /// <summary>
-        /// Tells Flagship the user have been exposed and have seen this flag. This will increment the visits for the current variation on your campaign reporting. No user exposition will be sent if the Flag doesn't exist or if the default value type do not correspond to the Flag type in Flagship.
+        /// Tells Flagship the user have been exposed and have seen this flag. This will increment the visits for the current variation on your campaign reporting. 
+        /// <br/> No user exposure will be sent if the Flag doesn't exist or if the default value type do not correspond to the Flag type in Flagship.
         /// </summary>
         /// <returns></returns>
+        [Obsolete("Please use visitorExposed instead ")]
         Task UserExposed();
+
+        /// <summary>
+        /// Tells Flagship the visitor have been exposed and have seen this flag. This will increment the visits for the current variation on your campaign reporting. No visitor exposure will be sent if the Flag doesn't exist or if the default value type do not correspond to the Flag type in Flagship.
+        /// </summary>
+        /// <returns></returns> 
+        Task VisitorExposed();
 
         /// <summary>
         /// Return the campaign information metadata or an empty object if the Flag doesn't exist or if the default value type does not correspond to the Flag type in Flagship.

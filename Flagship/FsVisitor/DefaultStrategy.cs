@@ -20,6 +20,9 @@ namespace Flagship.FsVisitor
         public static string FETCH_CAMPAIGNS_SUCCESS = "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns {3} in {4} ms";
         public static string FETCH_CAMPAIGNS_FROM_CACHE = "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns from cache {3} in {4} ms";
         public static string FETCH_FLAGS_FROM_CAMPAIGNS = "Visitor {0}, anonymousId {1} with context {2} has just fetched flags {3} from Campaigns";
+        public static string FLAG_VISITOR_EXPOSED = "FLAG_VISITOR_EXPOSED";
+        public static string FLAG_VALUE = "FLAG_VALUE";
+        public static string FLAG_METADATA = "FLAG_METADATA";
         public DefaultStrategy(VisitorDelegateAbstract visitor) : base(visitor)
         {
         }
@@ -174,17 +177,16 @@ namespace Flagship.FsVisitor
             };
             await TrackingManager.ActivateFlag(activate);
         }
-        public override async Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override async Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
-            const string functionName = "UserExposed";
             if (flag == null)
             {
-                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
+                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), FLAG_VISITOR_EXPOSED);
                 return;
             }
             if (flag.Value != null && defaultValue != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
+                Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), FLAG_VISITOR_EXPOSED);
                 return;
             }
 
@@ -193,11 +195,10 @@ namespace Flagship.FsVisitor
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
         {
-            const string functionName = "getFlag.value";
 
             if (flag == null)
             {
-                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName);
+                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), FLAG_VALUE);
                 return defaultValue;
             }
 
@@ -205,20 +206,20 @@ namespace Flagship.FsVisitor
             {
                 if (userExposed)
                 {
-                    _ = UserExposed(key, defaultValue, flag);
+                    _ = VisitorExposed(key, defaultValue, flag);
                 }
                 return defaultValue;
             }
 
             if (defaultValue != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
+                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), FLAG_VALUE);
                 return defaultValue;
             }
 
             if (userExposed)
             {
-                _ = UserExposed(key, defaultValue, flag);
+                _ = VisitorExposed(key, defaultValue, flag);
             }
 
             return (T)flag.Value;
@@ -226,10 +227,9 @@ namespace Flagship.FsVisitor
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
         {
-            const string functionName = "flag.metadata";
             if (!hasSameType && !string.IsNullOrWhiteSpace(metadata.CampaignId))
             {
-                Log.LogError(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), functionName);
+                Log.LogError(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), FLAG_METADATA);
                 return FlagMetadata.EmptyMetadata();
             }
             return metadata;

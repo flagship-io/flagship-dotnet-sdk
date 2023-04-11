@@ -65,21 +65,21 @@ namespace Flagship.FsVisitor
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
         {
-            Log("Flag.value");
+            Log(FLAG_VALUE);
             return defaultValue;
         }
 
-        public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
             return Task.Factory.StartNew(() =>
             {
-                Log("UserExposed");
+                Log(FLAG_VISITOR_EXPOSED);
             });
         }
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
         {
-            Log("Flag.metadata");
+            Log(FLAG_METADATA);
             return FlagMetadata.EmptyMetadata();
         }
 

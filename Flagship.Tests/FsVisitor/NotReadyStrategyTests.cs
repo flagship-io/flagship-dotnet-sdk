@@ -84,15 +84,15 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(defaultValue, value);
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FlagshipStatus.NOT_INITIALIZED), "Flag.value"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, DefaultStrategy.FLAG_VALUE, FlagshipStatus.NOT_INITIALIZED), DefaultStrategy.FLAG_VALUE), Times.Once());
         }
 
         [TestMethod()]
         public async Task UserExposedTest()
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
-            await notReadyStategy.UserExposed("key","defaultValue", null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UserExposed", FlagshipStatus.NOT_INITIALIZED), "UserExposed"), Times.Once());
+            await notReadyStategy.VisitorExposed("key","defaultValue", null).ConfigureAwait(false);
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, DefaultStrategy.FLAG_VISITOR_EXPOSED, FlagshipStatus.NOT_INITIALIZED), DefaultStrategy.FLAG_VISITOR_EXPOSED), Times.Once());
         }
 
         [TestMethod()]
@@ -103,7 +103,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(value));
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "flag.metadata", FlagshipStatus.NOT_INITIALIZED), "flag.metadata"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, DefaultStrategy.FLAG_METADATA, FlagshipStatus.NOT_INITIALIZED), DefaultStrategy.FLAG_METADATA), Times.Once());
         }
     }
 }

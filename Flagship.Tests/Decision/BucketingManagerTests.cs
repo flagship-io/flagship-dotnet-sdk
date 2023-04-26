@@ -19,6 +19,7 @@ using System.Collections.ObjectModel;
 using Newtonsoft.Json.Linq;
 using Flagship.Model;
 using Flagship.Logger;
+using Flagship.Hit;
 
 namespace Flagship.Decision.Tests
 {
@@ -719,7 +720,7 @@ namespace Flagship.Decision.Tests
                 CallBase = true
             };
 
-            decisionManagerMock.Setup(x => x.SendContextAsync(It.IsAny<FsVisitor.VisitorDelegateAbstract>()));
+            decisionManagerMock.Setup(x => x.SendContextAsync(It.IsAny<FsVisitor.VisitorDelegateAbstract>())) ;
 
             var decisionManager = decisionManagerMock.Object;
 
@@ -764,8 +765,6 @@ namespace Flagship.Decision.Tests
             await decisionManager.StartPolling().ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(exception.Message, "Polling"), Times.Once());
-
-            fsLogManagerMock.Verify(x => x.Error(It.Is<string>(y => y != exception.Message), It.Is<string>(y => y != "Polling")), Times.Never());
 
             httpResponsePanicMode.Dispose();
             httpClient.Dispose();
@@ -834,7 +833,7 @@ namespace Flagship.Decision.Tests
         }
 
         [TestMethod()]
-        public async Task SendContextTest()
+        public void SendContextTest()
         {
             var fsLogManagerMock = new Mock<IFsLogManager>();
 
@@ -846,61 +845,39 @@ namespace Flagship.Decision.Tests
                 LogManager = fsLogManagerMock.Object,
             };
 
-            HttpResponseMessage httpResponse = new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent("", Encoding.UTF8, "application/json"),
-            };
-
-            HttpResponseMessage httpResponseError = new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.BadRequest,
-                Content = new StringContent("Error", Encoding.UTF8, "application/json"),
-            };
-
-            var url = string.Format(Constants.BUCKETING_API_CONTEXT_URL, config.EnvId);
-
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
-
-
-            mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
-                 "SendAsync",
-                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
-                  ItExpr.IsAny<CancellationToken>()
-                ).ReturnsAsync(httpResponse).ReturnsAsync(httpResponseError);
-
-            var httpClient = new HttpClient(mockHandler.Object);
+            var httpClient = new HttpClient();
 
             var decisionManagerMock = new BucketingManager(config, httpClient, null);
 
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
-            var decisionManagerMock2 = new Mock<Flagship.Decision.IDecisionManager>();
-            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock2.Object, trackingManagerMock.Object);
+            var decisionManagerMock2 = new Mock<IDecisionManager>();
+            var configManager = new Config.ConfigManager(config, decisionManagerMock2.Object, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>()
             {
                 ["age"] = 20
             };
 
-            var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitor_1", false, context, false, configManager);
+            var visitorDelegate = new Mock<FsVisitor.VisitorDelegate>("visitor_1", false, context, false, configManager)
+            {
+                CallBase = true
+            };
 
-            decisionManagerMock.SendContextAsync(visitorDelegate);
+            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])));
 
-            mockHandler.Protected().Verify("SendAsync", Times.Exactly(1),
-                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
-                  ItExpr.IsAny<CancellationToken>());
+            decisionManagerMock.SendContextAsync(visitorDelegate.Object);
 
-            decisionManagerMock.SendContextAsync(visitorDelegate);
+            visitorDelegate.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
 
+            var exception = new Exception("sendHit error");
 
-            mockHandler.Protected().Verify("SendAsync", Times.Exactly(2),
-                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Post && req.RequestUri.ToString() == url),
-                  ItExpr.IsAny<CancellationToken>());
+            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);
 
-            fsLogManagerMock.Verify(x => x.Error("Bad Request", "SendContext"), Times.Once());
+            decisionManagerMock.SendContextAsync(visitorDelegate.Object);
 
-            httpResponse.Dispose();
-            httpResponseError.Dispose();
+            fsLogManagerMock.Verify(x => x.Error(exception.Message, "SendContext"), Times.Once());
+
+            httpClient.Dispose();
         }
 
         [TestMethod()]

@@ -60,10 +60,13 @@ namespace Flagship.Config
         /// <summary>
         /// If it's set to true, hit cache and visitor cache will be disabled otherwise will be enabled.
         /// </summary>
-        public bool DisableCache { get; set; } 
-        
-        public FlagshipConfig()
+        public bool DisableCache { get; set; }
+
+        public ITrackingManagerConfig TrackingMangerConfig { get; set; }
+
+        public FlagshipConfig(DecisionMode decisionMode = DecisionMode.DECISION_API)
         {
+            DecisionMode = decisionMode;
             LogLevel = LogLevel.ALL;
             if (!Timeout.HasValue)
             {

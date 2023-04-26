@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
+using Moq;
 
 namespace Flagship.Hit.Tests
 {
@@ -25,19 +26,26 @@ namespace Flagship.Hit.Tests
             var code = "itemCode";
             var name = "itemName";
             var price = 100f;
-            var quantity = 5f;
+            var quantity = 5;
             var category = "ItemCategory";
             var visitorId = "VisitorId";
 
-            var item = new Hit.Item(transactionId, name, code)
-            {
-                Price = price,
-                Quantity = quantity,
-                Category = category,
-                Config = config,
-                VisitorId = visitorId,
-                DS = Constants.SDK_APP
-            };
+            var itemMock = new Mock<Item>(transactionId, name, code) { CallBase = true };
+
+
+            var currentTime = DateTime.Now;
+            itemMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+
+            var item = itemMock.Object;
+
+            item.Price = price;
+            item.Quantity = quantity;
+            item.Category = category;
+            item.Config = config;
+            item.VisitorId = visitorId;
+            item.DS = Constants.SDK_APP;
+            item.CreatedAt = currentTime;
+            
 
             Assert.AreEqual(transactionId, item.TransactionId);
             Assert.AreEqual(name, item.Name);
@@ -55,9 +63,10 @@ namespace Flagship.Hit.Tests
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
                 [Constants.T_API_ITEM] = $"{Hit.HitType.ITEM}",
                 [Constants.CUSTOMER_UID] = null,
+                [Constants.QT_API_ITEM] = 0,
                 [Constants.TID_API_ITEM] = transactionId,
                 [Constants.IN_API_ITEM] = name,
-                [Constants.ICN_API_ITEM] = code,
+                [Constants.IC_API_ITEM] = code,
                 [Constants.IP_API_ITEM] = price,
                 [Constants.IQ_API_ITEM] = quantity,
                 [Constants.IV_API_ITEM] = category,

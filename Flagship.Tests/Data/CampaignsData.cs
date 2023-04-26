@@ -36,9 +36,9 @@ namespace Flagship.Tests.Data
                  new FlagDTO{
                 Key = "key2",
                 Value = null,
-                VariationId = "c3mrlpveoqt1lkm7tc00",
+                VariationId = "c3mrlpveoqt1lkm7tc10",
                 CampaignId = "c3ev1afkprbg5u3burag",
-                VariationGroupId = "c3ev1afkprbg5u3burbg",
+                VariationGroupId = "c3ev1afkprbg5u3bkrbg",
                 IsReference = true,
                 }
             };

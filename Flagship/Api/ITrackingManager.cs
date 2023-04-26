@@ -11,14 +11,10 @@ using System.Threading.Tasks;
 
 namespace Flagship.Api
 {
-    internal interface ITrackingManager
+    internal interface ITrackingManager : ITrackingManagerCommon
     {
-        FlagshipConfig Config { get; set; }
+         void StartBatchingLoop();
 
-        HttpClient HttpClient { get; set; }
-
-        Task SendActive(VisitorDelegateAbstract visitor, FlagDTO flag);
-
-        Task SendHit(HitAbstract hit);
+         void StopBatchingLoop();
     }
 }

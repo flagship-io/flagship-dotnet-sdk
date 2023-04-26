@@ -8,3 +8,4 @@ CoverageResults.xml
 /ConsoleApp3
 /TestResults
 Flagship/NugetPackageRelease/Flagship.SDK.3.0.3.nupkg
+/Flagship.Tests/FakesAssemblies

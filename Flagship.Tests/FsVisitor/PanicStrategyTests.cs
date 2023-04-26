@@ -54,14 +54,10 @@ namespace Flagship.FsVisitor.Tests
             config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
             config.HitCacheImplementation = HitCaheImplementation.Object;
 
-            panicStrategy.CacheHit(flagDTO: null);
-            panicStrategy.CacheHit(hit: null);
             panicStrategy.CacheVisitorAsync();
-            panicStrategy.LookupHits();
             panicStrategy.LookupVisitor();
 
             VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
-            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
 
             var privateNoConsentStrategy = new PrivateObject(panicStrategy);
 

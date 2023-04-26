@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
+using Moq;
 
 namespace Flagship.Hit.Tests
 {
@@ -24,12 +25,17 @@ namespace Flagship.Hit.Tests
             var pageUrl = "http://localhost";
             var visitorId = "VisitorId";
 
-            var page = new Hit.Page(pageUrl)
-            {
-                Config = config,
-                VisitorId = visitorId,
-                DS = Constants.SDK_APP
-            };
+            var pageMock = new Mock<Page>(pageUrl) { CallBase = true};
+            var currentTime = DateTime.Now;
+            pageMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+
+            var page = pageMock.Object;
+
+            page.Config = config;
+            page.VisitorId = visitorId;
+            page.DS = Constants.SDK_APP;
+            page.CreatedAt = currentTime;
+            
 
             Assert.AreEqual(page.DocumentLocation, pageUrl);
             Assert.AreEqual(page.Config, config);   
@@ -44,6 +50,7 @@ namespace Flagship.Hit.Tests
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
                 [Constants.T_API_ITEM] = $"{Hit.HitType.PAGEVIEW}",
                 [Constants.CUSTOMER_UID] = null,
+                [Constants.QT_API_ITEM] = 0,
                 [Constants.DL_API_ITEM] = pageUrl,
             };
 

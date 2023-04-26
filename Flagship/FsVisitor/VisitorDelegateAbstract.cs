@@ -32,6 +32,10 @@ namespace Flagship.FsVisitor
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
             ConfigManager = configManager;
+            if (isAuthenticated && configManager.Config.DecisionMode == DecisionMode.DECISION_API)
+            {
+                AnonymousId = Guid.NewGuid().ToString();
+            }
             _context = new Dictionary<string, object>();
             UpdateContext(context);
             Flags = new HashSet<FlagDTO>();
@@ -39,12 +43,6 @@ namespace Flagship.FsVisitor
             SetConsent(hasConsented);
             LoadPredefinedContext();
 
-            if (isAuthenticated && configManager.Config.DecisionMode== DecisionMode.DECISION_API)
-            {
-                _anonymousId = Guid.NewGuid().ToString();
-            }
-
-            GetStrategy().LookupHits();
             GetStrategy().LookupVisitor();
         }
        
@@ -59,7 +57,7 @@ namespace Flagship.FsVisitor
         {
             _context[PredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
             _context[PredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
-            //_context[FsPredefinedContext.FLAGSHIP_VISITOR] = VisitorId; 
+            _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;  
         }
 
         virtual public VisitorStrategyAbstract GetStrategy()

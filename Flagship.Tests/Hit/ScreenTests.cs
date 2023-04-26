@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
+using Moq;
 
 namespace Flagship.Hit.Tests
 {
@@ -29,17 +30,26 @@ namespace Flagship.Hit.Tests
             var locale = "en";
             var sessionNumber = "1";
 
-            var screen = new Hit.Screen(viewName)
+            var screenMock = new Mock<Screen>(viewName)
             {
-                Config = config,
-                VisitorId = visitorId,
-                DS = Constants.SDK_APP,
-                AnonymousId = anonymousId,
-                UserIp = userIp,
-                ScreenResolution = screenResolution,
-                Locale = locale,
-                SessionNumber= sessionNumber
+                CallBase = true
             };
+
+            var currentTime = DateTime.Now;
+            screenMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+
+            var screen = screenMock.Object;
+
+            screen.Config = config;
+            screen.VisitorId = visitorId;
+            screen.DS = Constants.SDK_APP;
+            screen.AnonymousId = anonymousId;
+            screen.UserIp = userIp;
+            screen.ScreenResolution = screenResolution;
+            screen.Locale = locale;
+            screen.SessionNumber = sessionNumber;
+            screen.CreatedAt = currentTime;
+            
 
             Assert.AreEqual(screen.DocumentLocation, viewName);
             Assert.AreEqual(screen.Config, config);
@@ -58,11 +68,12 @@ namespace Flagship.Hit.Tests
                 [Constants.DS_API_ITEM] = Constants.SDK_APP,
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
                 [Constants.T_API_ITEM] = $"{Hit.HitType.SCREENVIEW}",
+                [Constants.CUSTOMER_UID] = visitorId,
+                [Constants.QT_API_ITEM] = 0,
                 [Constants.USER_IP_API_ITEM] = userIp,
                 [Constants.SCREEN_RESOLUTION_API_ITEM] = screenResolution,
                 [Constants.USER_LANGUAGE] = locale,
                 [Constants.SESSION_NUMBER] = sessionNumber,
-                [Constants.CUSTOMER_UID] = visitorId,
                 [Constants.DL_API_ITEM] = viewName,
             };
 
@@ -76,24 +87,11 @@ namespace Flagship.Hit.Tests
 
             screen = new Hit.Screen(null)
             {
-                Config = config,    
+                Config = config,
             };
             Assert.IsFalse(screen.IsReady());
 
-            keys = Newtonsoft.Json.JsonConvert.SerializeObject(screen.ToApiKeys());
 
-             apiKeys = new Dictionary<string, object>()
-            {
-                [Constants.VISITOR_ID_API_ITEM] = null,
-                [Constants.DS_API_ITEM] = null,
-                [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
-                [Constants.T_API_ITEM] = $"{Hit.HitType.SCREENVIEW}",
-                 [Constants.CUSTOMER_UID] = null,
-                 [Constants.DL_API_ITEM] = null,
-            };
-
-             apiKeysJson = Newtonsoft.Json.JsonConvert.SerializeObject(apiKeys);
-            Assert.AreEqual(apiKeysJson, keys);
         }
     }
 }

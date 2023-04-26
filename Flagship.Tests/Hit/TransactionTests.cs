@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
+using Moq;
 
 namespace Flagship.Hit.Tests
 {
@@ -27,27 +28,33 @@ namespace Flagship.Hit.Tests
             var currency = "ItemCategory";
             var visitorId = "VisitorId";
             var couponCode = "couponCode";
-            var itemCount = 5f;
+            var itemCount = 5;
             var shippingMethod = "shippingMethod";
             var paymentMethod = "paymentMethod";
             var totalRevenue = 450f;
             var shippingCosts = 10f;
 
-            var transaction = new Hit.Transaction(transactionId, affiliation)
-            {
-                Taxes = taxes,
-                Currency = currency,
-                CouponCode = couponCode,
-                ItemCount = itemCount,
-                ShippingMethod = shippingMethod,
-                PaymentMethod = paymentMethod,
-                TotalRevenue = totalRevenue,
-                ShippingCosts = shippingCosts,
-                Config = config,
-                VisitorId = visitorId,
+            var transactionMock = new Mock<Transaction>(transactionId, affiliation) { CallBase = true };
 
-                DS = Constants.SDK_APP
-            };
+            var currentTime = DateTime.Now;
+            transactionMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+
+            var transaction = transactionMock.Object;
+
+            transaction.Taxes = taxes;
+            transaction.Currency = currency;
+            transaction.CouponCode = couponCode;
+            transaction.ItemCount = itemCount;
+            transaction.ShippingMethod = shippingMethod;
+            transaction.PaymentMethod = paymentMethod;
+            transaction.TotalRevenue = totalRevenue;
+            transaction.ShippingCosts = shippingCosts;
+            transaction.Config = config;
+            transaction.VisitorId = visitorId;
+            transaction.DS = Constants.SDK_APP;
+            transaction.CreatedAt = currentTime;
+
+
 
             Assert.AreEqual(transactionId, transaction.TransactionId);
             Assert.AreEqual(affiliation, transaction.Affiliation);
@@ -70,6 +77,7 @@ namespace Flagship.Hit.Tests
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
                 [Constants.T_API_ITEM] = $"{Hit.HitType.TRANSACTION}",
                 [Constants.CUSTOMER_UID] = null,
+                [Constants.QT_API_ITEM] = 0,
                 [Constants.TID_API_ITEM] = transactionId,
                 [Constants.TA_API_ITEM] = affiliation,
                 [Constants.TT_API_ITEM] = taxes,

@@ -40,7 +40,7 @@ namespace Flagship.Hit
         /// <summary>
         /// Specifies the number of items in your transaction.
         /// </summary>
-        public double? ItemCount { get; set; }
+        public int? ItemCount { get; set; }
 
         /// <summary>
         /// The shipping method for your transaction.

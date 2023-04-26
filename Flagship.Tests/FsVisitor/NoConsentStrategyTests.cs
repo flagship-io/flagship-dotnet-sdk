@@ -52,14 +52,12 @@ namespace Flagship.FsVisitor.Tests
             config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
             config.HitCacheImplementation = HitCaheImplementation.Object;
 
-            noConsentStategy.CacheHit(flagDTO: null);
-            noConsentStategy.CacheHit(hit: null);
+
             noConsentStategy.CacheVisitorAsync();
-            noConsentStategy.LookupHits();
             noConsentStategy.LookupVisitor();
 
             VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
-            HitCaheImplementation.Verify(x => x.CacheHit(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
+
 
             var privateNoConsentStrategy = new PrivateObject(noConsentStategy);
 
@@ -81,6 +79,26 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public async Task SendHitTest()
         {
+            fsLogManagerMock = new Mock<IFsLogManager>();
+            config = new Flagship.Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+            };
+            trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>(new object[] { null, null });
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key0"] = 1,
+            };
+            var visitorDelegateMock = new Mock<VisitorDelegate>("visitorId", false, context, false, configManager) { CallBase = true };
+
+            visitorDelegateMock.Setup(x => x.SetConsent(false));
+            var visitorDelegate = visitorDelegateMock.Object;
+
+
             var noConsentStategy = new NoConsentStrategy(visitorDelegate);
 
             await noConsentStategy.SendHit(new Flagship.Hit.Screen("Home")).ConfigureAwait(false);

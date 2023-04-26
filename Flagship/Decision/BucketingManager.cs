@@ -2,6 +2,7 @@
 using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
+using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
 using Flagship.Model.Bucketing;
@@ -147,34 +148,8 @@ namespace Flagship.Decision
         {
             try
             {
-                var url = string.Format(Constants.BUCKETING_API_CONTEXT_URL, Config.EnvId);
-
-                var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
-
-                requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
-                requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
-                requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
-                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
-
-                var postData = new Dictionary<string, object>
-                {
-                    ["visitorId"] = visitor.VisitorId,
-                    ["type"] = "CONTEXT",
-                    ["data"] = visitor.Context
-                };
-
-                var postDatajson = JsonConvert.SerializeObject(postData);
-
-                var stringContent = new StringContent(postDatajson, Encoding.UTF8, "application/json");
-
-                requestMessage.Content = stringContent;
-
-                var response = await HttpClient.SendAsync(requestMessage);
-
-                if (response.StatusCode >= HttpStatusCode.BadRequest)
-                {
-                    throw new Exception(response.ReasonPhrase);
-                }
+                var segment = new Segment(visitor.Context);
+                await visitor.SendHit(segment);
             }
             catch (Exception ex)
             {
@@ -206,7 +181,7 @@ namespace Flagship.Decision
 
                 foreach (var item in BucketingContent.Campaigns)
                 {
-                    var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id,item.Type);
+                    var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id, item.Type);
                     if (campaign != null)
                     {
                         campaigns.Add(campaign);
@@ -262,8 +237,8 @@ namespace Flagship.Decision
                     var visitorCache = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
                     var variationHistory = visitorCache?.Data?.AssignmentsHistory;
 
-                    var cacheVariationId = variationHistory!=null && variationHistory.ContainsKey(variationGroup.Id) ? variationHistory[variationGroup.Id] : null;
-                   
+                    var cacheVariationId = variationHistory != null && variationHistory.ContainsKey(variationGroup.Id) ? variationHistory[variationGroup.Id] : null;
+
                     if (cacheVariationId != null)
                     {
                         var newVariation = variationGroup.Variations.FirstOrDefault(x => x.Id == cacheVariationId);

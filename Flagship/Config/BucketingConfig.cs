@@ -14,9 +14,8 @@ namespace Flagship.Config
         /// Note: If 0 is given, it should poll only once at start time.
         /// </summary>
         public TimeSpan? PollingInterval { get; set; }
-        public BucketingConfig():base()
+        public BucketingConfig():base(DecisionMode.BUCKETING)
         {
-            DecisionMode = DecisionMode.BUCKETING;
             if (!PollingInterval.HasValue)
             {
                 PollingInterval = TimeSpan.FromMilliseconds(Constants.DEFAULT_POLLING_INTERVAL);

@@ -59,7 +59,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.IsNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 3);
+            Assert.AreEqual(visitor.Context.Count, 4);
             Assert.AreEqual(visitor.Flags.Count, 0);
 
             visitor = new VisitorDelegate(null, false, context, false, configManager.Object);
@@ -88,7 +88,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitor.AnonymousId, null);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.IsFalse(visitor.HasConsented);
-            Assert.AreEqual(visitor.Context.Count, 5);
+            Assert.AreEqual(visitor.Context.Count, 6);
             Assert.AreEqual(visitor.Flags.Count, 0);
         }
 

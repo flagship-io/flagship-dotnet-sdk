@@ -15,6 +15,7 @@ using Flagship.Cache;
 using Flagship.Model;
 using System.Collections.ObjectModel;
 using Flagship.Hit;
+using Flagship.Config;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -25,10 +26,11 @@ namespace Flagship.FsVisitor.Tests
         private VisitorDelegate visitorDelegate;
         private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
         private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
+        private DecisionApiConfig config;
         public DefaultStrategyTests()
         {
             fsLogManagerMock = new Mock<IFsLogManager>();
-            var config = new Flagship.Config.DecisionApiConfig()
+            config = new Flagship.Config.DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -67,7 +69,7 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.UpdateContext(newContext);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 5);
+            Assert.AreEqual(visitorDelegate.Context.Count, 6);
 
             var newContext2 = new Dictionary<string, object>()
             {
@@ -77,7 +79,7 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.UpdateContext(newContext2);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 7);
+            Assert.AreEqual(visitorDelegate.Context.Count, 8);
 
             var newContext3 = new Dictionary<string, object>()
             {
@@ -87,7 +89,7 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.UpdateContext(newContext3);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 9);
+            Assert.AreEqual(visitorDelegate.Context.Count, 10);
 
             defaultStrategy.UpdateContext("key1", "value3");
             Assert.AreEqual(visitorDelegate.Context["key1"], "value3");
@@ -98,13 +100,15 @@ namespace Flagship.FsVisitor.Tests
             defaultStrategy.UpdateContext("key5", false);
             Assert.AreEqual(visitorDelegate.Context["key5"], false);
 
+            defaultStrategy.UpdateContext(null);
+
             var newContext4 = new Dictionary<string, object>()
             {
                 ["key6"] = new object(),
             };
 
             defaultStrategy.UpdateContext(newContext4);
-            Assert.AreEqual(visitorDelegate.Context.Count, 9);
+            Assert.AreEqual(visitorDelegate.Context.Count, 10);
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.CONTEXT_PARAM_ERROR, "key6"), "UpdateContex"), Times.Once());
 
             //Test clearContext
@@ -131,7 +135,7 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.UpdateContext(newContext);
 
-            Assert.AreEqual(visitorDelegate.Context.Count, 6);
+            Assert.AreEqual(visitorDelegate.Context.Count, 7);
             Assert.AreEqual(visitorDelegate.Context[PredefinedContext.LOCATION_CITY], "London");
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
@@ -280,20 +284,19 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDto), Times.Once());
+            var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
+
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)), Times.Once());
 
             var flagDtoValueNull = CampaignsData.GetFlag()[1];
 
             await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDtoValueNull), Times.Once());
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)
+                ), Times.Once());
 
-            var error = new Exception("userExposed error");
-
-            trackingManagerMock.Setup(x => x.SendActive(visitorDelegate, flagDto)).Throws(error);
-            await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
-
-            fsLogManagerMock.Verify(x => x.Error(error.Message, functionName), Times.Once());
         }
 
         [TestMethod()]
@@ -320,8 +323,8 @@ namespace Flagship.FsVisitor.Tests
             var value2 = defaultStrategy.GetFlagValue(flagDtoValueNull.Key, defaultValueString, flagDtoValueNull);
             Assert.AreEqual(defaultValueString, value2);
 
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDtoValueNull.Key), functionName), Times.Once());
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDtoValueNull), Times.Once());
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)), Times.Once());
         }
 
         [TestMethod()]
@@ -335,7 +338,8 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(1, value3);
 
             fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDto.Key), functionName), Times.Once());
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDto), Times.Never());
+            var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
+            trackingManagerMock.Verify(x => x.Add(activate), Times.Never());
         }
 
         [TestMethod()]
@@ -346,7 +350,8 @@ namespace Flagship.FsVisitor.Tests
 
             var value = defaultStrategy.GetFlagValue(flagDto.Key, "Default", flagDto, false);
             Assert.AreEqual(flagDto.Value, value);
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDto), Times.Never());
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)), Times.Never());
         }
 
         [TestMethod()]
@@ -357,7 +362,10 @@ namespace Flagship.FsVisitor.Tests
 
             var value = defaultStrategy.GetFlagValue(flagDto.Key, "Default", flagDto);
             Assert.AreEqual(flagDto.Value, value);
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, flagDto), Times.Once());
+       
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+                y=>y.VariationGroupId== flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)
+                ), Times.Once());
         }
 
         [TestMethod()]
@@ -412,10 +420,10 @@ namespace Flagship.FsVisitor.Tests
             var errorMessage = "error hit";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
             var hit = new Flagship.Hit.Screen("HomeView");
-            trackingManagerMock.Setup(x => x.SendHit(hit)).Throws(new Exception(errorMessage));
+            trackingManagerMock.Setup(x => x.Add(hit)).Throws(new Exception(errorMessage));
 
             await defaultStrategy.SendHit(hit).ConfigureAwait(false);
-            trackingManagerMock.Verify(x => x.SendHit(hit), Times.Once());
+            trackingManagerMock.Verify(x => x.Add(hit), Times.Once());
 
             fsLogManagerMock.Verify(x => x.Error(errorMessage, functionName), Times.Once());
         }
@@ -426,7 +434,7 @@ namespace Flagship.FsVisitor.Tests
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
             var hit = new Flagship.Hit.Screen("HomeView");
             await defaultStrategy.SendHit(hit).ConfigureAwait(false);
-            trackingManagerMock.Verify(x => x.SendHit(hit), Times.Once());
+            trackingManagerMock.Verify(x => x.Add(hit), Times.Once());
         }
 
         [TestMethod()]
@@ -436,8 +444,8 @@ namespace Flagship.FsVisitor.Tests
             var screen = new Flagship.Hit.Screen("HomeView");
             var page = new Flagship.Hit.Page("HomePage");
             await defaultStrategy.SendHit(new List<Hit.HitAbstract>() { screen, page }).ConfigureAwait(false);
-            trackingManagerMock.Verify(x => x.SendHit(screen), Times.Once());
-            trackingManagerMock.Verify(x => x.SendHit(page), Times.Once());
+            trackingManagerMock.Verify(x => x.Add(screen), Times.Once());
+            trackingManagerMock.Verify(x => x.Add(page), Times.Once());
         }
 
         [TestMethod()]
@@ -447,27 +455,12 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.SendConsentHitAsync(true).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.SendHit(It.Is<Hit.Event>(
+            trackingManagerMock.Verify(x => x.Add(It.Is<Hit.Event>(
                 item => item.Label == $"{Constants.SDK_LANGUAGE}:{true}" &&
                 item.VisitorId == visitorDelegate.VisitorId &&
                 item.DS == Constants.SDK_APP &&
                 item.AnonymousId == visitorDelegate.AnonymousId
                 )), Times.Once());
-        }
-
-        [TestMethod()]
-        public async Task SendConsentHitAsyncFailedTest()
-        {
-            const string functionName = "SendConsentHit";
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
-
-            const string errorMessage = "error sendHit";
-
-            trackingManagerMock.Setup(x => x.SendHit(It.IsAny<Hit.Event>())).Throws(new Exception(errorMessage));
-
-            await defaultStrategy.SendConsentHitAsync(true).ConfigureAwait(false);
-
-            fsLogManagerMock.Verify(x => x.Error(errorMessage, functionName), Times.Once());
         }
 
         [TestMethod]
@@ -761,6 +754,10 @@ namespace Flagship.FsVisitor.Tests
             defaultStrategy.CacheVisitorAsync();
 
             fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheVisitor"), Times.Once());
+
+            visitorDelegate.Config.VisitorCacheImplementation = null;
+
+            defaultStrategy.CacheVisitorAsync();
         }
 
         [TestMethod]
@@ -786,301 +783,5 @@ namespace Flagship.FsVisitor.Tests
 
         }
 
-        [TestMethod]
-        public void CacheHitActivateTest()
-        {
-            var hitCache = new Mock<IHitCacheImplementation>();
-            var visitorId = visitorDelegate.VisitorId;
-            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
-
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
-
-            var flag = new FlagDTO
-            {
-                CampaignId = "campaignId",
-                CampaignType = "ab",
-                IsReference = true,
-                Key = "key",
-                Value = "value",
-                VariationGroupId = "varGrID",
-                VariationId = "varID"
-            };
-
-            var hitData = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.ACTIVATE,
-                    Content = flag,
-                    Time = DateTime.Now
-                }
-            };
-
-            var hitDataJson = JObject.FromObject(hitData);
-
-            defaultStrategy.CacheHit(flag);
-
-            hitCache.Verify(x => x.CacheHit(visitorId, It.Is<JObject>(y =>
-             y["Data"]["Type"].Value<int>() == ((int)HitCacheType.ACTIVATE) &&
-             y["Data"]["Content"].Value<JObject>().ToString() == JObject.FromObject(flag).ToString()
-            )), Times.Once());
-
-            var error = new Exception("CacheHit error");
-
-            hitCache.Setup(x => x.CacheHit(visitorId, It.IsAny<JObject>())).Throws(error);
-
-            defaultStrategy.CacheHit(flag);
-
-            fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheHit"), Times.Once());
-        }
-
-        [TestMethod]
-        public void CacheHitTest()
-        {
-            var hitCache = new Mock<IHitCacheImplementation>();
-            var visitorId = visitorDelegate.VisitorId;
-            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
-
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
-
-            var hit = new Screen("Home");
-
-            var hitData = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.ACTIVATE,
-                    Content = hit,
-                    Time = DateTime.Now
-                }
-            };
-
-            var hitDataJson = JObject.FromObject(hitData);
-
-            defaultStrategy.CacheHit(hit);
-
-            hitCache.Verify(x => x.CacheHit(visitorId, It.Is<JObject>(y =>
-             y["Data"]["Type"].Value<int>() == ((int)HitCacheType.SCREENVIEW) &&
-             y["Data"]["Content"].Value<JObject>().ToString() == JObject.FromObject(hit).ToString()
-            )), Times.Once());
-
-            var error = new Exception("CacheHit error");
-
-            hitCache.Setup(x => x.CacheHit(visitorId, It.IsAny<JObject>())).Throws(error);
-
-            defaultStrategy.CacheHit(hit);
-
-            fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheHit"), Times.Once());
-        }
-
-        [TestMethod]
-        public void FlushHitsAsyncTest()
-        {
-            var hitCache = new Mock<IHitCacheImplementation>();
-            var visitorId = visitorDelegate.VisitorId;
-            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
-
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
-
-            defaultStrategy.FlushHitAsync();
-
-            hitCache.Verify(x => x.FlushHits(visitorId), Times.Once());
-
-            var error = new Exception("hitsCache error");
-
-            hitCache.Setup(x => x.FlushHits(It.IsAny<string>())).Throws(error);
-
-            defaultStrategy.FlushHitAsync();
-
-            fsLogManagerMock.Verify(x => x.Error(error.Message, "FlushHits"), Times.Once());
-        }
-
-        [TestMethod]
-        public void LookupHitsTest()
-        {
-            var hitCache = new Mock<IHitCacheImplementation>();
-            var visitorId = visitorDelegate.VisitorId;
-            visitorDelegate.Config.HitCacheImplementation = hitCache.Object;
-
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
-
-            var screenHit = new Screen(string.Concat(Enumerable.Repeat("Home", 1000000)));
-
-            var hitData = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.SCREENVIEW,
-                    Content = screenHit,
-                    Time = DateTime.Now
-                }
-            };
-
-            var pageHit = new Page(string.Concat(Enumerable.Repeat("Home", 1000000)));
-
-            var hitData2 = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.PAGEVIEW,
-                    Content = pageHit,
-                    Time = DateTime.Now
-                }
-            };
-
-            var batchHit = new Batch()
-            {
-                Hits = new Collection<HitAbstract>()
-                {
-                    pageHit,
-                    screenHit
-                },
-            };
-
-            var hitData3 = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.BATCH,
-                    Content = batchHit,
-                    Time = DateTime.Now
-                }
-            };
-
-            var transactionHit = new Transaction("transactionID", "aff");
-
-            var hitData4 = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.TRANSACTION,
-                    Content = transactionHit,
-                    Time = DateTime.Now
-                }
-            };
-
-            var eventHit = new Event(EventCategory.USER_ENGAGEMENT, "aff");
-
-            var hitData5 = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.EVENT,
-                    Content = eventHit,
-                    Time = DateTime.Now
-                }
-            };
-
-            var itemHit = new Item("transID", "name", "code");
-
-            var hitData6 = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.ITEM,
-                    Content = itemHit,
-                    Time = DateTime.Now
-                }
-            };
-
-            var flag = new FlagDTO
-            {
-                CampaignId = "campaignCacheHitId",
-                CampaignType = "ab",
-                IsReference = true,
-                Key = "key",
-                Value = "value",
-                VariationGroupId = "varGrID",
-                VariationId = "varID"
-            };
-
-            var hitData7 = new HitCacheDTOV1
-            {
-                Version = 1,
-                Data = new HitCacheData
-                {
-                    VisitorId = visitorDelegate.VisitorId,
-                    AnonymousId = visitorDelegate.AnonymousId,
-                    Type = HitCacheType.ACTIVATE,
-                    Content = flag,
-                    Time = DateTime.Now
-                }
-            };
-
-            var array = new JArray()
-            {
-                JObject.FromObject(hitData),
-                JObject.FromObject(hitData2),
-                JObject.FromObject(hitData3),
-                JObject.FromObject(hitData4),
-                JObject.FromObject(hitData5),
-                JObject.FromObject(hitData6),
-                JObject.FromObject(hitData7),
-            };
-
-            hitCache.Setup(x => x.LookupHits(visitorId)).Returns(Task.FromResult(array));
-
-            defaultStrategy.LookupHits();
-
-            trackingManagerMock.Verify(x => x.SendActive(visitorDelegate, It.Is<FlagDTO>(
-                y => y.CampaignId == flag.CampaignId &&
-                y.CampaignType == flag.CampaignType &&
-                y.IsReference == flag.IsReference &&
-                y.Key == flag.Key &&
-                y.Value == flag.Value &&
-                y.VariationGroupId == flag.VariationGroupId &&
-                y.VariationId == flag.VariationId)), Times.Once());
-
-            Func<HitAbstract, bool> checkHit = (HitAbstract hitAbstract) =>
-            {
-                switch (hitAbstract.Type)
-                {
-                    case HitType.PAGEVIEW:
-                        var page = (Page)hitAbstract;
-                        return page.DocumentLocation == pageHit.DocumentLocation;
-                    case HitType.SCREENVIEW:
-                        var screen = (Screen)hitAbstract;
-                        return screen.DocumentLocation == screenHit.DocumentLocation;
-                    case HitType.TRANSACTION:
-                        var transaction = (Transaction)hitAbstract;
-                        return transaction.TransactionId == transactionHit.TransactionId && transaction.Affiliation == transactionHit.Affiliation;
-                    case HitType.ITEM:
-                        var item = (Item)hitAbstract;
-                        return item.TransactionId == itemHit.TransactionId && item.Code == itemHit.Code && item.Name == itemHit.Name;
-                    case HitType.EVENT:
-                        var eventObject = (Event)hitAbstract;
-                        return eventObject.Category == eventHit.Category && eventObject.Action == eventHit.Action;
-                    default:
-                        break;
-                }
-                return false;
-            };
-
-            trackingManagerMock.Verify(x => x.SendHit(It.Is<Batch>(y => y.Hits.Any(checkHit))), Times.Exactly(4));
-        }
     }
 }

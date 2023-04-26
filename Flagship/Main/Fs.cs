@@ -28,7 +28,7 @@ namespace Flagship.Main
         private FlagshipConfig _config;
 
         private IConfigManager _configManager;
-        private FsVisitor.Visitor _visitor;
+        private Visitor _visitor;
 
         protected static Fs GetInstance()
         {
@@ -56,6 +56,19 @@ namespace Flagship.Main
 
         private void SetStatus(FlagshipStatus status)
         {
+            if (_status == status)
+            {
+                return;
+            }
+
+            if (status == FlagshipStatus.READY)
+            {
+                _configManager?.TrackingManager?.StartBatchingLoop();
+            }
+            else
+            {
+                _configManager?.TrackingManager?.StopBatchingLoop();
+            }
             _status = status;
             _config.SetStatus(status);
         }
@@ -71,7 +84,7 @@ namespace Flagship.Main
         public static FsVisitor.Visitor Visitor
         {
             get { return GetInstance()._visitor; }
-           internal set { GetInstance()._visitor = value; }
+            internal set { GetInstance()._visitor = value; }
         }
 
         /// <summary>
@@ -91,6 +104,10 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             if (config == null)
             {
                 config = new DecisionApiConfig();
+            }
+            if (config.TrackingMangerConfig == null)
+            {
+                config.TrackingMangerConfig = new TrackingManagerConfig();
             }
             var fsInstance = GetInstance();
 
@@ -112,9 +129,10 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             config.ApiKey = apiKey;
 
             fsInstance.SetStatus(FlagshipStatus.STARTING);
-            var httpClient = new HttpClient() { 
+            var httpClient = new HttpClient()
+            {
                 Timeout = config.Timeout ?? TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT)
-        };
+            };
 
             IDecisionManager decisionManager = fsInstance._configManager?.DecisionManager;
 
@@ -123,7 +141,7 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                 bucketingManager.StopPolling();
             }
 
-            if (config.DecisionMode== DecisionMode.BUCKETING)
+            if (config.DecisionMode == DecisionMode.BUCKETING)
             {
                 decisionManager = new BucketingManager((BucketingConfig)config, httpClient, Murmur.MurmurHash.Create32());
                 _ = ((BucketingManager)decisionManager).StartPolling();
@@ -152,6 +170,14 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                 Constants.PROCESS_INITIALIZATION);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns> 
+        public static async Task Close() 
+        {
+            await instance?._configManager?.TrackingManager?.SendBatch(CacheTriggeredBy.Flush);
+        }
         private static void DecisionManager_StatusChange(FlagshipStatus status)
         {
             GetInstance().SetStatus(status);

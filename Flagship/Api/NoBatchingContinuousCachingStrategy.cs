@@ -183,6 +183,11 @@ namespace Flagship.Api
                     await FlushHitsAsync(hitKeysToRemove);
                 }
 
+                foreach (var item in activateBatch.Hits)
+                {
+                    OnVisitorExposed(item);
+                }
+
                 requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;
                 requestBody[ITEM_BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new

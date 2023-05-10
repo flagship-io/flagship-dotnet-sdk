@@ -68,7 +68,7 @@ namespace Flagship.FsVisitor
             return GetStrategy().GetFlagValue(key, defaultValue, flag, userExposed);
         }
 
-        public override Task UserExposed<T>(string key, T defaultValue, Model.FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, Model.FlagDTO flag)
         {
             return GetStrategy().UserExposed(key, defaultValue, flag);  
         }

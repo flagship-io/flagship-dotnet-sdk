@@ -20,7 +20,6 @@ namespace Flagship.FsVisitor
         protected string _anonymousId;
         virtual public string VisitorId { get; set; }
         virtual public ICollection<FlagDTO> Flags { get; set; }
-
         virtual public ICollection<Campaign> Campaigns { get; set; } 
         virtual public bool HasConsented => _hasConsented;
         virtual public FlagshipConfig Config => ConfigManager.Config;
@@ -48,7 +47,6 @@ namespace Flagship.FsVisitor
        
         protected string CreateVisitorId()
         {
-            
             var date = DateTime.Now;
             return $"{date.Year}{Utils.Utils.TwoDigit(date.Month)}{Utils.Utils.TwoDigit(date.Day)}{Utils.Utils.TwoDigit(date.Hour)}{Utils.Utils.TwoDigit(date.Minute)}{Utils.Utils.TwoDigit(date.Second)}{new Random().Next(10000, 99999)}";
         }
@@ -98,7 +96,7 @@ namespace Flagship.FsVisitor
         abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
         abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);
 
-        abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
         abstract public Task SendHit(HitAbstract hit); 

@@ -164,13 +164,18 @@ namespace Flagship.FsVisitor
             }
         }
 
-        protected override async Task SendActivate(FlagDTO flag)
+        protected override async Task SendActivate(FlagDTO flag, object defaultValue = null)
         {
             var activate = new Activate(flag.VariationGroupId, flag.VariationId)
             {
                 VisitorId = Visitor.VisitorId,
                 AnonymousId = Visitor.AnonymousId,
-                Config = Config
+                Config = Config,
+                FlagKey = flag.Key,
+                FlagValue = flag.Value,
+                FlagDefaultValue = defaultValue,
+                VisitorContext = Visitor.Context,
+                FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug)
             };
             await TrackingManager.ActivateFlag(activate);
         }
@@ -188,7 +193,7 @@ namespace Flagship.FsVisitor
                 return;
             }
 
-            await SendActivate(flag);
+            await SendActivate(flag, defaultValue);
         }
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)

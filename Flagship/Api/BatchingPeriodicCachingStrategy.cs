@@ -113,6 +113,11 @@ namespace Flagship.Api
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
+                foreach (var item in activateBatch.Hits)
+                {
+                    OnVisitorExposed(item);
+                }
+
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new
                 {
                     url,

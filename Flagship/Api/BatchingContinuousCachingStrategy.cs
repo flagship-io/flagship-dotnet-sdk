@@ -21,7 +21,6 @@ namespace Flagship.Api
 
         public async override Task Add(HitAbstract hit)
         {
-
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
 
@@ -110,6 +109,11 @@ namespace Flagship.Api
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
+                }
+
+                foreach (var item in activateBatch.Hits)
+                {
+                    OnVisitorExposed(item);
                 }
 
                 var hitKeysToRemove = activateHitsPool.Select(x => x.Key).ToArray();

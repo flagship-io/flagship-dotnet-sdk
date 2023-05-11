@@ -47,7 +47,7 @@ namespace Flagship.Config
         /// </summary>
         public event OnVisitorExposedDelegate OnVisitorExposed;
 
-        internal void InvokeOnVisitorExposed(IExposedVisitor exposedVisitor, IExposedFlag exposedFlag)
+        virtual internal void InvokeOnVisitorExposed(IExposedVisitor exposedVisitor, IExposedFlag exposedFlag)
         {
             OnVisitorExposed?.Invoke(exposedVisitor, exposedFlag);
         }

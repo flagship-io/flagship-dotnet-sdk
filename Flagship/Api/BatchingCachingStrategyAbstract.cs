@@ -79,7 +79,7 @@ namespace Flagship.Api
 
         protected void OnVisitorExposed(Activate activate)
         {
-            var fromFlag = new ExposedFlag(activate.Key, activate.FlagValue, activate.FlagDefaultValue, activate.FlagMetadata);
+            var fromFlag = new ExposedFlag(activate.FlagKey, activate.FlagValue, activate.FlagDefaultValue, activate.FlagMetadata);
             var exposedVisitor = new ExposedVisitor(activate.VisitorId, activate.AnonymousId, activate.VisitorContext);
             try
             {

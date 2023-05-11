@@ -19,6 +19,8 @@ using System.Net.Http.Headers;
 using Microsoft.QualityTools.Testing.Fakes;
 using Flagship.Model;
 using Newtonsoft.Json.Serialization;
+using Flagship.FsFlag;
+using Flagship.FsVisitor;
 
 namespace Flagship.Api.Tests
 {
@@ -703,6 +705,71 @@ namespace Flagship.Api.Tests
 
             httpResponse.Dispose();
         }
+
+        [TestMethod()]
+        public async Task OnVisitorExposedTest() 
+        {
+            var configMock = new Mock<DecisionApiConfig>();
+
+            var config = configMock.Object;
+            config.EnvId = "envId";
+            config.TrackingMangerConfig = new TrackingManagerConfig();
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var visitorId = "visitorId";
+
+            var activate = new Activate("variationGroupId", "variationId")
+            {
+                VisitorId = visitorId,
+                Config = config,
+                FlagKey = "flagKey",
+                FlagValue = "value",
+                FlagDefaultValue = "default Value"
+            };
+            var fromFlag = new ExposedFlag(activate.FlagKey, activate.FlagValue, activate.FlagDefaultValue, activate.FlagMetadata);
+            var exposedVisitor = new ExposedVisitor(activate.VisitorId, activate.AnonymousId, activate.VisitorContext);
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            await strategy.ActivateFlag(activate).ConfigureAwait(false);
+
+            configMock.Verify(x => x.InvokeOnVisitorExposed(
+                It.Is<ExposedVisitor>(y=> JsonConvert.SerializeObject(y) == JsonConvert.SerializeObject(exposedVisitor)),
+                It.Is<ExposedFlag>(y => JsonConvert.SerializeObject(y) == JsonConvert.SerializeObject(fromFlag))), Times.Once);
+
+            configMock.Setup(x => x.InvokeOnVisitorExposed(
+                It.Is<ExposedVisitor>(y => JsonConvert.SerializeObject(y) == JsonConvert.SerializeObject(exposedVisitor)),
+                It.Is<ExposedFlag>(y => JsonConvert.SerializeObject(y) == JsonConvert.SerializeObject(fromFlag))))
+                .Throws(new Exception());
+
+            await strategy.ActivateFlag(activate).ConfigureAwait(false);
+
+            httpResponse.Dispose();
+        }
+
 
         [TestMethod()]
         public async Task ActivateMultipleFlagTest() 

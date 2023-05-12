@@ -25,6 +25,7 @@ namespace Flagship.FsFlag
         /// Tells Flagship the user have been exposed and have seen this flag. This will increment the visits for the current variation on your campaign reporting. No user exposition will be sent if the Flag doesn't exist or if the default value type do not correspond to the Flag type in Flagship.
         /// </summary>
         /// <returns></returns>
+        [Obsolete("Please use visitorExposed instead ")]
         Task UserExposed();
 
         /// <summary>

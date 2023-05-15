@@ -19,7 +19,7 @@ namespace Flagship.FsVisitor
         /// <summary>
         /// Visitor anonymous id
         /// </summary>
-        string AnonymoudId { get; }
+        string AnonymousId { get; }
 
         /// <summary>
         /// Visitor context

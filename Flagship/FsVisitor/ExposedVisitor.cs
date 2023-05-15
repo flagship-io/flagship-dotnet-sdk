@@ -9,13 +9,13 @@ namespace Flagship.FsVisitor
     internal class ExposedVisitor : IExposedVisitor
     {
         public string Id { get ;  set; }
-        public string AnonymoudId { get; set; }
+        public string AnonymousId { get; set; }
         public IDictionary<string, object> Context { get ; set ; }
 
         public ExposedVisitor(string id, string anonymoudId, IDictionary<string, object> context)
         {
             Id = id;
-            AnonymoudId = anonymoudId;
+            AnonymousId = anonymoudId;
             Context = context;
         }
     }

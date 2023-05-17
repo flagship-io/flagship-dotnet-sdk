@@ -190,11 +190,7 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-                ).ReturnsAsync(httpResponse).Verifiable();
+
 
             var httpClient = new HttpClient(mockHandler.Object);
 
@@ -208,6 +204,20 @@ namespace Flagship.Api.Tests
 
             var strategy = strategyMock.Object;
             var visitorId = "visitorId";
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+                ).Throws(new Exception());
+
+            var PageHome = new Page("http://localhost")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}" 
+            };
+
+            await strategy.Add(PageHome).ConfigureAwait(false);
 
             var page = new Page("http://localhost")
             {
@@ -280,12 +290,18 @@ namespace Flagship.Api.Tests
                 AnonymousId = null
             };
 
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+    "SendAsync",
+    ItExpr.IsAny<HttpRequestMessage>(),
+    ItExpr.IsAny<CancellationToken>()
+    ).ReturnsAsync(httpResponse).Verifiable();
+
             await strategy.Add(hitEvent).ConfigureAwait(false);
 
             Assert.AreEqual(2, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
             strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(hitEvent))), Times.Once());
-            strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 4)), Times.Once());
+            strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 5)), Times.Once());
 
             httpResponse.Dispose();
         }

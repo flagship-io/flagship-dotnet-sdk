@@ -197,7 +197,33 @@ namespace Flagship.Api
             }
         }
 
-        abstract public Task NotConsent(string visitorId);
+        public virtual async Task NotConsent(string visitorId)
+        {
+            var hitKeys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
+            (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
+
+            var activateKeys = ActivatePoolQueue.Where(x => x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId).Select(x => x.Key).ToArray();
+
+            foreach (var item in hitKeys)
+            {
+                HitsPoolQueue.Remove(item);
+            }
+
+            foreach (var item in activateKeys)
+            {
+                ActivatePoolQueue.Remove(item);
+            }
+
+            var keysToFlush = new List<string>(hitKeys);
+
+            keysToFlush.AddRange(activateKeys);
+
+            if (!keysToFlush.Any())
+            {
+                return;
+            }
+            await FlushHitsAsync(keysToFlush.ToArray());
+        }
 
         public virtual async Task CacheHitAsync(Dictionary<string, Activate> activatesHits)
         {

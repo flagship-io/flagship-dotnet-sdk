@@ -43,7 +43,8 @@ namespace Flagship.Hit
                 [Constants.VARIATION_ID_API_ITEM] = VariationId,
                 [Constants.VARIATION_GROUP_ID_API_ITEM_ACTIVATE] = VariationGroupId,
                 [Constants.CUSTOMER_ENV_ID_API_ACTIVATE] = Config.EnvId,
-                [Constants.ANONYMOUS_ID] = null
+                [Constants.ANONYMOUS_ID] = null,
+                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds
             };
 
             if (!string.IsNullOrWhiteSpace(VisitorId) && !string.IsNullOrWhiteSpace(AnonymousId))

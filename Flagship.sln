@@ -14,8 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Dockerfile = Dockerfile
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flagship.QAApp", "Flagship.QAApp\Flagship.QAApp.csproj", "{E27BF965-0D27-4BEB-A5FC-A99C4F5750FB}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,10 +28,6 @@ Global
 		{34B049A8-FD04-43C7-8E5A-126938D9500C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34B049A8-FD04-43C7-8E5A-126938D9500C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34B049A8-FD04-43C7-8E5A-126938D9500C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E27BF965-0D27-4BEB-A5FC-A99C4F5750FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E27BF965-0D27-4BEB-A5FC-A99C4F5750FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E27BF965-0D27-4BEB-A5FC-A99C4F5750FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E27BF965-0D27-4BEB-A5FC-A99C4F5750FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

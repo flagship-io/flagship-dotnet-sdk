@@ -16,11 +16,11 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Flagship.Enums;
 using System.Net.Http.Headers;
-using Microsoft.QualityTools.Testing.Fakes;
 using Flagship.Model;
 using Newtonsoft.Json.Serialization;
 using Flagship.FsFlag;
 using Flagship.FsVisitor;
+using Microsoft.QualityTools.Testing.Fakes;
 
 namespace Flagship.Api.Tests
 {
@@ -635,6 +635,9 @@ namespace Flagship.Api.Tests
                 TrackingMangerConfig = new TrackingManagerConfig()
             };
 
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
@@ -782,6 +785,9 @@ namespace Flagship.Api.Tests
                 TrackingMangerConfig = new TrackingManagerConfig()
             };
 
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
@@ -886,6 +892,9 @@ namespace Flagship.Api.Tests
                 LogManager = fsLogManagerMock.Object,
                 TrackingMangerConfig = new TrackingManagerConfig()
             };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {

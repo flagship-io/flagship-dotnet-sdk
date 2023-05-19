@@ -314,7 +314,6 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagValueWithValueNullTest()
         {
-            const string functionName = "getFlag.value";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             var defaultValueString = "defaultValueString";

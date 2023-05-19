@@ -550,6 +550,9 @@ namespace Flagship.Api.Tests
                 TrackingMangerConfig = new TrackingManagerConfig()
             };
 
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
                 StatusCode = System.Net.HttpStatusCode.OK,

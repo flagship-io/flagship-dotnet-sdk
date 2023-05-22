@@ -25,6 +25,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(visitor.VisitorId, visitorId);
             Assert.AreEqual(true, visitor.HasConsented);
+
             Assert.IsNull(Main.Fs.Visitor);
 
             var context = new Dictionary<string, object>()
@@ -62,6 +63,8 @@ namespace Flagship.FsVisitor.Tests
             visitor = Builder.Build();
             Assert.AreEqual(visitor, Flagship.Main.Fs.Visitor);
         }
+
+     
 
     }
 }

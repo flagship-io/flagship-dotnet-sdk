@@ -77,6 +77,7 @@ namespace Flagship.FsVisitor
         {
             var visitorDelegate = new VisitorDelegate(_visitorId,_isAuthenticated,_context, _hasConsented,_configManager);
             var visitor = new Visitor(visitorDelegate);
+            Main.Fs.Visitor = null;
             if (_instanceType == InstanceType.SINGLE_INSTANCE)
             {
                 Main.Fs.Visitor = visitor;

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Moq;
+using Flagship.Api;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -18,8 +19,16 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void BuildTest()
         {
-            var configManager = new Mock<Flagship.Config.IConfigManager>();
-            Builder = VisitorBuilder.Builder(configManager.Object, visitorId, Enums.InstanceType.NEW_INSTANCE);
+            var configManagerMock = new Mock<Flagship.Config.IConfigManager>()
+            {
+                CallBase = true
+            };
+            var configManager = configManagerMock.Object;
+            var trackingManager = new Mock<ITrackingManager>().Object;
+
+            configManager.TrackingManager = trackingManager;
+            
+            Builder = VisitorBuilder.Builder(configManager, visitorId, Enums.InstanceType.NEW_INSTANCE);
 
             var visitor = Builder.Build();
 
@@ -59,7 +68,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(4, visitor.Context.Count);
 
 
-            Builder = VisitorBuilder.Builder(configManager.Object, visitorId, Enums.InstanceType.SINGLE_INSTANCE);
+            Builder = VisitorBuilder.Builder(configManager, visitorId, Enums.InstanceType.SINGLE_INSTANCE);
             visitor = Builder.Build();
             Assert.AreEqual(visitor, Flagship.Main.Fs.Visitor);
         }

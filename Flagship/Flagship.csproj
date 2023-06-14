@@ -8,13 +8,13 @@
     <Authors>Flagship Team</Authors>
     <Company>ABTasty</Company>
     <Product>Flagship</Product>
-    <Version>3.0.4</Version>
+    <Version>3.1.0</Version>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/flagship-io/flagship-dotnet-sdk</PackageProjectUrl>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <Description>C# SDK for Flagship</Description>
-    <Copyright>Copyright 2021-2022</Copyright>
+    <Copyright>Copyright 2021-2023</Copyright>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>

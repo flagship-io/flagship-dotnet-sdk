@@ -39,38 +39,6 @@ namespace Flagship.Api
             }
         }
 
-        public async override Task NotConsent(string visitorId)
-        {
-            var keys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-            (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToList();
-
-            var activateKeys = ActivatePoolQueue.Where(x => x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId).Select(x => x.Key).ToArray();
-
-            foreach (var item in keys)
-            {
-                HitsPoolQueue.Remove(item);
-            }
-
-            foreach (var item in activateKeys)
-            {
-                ActivatePoolQueue.Remove(item);
-            }
-
-            if (!keys.Any() && !activateKeys.Any())
-            {
-                return;
-            }
-
-            var mergedQueue = new Dictionary<string, HitAbstract>(HitsPoolQueue);
-            foreach (var item in ActivatePoolQueue)
-            {
-                mergedQueue[item.Key] = item.Value;
-            }
-
-            await FlushAllHitsAsync();
-            await CacheHitAsync(mergedQueue);
-        }
-
         protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
         {
             var url = Constants.BASE_API_URL + URL_ACTIVATE;
@@ -111,6 +79,11 @@ namespace Flagship.Api
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
+                }
+
+                foreach (var item in activateBatch.Hits)
+                {
+                    OnVisitorExposed(item);
                 }
 
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new

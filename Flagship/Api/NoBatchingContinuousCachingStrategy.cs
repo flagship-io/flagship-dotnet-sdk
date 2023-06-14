@@ -80,7 +80,7 @@ namespace Flagship.Api
             {
                 if (!(hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT))
                 {
-                    _cacheHitKeys[hit.Key] = hit.Key;
+                    _cacheHitKeys[hit.Key] = hit.VisitorId;
                 }
 
                 await CacheHitAsync(new Dictionary<string, HitAbstract>() { { hit.Key, hit } });
@@ -102,6 +102,8 @@ namespace Flagship.Api
 
             var keysActivate = ActivatePoolQueue.Where(x => (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
 
+            var visitorCacheKeys = _cacheHitKeys.Where(x=> x.Value ==  visitorId).Select(x => x.Key).ToArray();
+
             foreach (var item in keysHit)
             {
                 HitsPoolQueue.Remove(item);
@@ -112,8 +114,13 @@ namespace Flagship.Api
                 ActivatePoolQueue.Remove(item);
             }
 
+            foreach (var item in visitorCacheKeys)
+            {
+                _cacheHitKeys.Remove(item);
+            }
+
             var mergedKeys = new List<string>(keysHit);
-            mergedKeys.AddRange(_cacheHitKeys.Keys);
+            mergedKeys.AddRange(visitorCacheKeys);
             mergedKeys.AddRange(keysActivate);
 
             if (!mergedKeys.Any())
@@ -181,6 +188,11 @@ namespace Flagship.Api
                 if (hitKeysToRemove.Any())
                 {
                     await FlushHitsAsync(hitKeysToRemove);
+                }
+
+                foreach (var item in activateBatch.Hits)
+                {
+                    OnVisitorExposed(item);
                 }
 
                 requestBody[ITEM_DURATION] = (DateTime.Now - now).TotalMilliseconds;

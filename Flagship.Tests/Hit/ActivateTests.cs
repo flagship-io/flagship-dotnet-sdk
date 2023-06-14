@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Flagship.Enums;
 using Flagship.Config;
 using Newtonsoft.Json;
+using Moq;
+using static Microsoft.QualityTools.Testing.Fakes.FakesDelegates;
 
 namespace Flagship.Hit.Tests
 {
@@ -24,10 +26,17 @@ namespace Flagship.Hit.Tests
                 EnvId = "envId"
             };
 
-            var activate = new Activate(variationGroupId, variationId)
+            var activateMock = new Mock<Activate>(variationGroupId, variationId)
             {
-                Config = config
+                CallBase = true
             };
+
+            var currentTime = DateTime.Now;
+            activateMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+
+            var activate = activateMock.Object;
+            activate.Config = config;
+
 
             Assert.AreEqual(variationId, activate.VariationId);
             Assert.AreEqual(variationGroupId, activate.VariationGroupId);
@@ -37,7 +46,8 @@ namespace Flagship.Hit.Tests
             var visitorId = "visitorId";
 
             activate.VisitorId = visitorId;
-            Assert.IsTrue(activate.IsReady());
+            var check = activate.IsReady();
+            Assert.IsTrue(check);
 
             var apiKeys = new Dictionary<string, object>()
             {
@@ -45,7 +55,8 @@ namespace Flagship.Hit.Tests
                 [Constants.VARIATION_ID_API_ITEM] = variationId,
                 [Constants.VARIATION_GROUP_ID_API_ITEM_ACTIVATE] = variationGroupId,
                 [Constants.CUSTOMER_ENV_ID_API_ACTIVATE] = config.EnvId,
-                [Constants.ANONYMOUS_ID] = null
+                [Constants.ANONYMOUS_ID] = null,
+                [Constants.QT_API_ITEM] = 0
             };
 
             Assert.AreEqual(JsonConvert.SerializeObject(apiKeys), JsonConvert.SerializeObject(activate.ToApiKeys()));

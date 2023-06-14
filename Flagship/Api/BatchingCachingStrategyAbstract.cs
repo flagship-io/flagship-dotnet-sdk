@@ -1,5 +1,7 @@
 ﻿using Flagship.Config;
 using Flagship.Enums;
+using Flagship.FsFlag;
+using Flagship.FsVisitor;
 using Flagship.Hit;
 using Flagship.Model;
 using Newtonsoft.Json;
@@ -28,6 +30,7 @@ namespace Flagship.Api
         static public string SEND_BATCH = "SEND BATCH";
         static public string SEND_HIT = "SEND HIT";
         static public string SEND_ACTIVATE = "SEND ACTIVATE";
+        static public string ON_VISITOR_EXPOSED = "ON_VISITOR_EXPOSED";
         static public string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
         static public string HIT_SENT_SUCCESS = "hit has been sent : {0}";
         static public string URL_ACTIVATE = "activate";
@@ -72,6 +75,24 @@ namespace Flagship.Api
             }
 
             await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength);
+        }
+
+        protected void OnVisitorExposed(Activate activate)
+        {
+            var fromFlag = new ExposedFlag(activate.FlagKey, activate.FlagValue, activate.FlagDefaultValue, activate.FlagMetadata);
+            var exposedVisitor = new ExposedVisitor(activate.VisitorId, activate.AnonymousId, activate.VisitorContext);
+            try
+            {
+                Config.InvokeOnVisitorExposed(exposedVisitor, fromFlag);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    fromFlag,
+                    exposedVisitor
+                }), ON_VISITOR_EXPOSED);
+            }
         }
 
         abstract protected Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy);
@@ -176,7 +197,33 @@ namespace Flagship.Api
             }
         }
 
-        abstract public Task NotConsent(string visitorId);
+        public virtual async Task NotConsent(string visitorId)
+        {
+            var hitKeys = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
+            (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
+
+            var activateKeys = ActivatePoolQueue.Where(x => x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId).Select(x => x.Key).ToArray();
+
+            foreach (var item in hitKeys)
+            {
+                HitsPoolQueue.Remove(item);
+            }
+
+            foreach (var item in activateKeys)
+            {
+                ActivatePoolQueue.Remove(item);
+            }
+
+            var keysToFlush = new List<string>(hitKeys);
+
+            keysToFlush.AddRange(activateKeys);
+
+            if (!keysToFlush.Any())
+            {
+                return;
+            }
+            await FlushHitsAsync(keysToFlush.ToArray());
+        }
 
         public virtual async Task CacheHitAsync(Dictionary<string, Activate> activatesHits)
         {

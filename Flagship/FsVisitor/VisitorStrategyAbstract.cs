@@ -212,7 +212,7 @@ namespace Flagship.FsVisitor
 
         abstract public Task FetchFlags();
 
-        abstract protected Task SendActivate(FlagDTO flag);
+        abstract protected Task SendActivate(FlagDTO flag, object defaultValue = null);
 
         abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);

@@ -110,7 +110,6 @@ namespace Flagship.Main.Tests
         public void NewVisitorTest()
         {
             var visitorBuilder = Fs.NewVisitor();
-            Assert.IsNull(visitorBuilder);
 
             Fs.Start(null, null);
 

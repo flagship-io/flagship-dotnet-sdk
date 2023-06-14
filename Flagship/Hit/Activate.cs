@@ -1,4 +1,5 @@
 ﻿using Flagship.Enums;
+using Flagship.FsFlag;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,16 @@ namespace Flagship.Hit
         public const string ERROR_MESSAGE = "variationGroupId and variationId are required";
         public string VariationGroupId { get; set; }
         public string VariationId { get; set; }
+
+        public string FlagKey { get; set; } 
+
+        public object FlagValue { get; set; }
+
+        public object FlagDefaultValue { get; set; }
+
+        public IFlagMetadata FlagMetadata { get; set; }
+
+        public IDictionary<string, object> VisitorContext { get; set; } 
 
         public Activate(string variationGroupId, string variationId):base(HitType.ACTIVATE)
         {
@@ -32,7 +43,8 @@ namespace Flagship.Hit
                 [Constants.VARIATION_ID_API_ITEM] = VariationId,
                 [Constants.VARIATION_GROUP_ID_API_ITEM_ACTIVATE] = VariationGroupId,
                 [Constants.CUSTOMER_ENV_ID_API_ACTIVATE] = Config.EnvId,
-                [Constants.ANONYMOUS_ID] = null
+                [Constants.ANONYMOUS_ID] = null,
+                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds
             };
 
             if (!string.IsNullOrWhiteSpace(VisitorId) && !string.IsNullOrWhiteSpace(AnonymousId))

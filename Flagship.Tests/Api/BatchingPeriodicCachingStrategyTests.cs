@@ -80,144 +80,6 @@ namespace Flagship.Api.Tests
         }
 
         [TestMethod()]
-        public async Task NotConsentTest()
-        {
-            var httpClientMock = new Mock<HttpClient>();
-            var fsLogManagerMock = new Mock<IFsLogManager>();
-
-            var config = new DecisionApiConfig()
-            {
-                EnvId = "envID",
-                LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
-            };
-
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
-
-            var strategyMock = new Mock<BatchingPeriodicCachingStrategy>(new object[] { config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue })
-            {
-                CallBase = true,
-            };
-
-            var strategy = strategyMock.Object;
-            var visitorId = "visitorId";
-
-            var page = new Page("http://localhost")
-            {
-                VisitorId = visitorId
-            };
-
-            var page2 = new Page("http://localhost2")
-            {
-                VisitorId = visitorId
-            };
-
-            await strategy.Add(page).ConfigureAwait(false);
-            await strategy.Add(page2).ConfigureAwait(false);
-
-            Assert.AreEqual(2, hitsPoolQueue.Count);
-            Assert.AreEqual(0, activatePoolQueue.Count);
-
-            var visitorId_2 = "visitorId_2";
-
-            var screen = new Screen("home")
-            {
-                VisitorId = visitorId_2
-            };
-
-            await strategy.Add(screen).ConfigureAwait(false);
-
-            Assert.AreEqual(3, hitsPoolQueue.Count);
-            Assert.AreEqual(0, activatePoolQueue.Count);
-
-            var activate = new Activate("varGroupId", "varId")
-            {
-                VisitorId = visitorId,
-                Key = visitorId + "key-activate"
-            };
-
-            var activateXp = new Activate("varGroupId", "varId")
-            {
-                VisitorId = Guid.NewGuid().ToString() ,
-                AnonymousId = visitorId,
-                Key = visitorId + "key-activate-xp",
-            };
-
-            var activate2 = new Activate("varGroupId", "varId")
-            {
-                VisitorId = visitorId_2,
-                Key = visitorId_2 + "key-activate"
-            };
-
-            activatePoolQueue[activate.Key] = activate;
-            activatePoolQueue[activate2.Key] = activate2;
-            activatePoolQueue[activateXp.Key] = activateXp;
-
-
-            Assert.AreEqual(3, hitsPoolQueue.Count);
-            Assert.AreEqual(3, activatePoolQueue.Count);
-
-            var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, Constants.FS_CONSENT)
-            {
-                Label = $"{Constants.SDK_LANGUAGE}:{false}",
-                VisitorId = visitorId,
-                DS = Constants.SDK_APP,
-                Config = config,
-                AnonymousId = null
-            };
-
-            await strategy.Add(hitEvent).ConfigureAwait(false);
-
-            Assert.AreEqual(2, hitsPoolQueue.Count);
-            Assert.AreEqual(1, activatePoolQueue.Count);
-
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(hitEvent) && y.ContainsValue(screen) && y.ContainsValue(activate2))), Times.Once());
-            strategyMock.Verify(x => x.FlushAllHitsAsync(), Times.Once());
-        }
-
-        [TestMethod()]
-        public async Task NotConsentEmptyTest()
-        {
-            var httpClientMock = new Mock<HttpClient>();
-            var fsLogManagerMock = new Mock<IFsLogManager>();
-            var config = new DecisionApiConfig()
-            {
-                EnvId = "envID",
-                LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
-            };
-
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
-
-            var strategyMock = new Mock<BatchingPeriodicCachingStrategy>(new object[] { config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue })
-            {
-                CallBase = true,
-            };
-
-            var strategy = strategyMock.Object;
-            var visitorId = "visitorId";
-
-            Assert.AreEqual(0, hitsPoolQueue.Count);
-
-            var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, Constants.FS_CONSENT)
-            {
-                Label = $"{Constants.SDK_LANGUAGE}:{false}",
-                VisitorId = visitorId,
-                DS = Constants.SDK_APP,
-                Config = config,
-                AnonymousId = null
-            };
-
-            await strategy.Add(hitEvent).ConfigureAwait(false);
-            Assert.AreEqual(1, hitsPoolQueue.Count);
-
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
-            strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
-        }
-
-        [TestMethod()]
         public async Task SendBatchTest()
         {
             var fsLogManagerMock = new Mock<IFsLogManager>();
@@ -636,6 +498,9 @@ namespace Flagship.Api.Tests
                 TrackingMangerConfig = new TrackingManagerConfig()
             };
 
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
@@ -717,6 +582,9 @@ namespace Flagship.Api.Tests
                 LogManager = fsLogManagerMock.Object,
                 TrackingMangerConfig = new TrackingManagerConfig()
             };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -820,6 +688,9 @@ namespace Flagship.Api.Tests
                 LogManager = fsLogManagerMock.Object,
                 TrackingMangerConfig = new TrackingManagerConfig()
             };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {

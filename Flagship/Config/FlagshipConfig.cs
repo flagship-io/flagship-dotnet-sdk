@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Flagship.FsFlag;
 
 namespace Flagship.Config
 {
@@ -39,6 +40,16 @@ namespace Flagship.Config
         internal void SetStatus(FlagshipStatus status)
         {
             StatusChanged?.Invoke(status);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event OnVisitorExposedDelegate OnVisitorExposed;
+
+        virtual internal void InvokeOnVisitorExposed(IExposedVisitor exposedVisitor, IExposedFlag exposedFlag)
+        {
+            OnVisitorExposed?.Invoke(exposedVisitor, exposedFlag);
         }
 
         /// <summary>

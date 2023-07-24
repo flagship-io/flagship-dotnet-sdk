@@ -51,7 +51,7 @@ namespace Flagship.Api
         protected BatchingCachingStrategyAbstract InitStrategy()
         {
             BatchingCachingStrategyAbstract strategy;
-            switch (Config.TrackingMangerConfig.CacheStrategy)
+            switch (Config.TrackingManagerConfig.CacheStrategy)
             {
                 case CacheStrategy.PERIODIC_CACHING:
                     strategy = new BatchingPeriodicCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
@@ -84,7 +84,7 @@ namespace Flagship.Api
 
         public void StartBatchingLoop()
         {
-            var batchIntervals = Config.TrackingMangerConfig.BatchIntervals;
+            var batchIntervals = Config.TrackingManagerConfig.BatchIntervals;
             Log.LogInfo(Config, "Batching Loop have been started", "startBatchingLoop");
 
             if (_timer != null)

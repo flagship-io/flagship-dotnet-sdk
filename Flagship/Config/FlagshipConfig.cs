@@ -73,7 +73,10 @@ namespace Flagship.Config
         /// </summary>
         public bool DisableCache { get; set; }
 
-        public ITrackingManagerConfig TrackingMangerConfig { get; set; }
+        /// <summary>
+        /// Define options to configure hit batching
+        /// </summary>
+        public ITrackingManagerConfig TrackingManagerConfig { get; set; }
 
         public FlagshipConfig(DecisionMode decisionMode = DecisionMode.DECISION_API)
         {

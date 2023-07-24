@@ -28,7 +28,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig()
+                TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
             var trackingManager = new Flagship.Api.TrackingManager(config, httpClientMock.Object);
@@ -39,19 +39,19 @@ namespace Flagship.Tests.Api
 
             Assert.IsInstanceOfType(strategy, typeof(BatchingPeriodicCachingStrategy));
 
-            config.TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.PERIODIC_CACHING);
+            config.TrackingManagerConfig = new Config.TrackingManagerConfig(CacheStrategy.PERIODIC_CACHING);
 
             strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
             Assert.IsInstanceOfType(strategy, typeof(BatchingPeriodicCachingStrategy));
 
-            config.TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.NO_BATCHING);
+            config.TrackingManagerConfig = new Config.TrackingManagerConfig(CacheStrategy.NO_BATCHING);
 
             strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
             Assert.IsInstanceOfType(strategy, typeof(NoBatchingContinuousCachingStrategy));
 
-            config.TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.CONTINUOUS_CACHING);
+            config.TrackingManagerConfig = new Config.TrackingManagerConfig(CacheStrategy.CONTINUOUS_CACHING);
 
             strategy = trackingManagerPrivate.Invoke("InitStrategy");
 
@@ -69,7 +69,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig()
+                TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
             var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
@@ -103,7 +103,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig()
+                TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
             var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
@@ -137,7 +137,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig()
+                TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
             var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
@@ -172,7 +172,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig(CacheStrategy.CONTINUOUS_CACHING,
+                TrackingManagerConfig = new Config.TrackingManagerConfig(CacheStrategy.CONTINUOUS_CACHING,
                 5, TimeSpan.FromMilliseconds(500)),
             };
 
@@ -205,7 +205,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                TrackingManagerConfig = new Config.TrackingManagerConfig(),
             };
 
             var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
@@ -233,7 +233,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                TrackingManagerConfig = new Config.TrackingManagerConfig(),
             };
 
             var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
@@ -269,7 +269,7 @@ namespace Flagship.Tests.Api
             var config = new Flagship.Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                TrackingManagerConfig = new Config.TrackingManagerConfig(),
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
@@ -385,7 +385,7 @@ namespace Flagship.Tests.Api
             var config = new Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                TrackingManagerConfig = new Config.TrackingManagerConfig(),
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
@@ -448,7 +448,7 @@ namespace Flagship.Tests.Api
             var config = new Config.DecisionApiConfig
             {
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new Config.TrackingManagerConfig(),
+                TrackingManagerConfig = new Config.TrackingManagerConfig(),
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 

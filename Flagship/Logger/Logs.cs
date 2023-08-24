@@ -44,6 +44,23 @@ namespace Flagship.Logger
             }
         }
 
+        public static void LogWarning(FlagshipConfig config, string message, string tag)
+        {
+            try
+            {
+                if (config == null || config.LogManager == null || config.LogLevel < Enums.LogLevel.WARNING)
+                {
+                    return;
+                }
+
+                config.LogManager.Warning(message, tag);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+        }
+
         public static void LogDebug(FlagshipConfig config, string message, string tag)
         {
             try

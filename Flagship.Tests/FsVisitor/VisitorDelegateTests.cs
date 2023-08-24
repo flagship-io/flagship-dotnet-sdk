@@ -10,6 +10,7 @@ using Moq.Protected;
 using Flagship.Tests.Data;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Flagship.Logger;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -28,16 +29,22 @@ namespace Flagship.FsVisitor.Tests
 
         public VisitorDelegateTests()
         {
-            var config = new Flagship.Config.DecisionApiConfig();
-            configManager = new Mock<Flagship.Config.IConfigManager>();
-            configManager.SetupGet(x=>x.Config).Returns(config);
+            var config = new Config.DecisionApiConfig();
+            configManager = new Mock<Flagship.Config.IConfigManager>()
+            {
+                CallBase = true
+            };
+            configManager.Object.Config = config;
+            configManager.SetupGet(x => x.Config).Returns(config);
 
             visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object });
             visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
             defaultStrategy = new Mock<VisitorStrategyAbstract>(visitorDelegateMock.Object);
 
-            visitorDelegateMock.Setup<VisitorStrategyAbstract>(x=> x.GetStrategy()).Returns(defaultStrategy.Object);
+            visitorDelegateMock.Setup(x=> x.GetStrategy()).Returns(defaultStrategy.Object);
             visitorDelegateMock.CallBase = true;
+            visitorDelegateMock.SetupGet(x => x.Config).Returns(config);
+            visitorDelegateMock.Object.FlagSyncStatus = Enums.FlagSyncStatus.FLAGS_FETCHED;
         }
 
 
@@ -70,6 +77,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.IsNotNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.AreEqual(36,visitor.AnonymousId.Length);
+            Assert.AreEqual(Enums.FlagSyncStatus.CREATED, visitor.FlagSyncStatus);
 
         }
 
@@ -152,6 +160,19 @@ namespace Flagship.FsVisitor.Tests
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JArray());
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
+        }
+
+        [TestMethod()]
+        public void GetFlagTest5()
+        {
+            Mock<IFsLogManager> fsLogManagerMock = new Mock<IFsLogManager>();
+            visitorDelegateMock.Object.Config.LogManager = fsLogManagerMock.Object;
+            visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
+            visitorDelegateMock.Object.FlagSyncStatus = Enums.FlagSyncStatus.UNAUTHENTICATED;
+            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JArray());
+            Assert.IsNotNull(flag);
+            Assert.IsFalse(flag.Exists);
+            fsLogManagerMock.Verify(x=> x.Warning(It.IsAny<string>(), "GET_FLAG"), Times.Once()); 
         }
 
         [TestMethod()]

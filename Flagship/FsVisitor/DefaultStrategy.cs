@@ -47,6 +47,7 @@ namespace Flagship.FsVisitor
             }
 
             Visitor.Context[key] = value;
+            this.Visitor.FlagSyncStatus = FlagSyncStatus.CONTEXT_UPDATED;
         }
 
         public override void UpdateContext(IDictionary<string, object> context)
@@ -152,6 +153,8 @@ namespace Flagship.FsVisitor
                 Visitor.Campaigns = campaigns;
                 Visitor.Flags = await DecisionManager.GetFlags(campaigns);
                 Visitor.GetStrategy().CacheVisitorAsync();
+
+                Visitor.FlagSyncStatus = FlagSyncStatus.FLAGS_FETCHED;
 
                 Log.LogDebug(Config, string.Format(FETCH_FLAGS_FROM_CAMPAIGNS,
                     Visitor.VisitorId, Visitor.AnonymousId,
@@ -294,6 +297,7 @@ namespace Flagship.FsVisitor
 
             Visitor.AnonymousId = Visitor.VisitorId;
             Visitor.VisitorId = visitorId;
+            Visitor.FlagSyncStatus = FlagSyncStatus.AUTHENTICATED;
         }
 
         public override void Unauthenticate()
@@ -313,6 +317,7 @@ namespace Flagship.FsVisitor
 
             Visitor.VisitorId = Visitor.AnonymousId;
             Visitor.AnonymousId = null;
+            Visitor.FlagSyncStatus = FlagSyncStatus.UNAUTHENTICATED;
 
         }
 

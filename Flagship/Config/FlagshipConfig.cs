@@ -14,12 +14,14 @@ using Flagship.FsFlag;
 
 namespace Flagship.Config
 {
-    public abstract class FlagshipConfig 
+    public abstract class FlagshipConfig
     {
+        private ITrackingManagerConfig trackingManagerConfig;
+
         public string EnvId { get; internal set; }
         public string ApiKey { get; internal set; }
 
-        public DecisionMode DecisionMode {  get; protected set; }
+        public DecisionMode DecisionMode { get; protected set; }
 
         /// <summary>
         /// Specify timeout for api request.
@@ -76,7 +78,14 @@ namespace Flagship.Config
         /// <summary>
         /// Define options to configure hit batching
         /// </summary>
-        public ITrackingManagerConfig TrackingManagerConfig { get; set; }
+        /// 
+        [Obsolete("Please use TrackingManagerConfig instead ")]
+        public ITrackingManagerConfig TrackingMangerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
+
+        /// <summary>
+        /// Define options to configure hit batching
+        /// </summary>
+        public ITrackingManagerConfig TrackingManagerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
 
         public FlagshipConfig(DecisionMode decisionMode = DecisionMode.DECISION_API)
         {

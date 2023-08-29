@@ -105,9 +105,9 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             {
                 config = new DecisionApiConfig();
             }
-            if (config.TrackingMangerConfig == null)
+            if (config.TrackingManagerConfig == null)
             {
-                config.TrackingMangerConfig = new TrackingManagerConfig();
+                config.TrackingManagerConfig = new TrackingManagerConfig();
             }
             var fsInstance = GetInstance();
 

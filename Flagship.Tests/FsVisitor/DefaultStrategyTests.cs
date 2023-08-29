@@ -70,6 +70,7 @@ namespace Flagship.FsVisitor.Tests
             defaultStrategy.UpdateContext(newContext);
 
             Assert.AreEqual(visitorDelegate.Context.Count, 6);
+            Assert.AreEqual(FlagSyncStatus.CONTEXT_UPDATED, visitorDelegate.FlagSyncStatus);
 
             var newContext2 = new Dictionary<string, object>()
             {
@@ -172,6 +173,7 @@ namespace Flagship.FsVisitor.Tests
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             await defaultStrategy.FetchFlags().ConfigureAwait(false);
+            Assert.AreEqual(FlagSyncStatus.FLAGS_FETCHED, visitorDelegate.FlagSyncStatus);
 
             Assert.AreEqual(visitorDelegate.Flags.Count, 6);
         }
@@ -475,6 +477,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
             Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
+            Assert.AreEqual(FlagSyncStatus.AUTHENTICATED, visitorDelegate.FlagSyncStatus);
 
             defaultStrategy.Authenticate(null);
 
@@ -525,6 +528,8 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.IsNull(visitorDelegate.AnonymousId);
             Assert.AreEqual(visitorId, visitorDelegate.VisitorId);
+
+            Assert.AreEqual(FlagSyncStatus.UNAUTHENTICATED, visitorDelegate.FlagSyncStatus);
 
             defaultStrategy.Unauthenticate();
 

@@ -28,6 +28,8 @@ namespace Flagship.FsVisitor
         virtual public string AnonymousId { get => _anonymousId; internal set { _anonymousId = value; } }
         virtual public VisitorCache VisitorCache { get; set; }
 
+        public FlagSyncStatus FlagSyncStatus { get; set; }
+
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
             ConfigManager = configManager;
@@ -43,6 +45,7 @@ namespace Flagship.FsVisitor
             LoadPredefinedContext();
 
             GetStrategy().LookupVisitor();
+            this.FlagSyncStatus = FlagSyncStatus.CREATED;
         }
        
         protected string CreateVisitorId()

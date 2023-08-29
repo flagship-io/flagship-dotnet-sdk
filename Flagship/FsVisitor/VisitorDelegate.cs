@@ -1,6 +1,8 @@
 ﻿using Flagship.Config;
+using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
+using Flagship.Logger;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -24,11 +26,16 @@ namespace Flagship.FsVisitor
 
         public override Task FetchFlags()
         {
+
             return this.GetStrategy().FetchFlags();
         }
 
         private IFlag<T> CreateFlag<T>(string key, T defaultValue)
         {
+            if (FlagSyncStatus != FlagSyncStatus.FLAGS_FETCHED)
+            {
+                Log.LogWarning(Config, string.Format(FlagSyncStatusMessage(FlagSyncStatus), VisitorId, key), "GET_FLAG");
+            }
             return new Flag<T>(key, this, defaultValue);
         }
 
@@ -96,6 +103,27 @@ namespace Flagship.FsVisitor
         public override void UpdateContext(string key, bool value)
         {
             GetStrategy().UpdateContext(key, value);
+        }
+
+        protected string FlagSyncStatusMessage(FlagSyncStatus flagSyncStatus)
+        {
+            var message = "";
+            var flagMessage = "without calling `fetchFlags` method afterwards, the value of the flag `{1}` may be outdated";
+            switch (flagSyncStatus) {
+                case FlagSyncStatus.CREATED:
+                    message = $"Visitor `{{0}}` has been created {flagMessage}";
+                    break;
+                case FlagSyncStatus.CONTEXT_UPDATED:
+                    message = $"Visitor context for visitor `{{0}}` has been updated {flagMessage}";
+                    break;
+                case FlagSyncStatus.AUTHENTICATED:
+                    message = $"Visitor `{{0}}` has been authenticated {flagMessage}";
+                    break;
+                case FlagSyncStatus.UNAUTHENTICATED:
+                    message = $"Visitor `{{0}}` has been unauthenticated {flagMessage}";
+                    break;
+            }
+            return message;
         }
     }
 }

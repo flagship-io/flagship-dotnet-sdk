@@ -33,7 +33,7 @@ namespace Flagship.Api
             }
             Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
 
-            if (HitsPoolQueue.Count >= Config.TrackingMangerConfig.PoolMaxSize)
+            if (HitsPoolQueue.Count >= Config.TrackingManagerConfig.PoolMaxSize)
             {
                 _ = SendBatch(CacheTriggeredBy.BatchLength);
             }

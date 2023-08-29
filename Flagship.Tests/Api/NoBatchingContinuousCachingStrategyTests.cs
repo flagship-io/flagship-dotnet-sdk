@@ -31,7 +31,7 @@ namespace Flagship.Api.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
@@ -105,7 +105,7 @@ namespace Flagship.Api.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
@@ -179,7 +179,7 @@ namespace Flagship.Api.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
@@ -314,7 +314,7 @@ namespace Flagship.Api.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
@@ -385,7 +385,7 @@ namespace Flagship.Api.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
@@ -466,7 +466,7 @@ namespace Flagship.Api.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
@@ -547,7 +547,7 @@ namespace Flagship.Api.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
-                TrackingMangerConfig = new TrackingManagerConfig()
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
 
             var shimeContext = ShimsContext.Create();

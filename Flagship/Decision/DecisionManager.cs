@@ -46,12 +46,16 @@ namespace Flagship.Decision
                     {
                         foreach (var item in campaign.Variation.Modifications.Value)
                         {
+                        var variationName = campaign.Type == "ab" ? campaign.Variation.Name : campaign.VariationGroupName;
                             var flag = new FlagDTO()
                             {
                                 Key = item.Key,
                                 CampaignId = campaign.Id,
+                                CampaignName = campaign.Name,
                                 VariationGroupId = campaign.VariationGroupId,
+                                VariationGroupName = campaign.VariationGroupName,
                                 VariationId = campaign.Variation.Id,
+                                VariationName = variationName,
                                 IsReference = campaign.Variation.Reference,
                                 Value = item.Value,
                                 CampaignType = campaign.Type,

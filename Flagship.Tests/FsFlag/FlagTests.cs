@@ -41,7 +41,7 @@ namespace Flagship.FsFlag.Tests
                 EnvId = "envID"
             };
 
-            var metadata = new FlagMetadata(flagDTO.CampaignId, flagDTO.VariationGroupId, flagDTO.VariationId, flagDTO.IsReference, flagDTO.CampaignType, flagDTO.Slug);
+            var metadata = new FlagMetadata(flagDTO.CampaignId, flagDTO.VariationGroupId, flagDTO.VariationId, flagDTO.IsReference, flagDTO.CampaignType, flagDTO.Slug, flagDTO.CampaignName, flagDTO.VariationGroupName, flagDTO.VariationName);
 
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
             var decisionManagerMock = new Mock<Decision.IDecisionManager>();
@@ -129,7 +129,7 @@ namespace Flagship.FsFlag.Tests
             var defaultValue = "defaultString";
             var flag = new Flag<string>("key", visitorMock.Object, defaultValue);
 
-            var metadata = new FlagMetadata("", "", "", false, "", null);
+            var metadata = new FlagMetadata("", "", "", false, "", null, "", "", "");
 
             var resultMeta = flag.Metadata;
 

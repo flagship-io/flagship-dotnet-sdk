@@ -19,19 +19,21 @@ namespace Flagship.Decision
         protected bool _isPanic = false;
 
         public FlagshipConfig Config { get; set; }
-        public bool IsPanic { 
-            get => _isPanic; 
-            protected set {
+        public bool IsPanic
+        {
+            get => _isPanic;
+            protected set
+            {
                 _isPanic = value;
                 StatusChange?.Invoke(_isPanic ? FlagshipStatus.READY_PANIC_ON : FlagshipStatus.READY);
             }
         }
 
-        public HttpClient HttpClient { get ; set ; }
+        public HttpClient HttpClient { get; set; }
 
         public DecisionManager(FlagshipConfig config, HttpClient httpClient)
         {
-            Config = config;    
+            Config = config;
             HttpClient = httpClient;
         }
 
@@ -39,29 +41,32 @@ namespace Flagship.Decision
 
         public Task<ICollection<FlagDTO>> GetFlags(ICollection<Campaign> campaigns)
         {
-           return Task.Factory.StartNew(() =>
-            {
-                ICollection<FlagDTO> flags = new Collection<FlagDTO>();
-                    foreach (var campaign in campaigns)
-                    {
-                        foreach (var item in campaign.Variation.Modifications.Value)
-                        {
-                            var flag = new FlagDTO()
-                            {
-                                Key = item.Key,
-                                CampaignId = campaign.Id,
-                                VariationGroupId = campaign.VariationGroupId,
-                                VariationId = campaign.Variation.Id,
-                                IsReference = campaign.Variation.Reference,
-                                Value = item.Value,
-                                CampaignType = campaign.Type,
-                                Slug = campaign.Slug
-                            };
-                            flags.Add(flag);
-                        }
-                    }
-                return flags;
-            });
+            return Task.Factory.StartNew(() =>
+             {
+                 ICollection<FlagDTO> flags = new Collection<FlagDTO>();
+                 foreach (var campaign in campaigns)
+                 {
+                     foreach (var item in campaign.Variation.Modifications.Value)
+                     {
+                         var flag = new FlagDTO()
+                         {
+                             Key = item.Key,
+                             CampaignId = campaign.Id,
+                             CampaignName = campaign.Name,
+                             VariationGroupId = campaign.VariationGroupId,
+                             VariationGroupName = campaign.VariationGroupName,
+                             VariationId = campaign.Variation.Id,
+                             VariationName = campaign.Variation.Name,
+                             IsReference = campaign.Variation.Reference,
+                             Value = item.Value,
+                             CampaignType = campaign.Type,
+                             Slug = campaign.Slug
+                         };
+                         flags.Add(flag);
+                     }
+                 }
+                 return flags;
+             });
         }
     }
 }

@@ -23,19 +23,19 @@ namespace Flagship.Enums
         /// </summary>
         public const int REQUEST_TIME_OUT = 2000;
 
-        public const string BASE_API_URL = "https://decision.flagship.io/v2/";
+        public const string BASE_API_URL = "https://staging-decision.flagship.io/v2/"; // "https://decision.flagship.io/v2/";
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 
         public const string HIT_EVENT_URL = "https://events.flagship.io/"; 
 
-        public const string BUCKETING_API_URL = "https://cdn.flagship.io/{0}/bucketing.json";
+        public const string BUCKETING_API_URL = "https://cdn-staging.flagship.io/{0}/bucketing.json";
 
         public const string BUCKETING_API_CONTEXT_URL = "https://decision.flagship.io/v2/{0}/events";
 
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
-        public const string SDK_VERSION = "3.1.1";
+        public const string SDK_VERSION = "3.1.2";
 
         public const string FLAGSHIP_SDK = "Flagship SDK";
 

@@ -375,7 +375,7 @@ namespace Flagship.FsVisitor.Tests
             const string functionName = "flag.metadata";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
-            var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null);
+            var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
             var resultatMetadata = defaultStrategy.GetFlagMetadata(metadata, "key", false);
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultatMetadata));
@@ -388,7 +388,7 @@ namespace Flagship.FsVisitor.Tests
             const string functionName = "flag.metadata";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
-            var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null);
+            var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
             var resultatMetadata = defaultStrategy.GetFlagMetadata(metadata, "key", true);
 
             Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(resultatMetadata));

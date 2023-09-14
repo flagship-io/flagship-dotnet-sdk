@@ -184,6 +184,7 @@ namespace Flagship.Decision
                     var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id, item.Type);
                     if (campaign != null)
                     {
+                        campaign.Name = item.Name;
                         campaigns.Add(campaign);
                     }
                 }
@@ -210,6 +211,7 @@ namespace Flagship.Decision
                         Id = campaignId,
                         Variation = variation,
                         VariationGroupId = item.Id,
+                        VariationGroupName = item.Name,
                         Type = campaignType
                     };
                 }
@@ -252,6 +254,7 @@ namespace Flagship.Decision
                             Id = newVariation.Id,
                             Modifications = newVariation.Modifications,
                             Reference = newVariation.Reference,
+                            Name = newVariation.Name,
                         };
                     }
                 }
@@ -264,6 +267,7 @@ namespace Flagship.Decision
                         Id = item.Id,
                         Modifications = item.Modifications,
                         Reference = item.Reference,
+                        Name = item.Name,
                     };
                 }
             }

@@ -36,7 +36,11 @@ namespace Flagship.FsFlag
             get
             {
                 var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
-                var metadata = new FlagMetadata(flagDTO?.CampaignId ?? "", flagDTO?.VariationGroupId ?? "", flagDTO?.VariationId ?? "", flagDTO?.IsReference ?? false, flagDTO?.CampaignType ?? "", flagDTO?.Slug);
+                var metadata = new FlagMetadata(flagDTO?.CampaignId ?? "", 
+                    flagDTO?.VariationGroupId ?? "", 
+                    flagDTO?.VariationId ?? "", flagDTO?.IsReference ?? false, flagDTO?.CampaignType ?? "", flagDTO?.Slug, 
+                    flagDTO?.CampaignName??"", flagDTO?.VariationGroupName??"", flagDTO?.VariationName??""
+                    );
                 if (flagDTO == null)
                 {
                     return metadata;

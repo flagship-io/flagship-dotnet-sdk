@@ -24,6 +24,8 @@ namespace Flagship.FsVisitor
         /// </summary>
         bool HasConsented { get; }
 
+        ICollection<FlagDTO> GetFlagDTOs();
+
         /// <summary>
         /// Set if visitor has consented for protected data usage.
         /// </summary>

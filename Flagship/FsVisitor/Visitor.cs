@@ -106,5 +106,10 @@ namespace Flagship.FsVisitor
         {
             _visitorDelegate.Unauthenticate();  
         }
+
+        public ICollection<FlagDTO> GetFlagDTOs()
+        {
+            return _visitorDelegate.GetFlagDTOs();
+        }
     }
 }

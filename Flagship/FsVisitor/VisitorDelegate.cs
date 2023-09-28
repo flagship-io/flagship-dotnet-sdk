@@ -3,6 +3,7 @@ using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Logger;
+using Flagship.Model;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,8 @@ namespace Flagship.FsVisitor
 {
     internal class VisitorDelegate : VisitorDelegateAbstract
     {
-        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
+        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, ICollection<FlagDTO> initialFlagsData = null) : 
+            base(visitorID, isAuthenticated, context, hasConsented, configManager, initialFlagsData)
         {
         }
 

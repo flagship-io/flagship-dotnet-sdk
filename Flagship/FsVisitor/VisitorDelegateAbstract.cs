@@ -30,7 +30,7 @@ namespace Flagship.FsVisitor
 
         public FlagSyncStatus FlagSyncStatus { get; set; }
 
-        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
+        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, ICollection<FlagDTO> initialFlagsData=null)
         {
             ConfigManager = configManager;
             if (isAuthenticated && configManager.Config.DecisionMode == DecisionMode.DECISION_API)
@@ -45,9 +45,20 @@ namespace Flagship.FsVisitor
             LoadPredefinedContext();
 
             GetStrategy().LookupVisitor();
-            this.FlagSyncStatus = FlagSyncStatus.CREATED;
+            FlagSyncStatus = FlagSyncStatus.CREATED;
+            SetInitialFlags(initialFlagsData);
         }
-       
+
+        protected void SetInitialFlags(ICollection<FlagDTO> initialFlagsDat)
+        {
+            if (initialFlagsDat==null)
+            {
+                return;
+            }
+            Flags = initialFlagsDat;
+        }
+
+
         protected string CreateVisitorId()
         {
             var date = DateTime.Now;
@@ -119,6 +130,11 @@ namespace Flagship.FsVisitor
         virtual public void Unauthenticate()
         {
             GetStrategy().Unauthenticate();
+        }
+
+        public ICollection<FlagDTO> GetFlagDTOs()
+        {
+            return Flags;
         }
     }
 }

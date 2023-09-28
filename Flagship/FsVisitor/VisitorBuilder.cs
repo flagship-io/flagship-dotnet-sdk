@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.Enums;
+using Flagship.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace Flagship.FsVisitor
         private readonly string _visitorId;
         private readonly IConfigManager _configManager;
         private readonly InstanceType _instanceType;
+        private ICollection<FlagDTO> _initialFlagsData;
 
 
         private VisitorBuilder(IConfigManager configManager, string visitorId, InstanceType instanceType)
@@ -26,6 +28,7 @@ namespace Flagship.FsVisitor
             _context = new Dictionary<string, object>();
             _configManager = configManager;
             _instanceType = instanceType;
+            _initialFlagsData = null;
         }
 
         internal static VisitorBuilder Builder(IConfigManager configManager, string visitorId, InstanceType instanceType)
@@ -69,13 +72,19 @@ namespace Flagship.FsVisitor
             return this;
         }
 
+        public VisitorBuilder WithInitialFlagsData(ICollection<FlagDTO> initialFlagsData)
+        {
+            _initialFlagsData=initialFlagsData;
+            return this;
+        }
+
         /// <summary>
         /// Complete the Visitor Creation process 
         /// </summary>
         /// <returns>Return an instance of \Flagship\Visitor\Visitor</returns>
         public Visitor Build()
         {
-            var visitorDelegate = new VisitorDelegate(_visitorId,_isAuthenticated,_context, _hasConsented,_configManager);
+            var visitorDelegate = new VisitorDelegate(_visitorId,_isAuthenticated,_context, _hasConsented,_configManager, _initialFlagsData);
             var visitor = new Visitor(visitorDelegate);
             Main.Fs.Visitor = null;
             if (_instanceType == InstanceType.SINGLE_INSTANCE)

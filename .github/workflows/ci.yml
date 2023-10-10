@@ -28,18 +28,12 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Set the environment variables FS_API_KEY
-        run:  $Env:FS_API_KEY = "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
-
-      - name: Set the environment variables FS_ENV_ID
-        run:  $Env:FS_ENV_ID = "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
-
       - name: Build dll
         run: MSBuild Flagship.Tests/Flagship.Tests.csproj -property:Configuration=Debug
 
       - name: Run tests
         shell: pwsh
-        run: ./coverage-ci.bat
+        run: $Env:FS_API_KEY = "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}" && $Env:FS_ENV_ID = "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}" && ./coverage-ci.bat
 
       # - name: Upload coverage to codecov
       #   uses: codecov/codecov-action@v2

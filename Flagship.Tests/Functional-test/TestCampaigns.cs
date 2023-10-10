@@ -35,11 +35,11 @@ namespace Flagship.Tests.Functional_test
             Assert.AreEqual("Test-campaign ab", flag.Metadata.CampaignName);
 
 
-            visitor = Fs.NewVisitor("visitor-2").WithContext(context).Build();
+            visitor = Fs.NewVisitor("visitor-3").WithContext(context).Build();
             await visitor.FetchFlags();
 
             flag = visitor.GetFlag("ci_flag_1", defaultValue);
-            Assert.AreEqual("flag-1-value-3", flag.GetValue());
+            Assert.AreEqual("flag-1-value-1", flag.GetValue());
             Assert.AreEqual("Test-campaign ab", flag.Metadata.CampaignName);
 
             visitor.UpdateContext("test-ab", false);
@@ -77,11 +77,11 @@ namespace Flagship.Tests.Functional_test
             Assert.AreEqual("Test-campaign ab", flag.Metadata.CampaignName);
 
 
-            visitor = Fs.NewVisitor("visitor-2").WithContext(context).Build();
+            visitor = Fs.NewVisitor("visitor-3").WithContext(context).Build();
             await visitor.FetchFlags();
 
             flag = visitor.GetFlag("ci_flag_1", defaultValue);
-            Assert.AreEqual("flag-1-value-3", flag.GetValue());
+            Assert.AreEqual("flag-1-value-1", flag.GetValue());
             Assert.AreEqual("Test-campaign ab", flag.Metadata.CampaignName);
 
             visitor.UpdateContext("test-ab", false);

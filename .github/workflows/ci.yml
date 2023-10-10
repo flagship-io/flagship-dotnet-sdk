@@ -10,9 +10,11 @@ jobs:
   build:
     name: Test & Coverage
     runs-on: windows-latest
+    env: 
+      FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
+      FS_ENV_ID:  "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
     steps:
       - uses: actions/checkout@v2
-
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: "6.0.x"
@@ -33,7 +35,7 @@ jobs:
 
       - name: Run tests
         shell: pwsh
-        run: $Env:FS_API_KEY = "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}" && $Env:FS_ENV_ID = "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}" && ./coverage-ci.bat
+        run: ./coverage-ci.bat
 
       # - name: Upload coverage to codecov
       #   uses: codecov/codecov-action@v2

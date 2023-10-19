@@ -11,12 +11,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("Flagship.Tests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: AssemblyKeyFile("flagshipKey.snk")]
+[assembly: InternalsVisibleTo("Flagship.Tests, PublicKey = 002400000480000094000000060200000024000052534131000400000100010041a296859040463dccfcb0b9fef7ff74f0db1a5c12034963bf51209203aabc1beb060f0a015bc7825756efb3bae9929f8ea40404a8aa9668f731718be0b547519260caf58fa7199108d431c9f084342b75883fe01a35809df34e87dd406c6e27c4ff4e63bbb3f1632ca3fbd4387ee821be9d56c4d54e56db8ec57418e91024cc")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2, PublicKey = 0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7")]
 namespace Flagship.Main
 {
     public class Fs

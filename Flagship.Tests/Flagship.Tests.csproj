@@ -70,6 +70,7 @@
     <Compile Include="FsVisitor\VisitorBuilderTests.cs" />
     <Compile Include="FsVisitor\VisitorDelegateTests.cs" />
     <Compile Include="FsVisitor\VisitorTests.cs" />
+    <Compile Include="Functional-test\TestCampaigns.cs" />
     <Compile Include="Hit\ActivateTests.cs" />
     <Compile Include="Hit\BatchTests.cs" />
     <Compile Include="Hit\EventTests.cs" />

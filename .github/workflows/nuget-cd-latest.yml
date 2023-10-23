@@ -39,8 +39,16 @@ jobs:
         shell: pwsh
         run: ./coverage-ci.bat
 
+      - name: Create signing Key file 
+        shell: pwsh
+        run: ${{ secrets.ASSEMBLY_SIGNING_KEY }} | Out-File -FilePath flagshipSigningKey.txt
+
+      - name: Decode signing Key
+        shell: pwsh
+        run:  certutil -decode .\flagshipSigningKey.txt .\flagshipSigningKey.snk
+
       - name: Build nuget
-        run: MSBuild.exe -t:pack -property:Configuration=Release
+        run: MSBuild.exe -t:pack -property:Configuration=Release -property:SignAssembly=True -property:AssemblyOriginatorKeyFile=flagshipSigningKey.snk
         working-directory: Flagship
 
       - name: set Nuget api key

@@ -11,6 +11,7 @@ jobs:
     env:
       FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
       FS_ENV_ID: "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
+      ASSEMBLY_SIGNING_KEY: ${{ secrets.ASSEMBLY_SIGNING_KEY }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
@@ -37,11 +38,13 @@ jobs:
 
       - name: Create signing Key file
         shell: pwsh
-        run: ${{ secrets.ASSEMBLY_SIGNING_KEY }} | Out-File -FilePath flagshipSigningKey.txt
+        run: $Env:ASSEMBLY_SIGNING_KEY | Out-File -FilePath flagshipSigningKey.txt
+        working-directory: Flagship
 
       - name: Decode signing Key
         shell: pwsh
         run: certutil -decode .\flagshipSigningKey.txt .\flagshipSigningKey.snk
+        working-directory: Flagship
 
       - name: Build nuget
         run: MSBuild.exe -t:pack -property:Configuration=Release -property:SignAssembly=True -property:AssemblyOriginatorKeyFile=flagshipSigningKey.snk

@@ -31,10 +31,12 @@ jobs:
       - name: Create signing Key file
         shell: pwsh
         run: $Env:ASSEMBLY_SIGNING_KEY | Out-File -FilePath flagshipSigningKey.txt
+        working-directory: Flagship
 
       - name: Decode signing Key
         shell: pwsh
         run: certutil -decode .\flagshipSigningKey.txt .\flagshipSigningKey.snk
+        working-directory: Flagship
 
       - name: Build nuget
         run: MSBuild.exe -t:pack -property:Configuration=Release -property:SignAssembly=True -property:AssemblyOriginatorKeyFile=flagshipSigningKey.snk

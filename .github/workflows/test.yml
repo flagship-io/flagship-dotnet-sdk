@@ -1,0 +1,46 @@
+name: CI pipeline
+# This workflow is triggered on pushes to the repository.
+on:
+  push:
+    branches: [signed-assembly]
+jobs:
+  build:
+    name: Test & Coverage
+    runs-on: windows-latest
+    env:
+      FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
+      FS_ENV_ID: "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
+      ASSEMBLY_SIGNING_KEY: ${{ secrets.ASSEMBLY_SIGNING_KEY }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+
+      - name: Restore NuGet Packages
+        run: nuget restore Flagship.sln
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Create signing Key file
+        shell: pwsh
+        run: $Env:ASSEMBLY_SIGNING_KEY | Out-File -FilePath flagshipSigningKey.txt
+
+      - name: Decode signing Key
+        shell: pwsh
+        run: certutil -decode .\flagshipSigningKey.txt .\flagshipSigningKey.snk
+
+      - name: Build nuget
+        run: MSBuild.exe -t:pack -property:Configuration=Release -property:SignAssembly=True -property:AssemblyOriginatorKeyFile=flagshipSigningKey.snk
+        working-directory: Flagship
+
+      # - name: Upload coverage to codecov
+      #   uses: codecov/codecov-action@v2
+      #   with:
+      #     files: ./CoverageResults.xml

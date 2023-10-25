@@ -40,6 +40,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>test.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Api\BatchingContinuousCachingStrategyTests.cs" />
     <Compile Include="Api\BatchingPeriodicCachingStrategyTests.cs" />
@@ -96,6 +105,7 @@
     <Fakes Include="Fakes\System.fakes" />
     <Fakes Include="Fakes\mscorlib.fakes" />
     <None Include="packages.config" />
+    <None Include="test.snk" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Flagship\Flagship.csproj">

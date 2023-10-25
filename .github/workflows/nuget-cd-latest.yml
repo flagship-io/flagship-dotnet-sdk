@@ -8,6 +8,10 @@ jobs:
   build:
     name: Deploy NuGet package
     runs-on: windows-latest
+    env:
+      FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
+      FS_ENV_ID: "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
+      ASSEMBLY_SIGNING_KEY: "${{ secrets.ASSEMBLY_SIGNING_KEY }}"
     steps:
       - uses: actions/checkout@v2
 
@@ -26,12 +30,6 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Set the environment variables FS_API_KEY
-        run:  $Env:FS_API_KEY = ${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}
-
-      - name: Set the environment variables FS_ENV_ID
-        run:  $Env:FS_ENV_ID = ${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}
-
       - name: Build dll
         run: MSBuild Flagship.Tests/Flagship.Tests.csproj -property:Configuration=Debug
 
@@ -39,13 +37,15 @@ jobs:
         shell: pwsh
         run: ./coverage-ci.bat
 
-      - name: Create signing Key file 
+      - name: Create signing Key file
         shell: pwsh
-        run: ${{ secrets.ASSEMBLY_SIGNING_KEY }} | Out-File -FilePath flagshipSigningKey.txt
+        run: $Env:ASSEMBLY_SIGNING_KEY | Out-File -FilePath flagshipSigningKey.txt
+        working-directory: Flagship
 
       - name: Decode signing Key
         shell: pwsh
-        run:  certutil -decode .\flagshipSigningKey.txt .\flagshipSigningKey.snk
+        run: certutil -decode .\flagshipSigningKey.txt .\flagshipSigningKey.snk
+        working-directory: Flagship
 
       - name: Build nuget
         run: MSBuild.exe -t:pack -property:Configuration=Release -property:SignAssembly=True -property:AssemblyOriginatorKeyFile=flagshipSigningKey.snk

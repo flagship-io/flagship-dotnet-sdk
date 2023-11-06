@@ -47,6 +47,9 @@ namespace Flagship.Api
         public Dictionary<string,HitAbstract> HitsPoolQueue { get; set; }
         public Dictionary<string, Activate> ActivatePoolQueue { get; set; }
 
+        public TroubleshootingData TroubleshootingData { get; set; }
+
+
 
         public BatchingCachingStrategyAbstract(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue)
         {
@@ -312,6 +315,31 @@ namespace Flagship.Api
             {
                 Logger.Log.LogError(Config, ex.Message, PROCESS_FLUSH_HIT);
             }
+        }
+
+        public virtual bool IsTroubleshootingActivated()
+        {
+            if (TroubleshootingData == null)
+            {
+                return false;
+            }
+
+            var now = new DateTime();
+
+            var isStarted = now >= TroubleshootingData.StartDate;
+            if (!isStarted)
+            {
+                return false;
+            }
+
+            var isFinished = now > TroubleshootingData.EndDate;
+
+            if (isFinished)
+            {
+                return true;
+            }
+
+            return true;
         }
     }
 }

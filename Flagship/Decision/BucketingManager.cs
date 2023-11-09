@@ -103,10 +103,11 @@ namespace Flagship.Decision
                 var response = await HttpClient.SendAsync(requestMessage);
 
 
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
+                    LastBucketingTimestamp = DateTime.Now.ToUniversalTime().ToString("u");
                 }
 
                 if (response.Headers.TryGetValues(HttpResponseHeader.LastModified.ToString(), out IEnumerable<string> lastModified))

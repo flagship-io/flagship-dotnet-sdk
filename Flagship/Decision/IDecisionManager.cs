@@ -17,11 +17,15 @@ namespace Flagship.Decision
 
         HttpClient HttpClient { get; set; }
 
+        TroubleshootingData TroubleshootingData { get; set; }
+
         bool IsPanic { get; }
 
-         Task<ICollection<FlagDTO>> GetFlags (ICollection<Campaign> campaigns);
+        Task<ICollection<FlagDTO>> GetFlags (ICollection<Campaign> campaigns);
 
-         Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
+        Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
+
+        string LastBucketingTimestamp { get; set; }
 
     }
 }

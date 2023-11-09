@@ -17,8 +17,12 @@ namespace Flagship.Decision
     {
         public event StatusChangeDelegate StatusChange;
         protected bool _isPanic = false;
+        public TroubleshootingData TroubleshootingData { get; set; }
 
         public FlagshipConfig Config { get; set; }
+
+        public string LastBucketingTimestamp { get ; set; }
+
         public bool IsPanic
         {
             get => _isPanic;

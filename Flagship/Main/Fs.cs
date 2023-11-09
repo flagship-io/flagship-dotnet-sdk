@@ -5,6 +5,7 @@ using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
 using Flagship.Logger;
+using Flagship.Model;
 using Flagship.Utils;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,8 @@ namespace Flagship.Main
 
         private IConfigManager _configManager;
         private Visitor _visitor;
+        private readonly SdkInitialData _sdkInitialData;
+
 
         protected static Fs GetInstance()
         {
@@ -43,7 +46,10 @@ namespace Flagship.Main
 
         private Fs()
         {
-
+            _sdkInitialData = new SdkInitialData()
+            {
+                InstanceId = Guid.NewGuid().ToString()
+            };
         }
 
         /// <summary>
@@ -73,6 +79,7 @@ namespace Flagship.Main
             }
             _status = status;
             _config.SetStatus(status);
+            VisitorDelegateAbstract.SDKStatus = Status;
         }
 
         private static bool IsReady()
@@ -216,7 +223,8 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             {
                 return null;
             }
-            return VisitorBuilder.Builder(GetInstance()._configManager, visitorId, instanceType);
+            var instance = GetInstance();
+            return VisitorBuilder.Builder(instance._configManager, visitorId, instanceType, instance._sdkInitialData);
         }
 
         /// <summary>

@@ -67,8 +67,9 @@ namespace Flagship.Decision
 
                 IsPanic = decisionResponse.Panic;
 
-                return decisionResponse.Campaigns;
+                TroubleshootingData = decisionResponse?.Extras?.AccountSettings?.Troubleshooting;
 
+                return decisionResponse.Campaigns;
             }
             catch (Exception ex)
             {

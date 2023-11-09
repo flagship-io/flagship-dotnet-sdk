@@ -16,7 +16,8 @@ namespace Flagship.Hit
         public DiagnosticLabel Label { get; set; }
         public string LastInitializationTimestamp { get; set; }
         public string LastBucketingTimestamp { get; set; }
-
+        public uint Traffic { get; set; }
+        public string FlagshipInstanceId { get; set; }
 
         public string StackType { get; set; }
         public string StackName { get; set; }
@@ -25,7 +26,7 @@ namespace Flagship.Hit
         public string StackOriginVersion { get; set; }
 
         public FlagshipStatus? SdkStatus { get; set; }
-        public string SdkConfigMode { get; set; }
+        public DecisionMode? SdkConfigMode { get; set; }
         public TimeSpan? SdkConfigTimeout { get; set; }
         public TimeSpan? SdkConfigPollingInterval { get; set; }
         public Model.Bucketing.BucketingDTO SdkBucketingFile { get; set; }
@@ -54,8 +55,8 @@ namespace Flagship.Hit
         public IDictionary<string, object> VisitorContext { get; set; }
         public bool? VisitorConsent { get; set; }
         public IDictionary<string, object> VisitorAssignmentHistory { get; set; }
-        public IDictionary<string, FlagDTO> VisitorFlags { get; set; }
-        public Campaign VisitorCampaigns { get; set; }
+        public ICollection<FlagDTO> VisitorFlags { get; set; }
+        public ICollection<Campaign> VisitorCampaigns { get; set; }
         public bool? VisitorIsAuthenticated { get; set; }
         public string VisitorSessionId { get; set; }
 
@@ -118,6 +119,11 @@ namespace Flagship.Hit
                 ["stack.name"] = StackName,
                 ["stack.version"] = StackVersion
             };
+
+            if (!string.IsNullOrWhiteSpace(FlagshipInstanceId))
+            {
+                customVariable["flagshipInstanceId"] = FlagshipInstanceId;
+            }
 
             if (!string.IsNullOrWhiteSpace(LastInitializationTimestamp))
             {
@@ -303,10 +309,9 @@ namespace Flagship.Hit
 
             if (VisitorFlags != null)
             {
-                foreach (var item in VisitorFlags)
+                foreach (var flagDto in VisitorFlags)
                 {
-                    var flagDto = item.Value;
-                    var flagKey = item.Value.Key;
+                    var flagKey = flagDto.Key;
                     var commonKey = $"visitor.flags.[{flagKey}]";
                     var customVariableKeyMetadata = $"{commonKey}.metadata";
                     customVariable[$"{commonKey}.key"] = flagKey;

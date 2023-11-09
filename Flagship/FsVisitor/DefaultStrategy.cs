@@ -160,6 +160,33 @@ namespace Flagship.FsVisitor
                     Visitor.VisitorId, Visitor.AnonymousId,
                     JsonConvert.SerializeObject(Visitor.Context),
                     JsonConvert.SerializeObject(Visitor.Flags)), FUNCTION_NAME);
+
+                if (DecisionManager?.TroubleshootingData != null)
+                {
+                    var uniqueId = Visitor.VisitorId + DecisionManager.TroubleshootingData.EndDate.ToString("u");
+                    var hashBytes = Murmur32.ComputeHash(Encoding.UTF8.GetBytes(uniqueId));
+                    var hash = BitConverter.ToUInt32(hashBytes, 0);
+                    var traffic = hash % 100;
+
+                    Visitor.Traffic = traffic;
+
+                    var fetchFlagTroubleshootingHit = new Troubleshooting()
+                    {
+                        Label= DiagnosticLabel.VISITOR_FETCH_CAMPAIGNS,
+                        LogLevel = LogLevel.INFO,
+                        VisitorId = Visitor.VisitorId,
+                        AnonymousId = Visitor.AnonymousId,
+                        VisitorSessionId = Visitor.SessionId,
+                        FlagshipInstanceId = Visitor.SdkInitialData.InstanceId,
+                        Traffic = traffic,
+                        Config = Config,
+                        SdkStatus = Visitor.GetSdkStatus(),
+                        VisitorContext = Visitor.Context,
+                        VisitorCampaigns = campaigns
+
+                    };
+                }
+             
             }
             catch (Exception ex)
             {

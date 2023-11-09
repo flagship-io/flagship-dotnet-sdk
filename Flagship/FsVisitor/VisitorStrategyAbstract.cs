@@ -6,6 +6,7 @@ using Flagship.FsFlag;
 using Flagship.FsVisitor;
 using Flagship.Hit;
 using Flagship.Model;
+using Murmur;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,8 @@ namespace Flagship.FsVisitor
         protected ITrackingManager TrackingManager => Visitor.ConfigManager.TrackingManager;
 
         protected IDecisionManager DecisionManager => Visitor.ConfigManager.DecisionManager;
+
+        public Murmur32  Murmur32 { get; set; }
 
         public VisitorStrategyAbstract(VisitorDelegateAbstract visitor)
         {

@@ -25,18 +25,22 @@ namespace Flagship.Api
         static public string HIT_DATA_FLUSHED = "The following hit keys have been flushed from database : {0}";
         static public string FLUSH_ALL_HITS = "All hits have been flushed from database";
         static public string ADD_HIT = "ADD HIT";
+        static public string ADD_TROUBELSHOOTING_HIT = "ADD TROUBLESHOOTING HIT";
         static public string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
+        static public string HIT_TROUBLESHOOTING_ADDED_IN_QUEUE = "The hit troubleshooting has been added to the pool queue : {0}";
         static public string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
         static public string SEND_BATCH = "SEND BATCH";
         static public string SEND_HIT = "SEND HIT";
         static public string SEND_ACTIVATE = "SEND ACTIVATE";
+        static public string SEND_TROUBLESHOOTING = "SEND TROUBLESHOOTING";
         static public string ON_VISITOR_EXPOSED = "ON_VISITOR_EXPOSED";
         static public string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
         static public string HIT_SENT_SUCCESS = "hit has been sent : {0}";
+        static public string TROUBLESHOOTING_SENT_SUCCESS = "Troubleshooting hit has been sent : {0}";
         static public string URL_ACTIVATE = "activate";
         static public string URL_EVENT = "events";
         static public string STATUS_CODE = "StatusCode:";
-        static public  string REASON_PHRASE = "ReasonPhrase";
+        static public string REASON_PHRASE = "ReasonPhrase";
         static public string RESPONSE = "response";
         static public string ITEM_DURATION = "duration";
         static public string ITEM_BATCH_TRIGGERED_BY = "batchTriggeredBy";
@@ -46,8 +50,10 @@ namespace Flagship.Api
 
         public Dictionary<string,HitAbstract> HitsPoolQueue { get; set; }
         public Dictionary<string, Activate> ActivatePoolQueue { get; set; }
+        public Dictionary<string, Troubleshooting> TroubleshootingQueue { get; set; }
 
         public TroubleshootingData TroubleshootingData { get; set; }
+        bool _isTroubleshootingQueueSending;
 
 
 
@@ -340,6 +346,109 @@ namespace Flagship.Api
             }
 
             return true;
+        }
+
+        public void AddTroubleshootingHit(Troubleshooting hit)
+        {
+            if (!IsTroubleshootingActivated())
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(hit.Key))
+            {
+                hit.Key = $"{hit.VisitorId}:{Guid.NewGuid()}";
+            }
+
+            TroubleshootingQueue[hit.Key] = hit;
+
+            Logger.Log.LogDebug(Config, string.Format(HIT_TROUBLESHOOTING_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_TROUBELSHOOTING_HIT);
+        }
+
+        public async virtual Task SendTroubleshootingHit(Troubleshooting hit)
+        {
+            if (!IsTroubleshootingActivated())
+            {
+                return;
+            }
+
+            if (TroubleshootingData.Traffic < hit.Traffic )
+            {
+                return;
+            }
+
+            var url = Constants.TROUBLESHOOTING_HIT_URL;
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+
+            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+            var requestBody = hit.ToApiKeys();
+            var now = DateTime.Now;
+
+            try
+            {
+                var postDatajson = JsonConvert.SerializeObject(requestBody);
+
+                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+
+                requestMessage.Content = stringContent;
+
+                var response = await HttpClient.SendAsync(requestMessage);
+
+                if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
+                {
+                    var message = new Dictionary<string, object>()
+                    {
+                        {STATUS_CODE, response.StatusCode},
+                        {REASON_PHRASE, response.ReasonPhrase },
+                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                    };
+
+                    throw new Exception(JsonConvert.SerializeObject(message));
+                }
+
+                Logger.Log.LogDebug(Config, string.Format(TROUBLESHOOTING_SENT_SUCCESS, JsonConvert.SerializeObject(new
+                {
+                    url,
+                    headers = new Dictionary<string, string>(),
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds
+                })), SEND_TROUBLESHOOTING);
+
+                if (!string.IsNullOrWhiteSpace(hit.Key))
+                {
+                    TroubleshootingQueue.Remove(hit.Key);
+                }
+            }
+            catch (Exception ex)
+            {
+                AddTroubleshootingHit(hit);
+
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    url,
+                    headers = new Dictionary<string, string>(),
+                    body = requestBody,
+                    duration = (DateTime.Now - now).TotalMilliseconds,
+                }), SEND_TROUBLESHOOTING);
+            }
+        }
+
+        public async  Task SendTroubleshootingQueue()
+        {
+            if (!IsTroubleshootingActivated() || _isTroubleshootingQueueSending || TroubleshootingQueue.Count == 0)
+            {
+                return; 
+            }
+
+            _isTroubleshootingQueueSending = true;
+
+            foreach (var item in TroubleshootingQueue)
+            {
+                await SendTroubleshootingHit(item.Value);
+            }
+
+            _isTroubleshootingQueueSending = false;
         }
     }
 }

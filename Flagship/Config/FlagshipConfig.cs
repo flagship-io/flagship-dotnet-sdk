@@ -54,6 +54,11 @@ namespace Flagship.Config
             OnVisitorExposed?.Invoke(exposedVisitor, exposedFlag);
         }
 
+        virtual internal bool HasOnVisitorExposed()
+        {
+            return OnVisitorExposed != null;
+        }
+
         /// <summary>
         /// Specify a custom implementation of LogManager in order to receive logs from the SDK.
         /// Note: The object must fill

@@ -27,8 +27,11 @@ namespace Flagship.FsVisitor
         virtual public IDictionary<string, object> Context => _context;
         virtual public string AnonymousId { get => _anonymousId; internal set { _anonymousId = value; } }
         virtual public VisitorCache VisitorCache { get; set; }
-
+        virtual public uint Traffic { get; set; }
+        virtual public string SessionId { get; set; }
+        virtual public SdkInitialData SdkInitialData { get; set; }
         public FlagSyncStatus FlagSyncStatus { get; set; }
+        public static FlagshipStatus SDKStatus { get; set; }
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
         {
@@ -37,6 +40,7 @@ namespace Flagship.FsVisitor
             {
                 AnonymousId = Guid.NewGuid().ToString();
             }
+            SessionId = Guid.NewGuid().ToString();
             _context = new Dictionary<string, object>();
             UpdateContext(context);
             Flags = new HashSet<FlagDTO>();
@@ -54,6 +58,11 @@ namespace Flagship.FsVisitor
             return $"{date.Year}{Utils.Utils.TwoDigit(date.Month)}{Utils.Utils.TwoDigit(date.Day)}{Utils.Utils.TwoDigit(date.Hour)}{Utils.Utils.TwoDigit(date.Minute)}{Utils.Utils.TwoDigit(date.Second)}{new Random().Next(10000, 99999)}";
         }
 
+        public FlagshipStatus GetSdkStatus()
+        {
+            return SDKStatus;
+        }
+
         protected void LoadPredefinedContext()
         {
             _context[PredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
@@ -64,11 +73,11 @@ namespace Flagship.FsVisitor
         virtual public VisitorStrategyAbstract GetStrategy()
         {
             VisitorStrategyAbstract strategy;
-            if (Fs.Status == Enums.FlagshipStatus.NOT_INITIALIZED)
+            if (Fs.Status == FlagshipStatus.NOT_INITIALIZED)
             {
                 strategy = new NotReadyStrategy(this);
             }
-            else if (Fs.Status == Enums.FlagshipStatus.READY_PANIC_ON)
+            else if (Fs.Status == FlagshipStatus.READY_PANIC_ON)
             {
                 strategy =  new PanicStrategy(this);
             }
@@ -80,6 +89,7 @@ namespace Flagship.FsVisitor
             {
                 strategy =  new DefaultStrategy(this);
             }
+            strategy.Murmur32 = Murmur.MurmurHash.Create32();
             return strategy;
         }
 

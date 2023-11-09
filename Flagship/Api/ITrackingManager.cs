@@ -13,8 +13,12 @@ namespace Flagship.Api
 {
     internal interface ITrackingManager : ITrackingManagerCommon
     {
-         void StartBatchingLoop();
+        void StartBatchingLoop();
 
-         void StopBatchingLoop();
+        void StopBatchingLoop();
+
+        Task SendTroubleshootingHit(Troubleshooting hit);
+
+        public TroubleshootingData TroubleshootingData { get; set; }
     }
 }

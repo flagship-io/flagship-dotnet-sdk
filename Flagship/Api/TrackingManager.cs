@@ -33,6 +33,7 @@ namespace Flagship.Api
         public HttpClient HttpClient { get; set; }
         public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
         public Dictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
+        public TroubleshootingData TroubleshootingData { get; set; }
 
         protected Timer _timer;
         protected bool _isPolling;
@@ -64,6 +65,8 @@ namespace Flagship.Api
                     strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;
             }
+
+            strategy.TroubleshootingData = TroubleshootingData;
             return strategy;
         }
 
@@ -215,6 +218,11 @@ namespace Flagship.Api
             {
                 Log.LogError(Config, ex.Message, PROCESS_LOOKUP_HIT);
             }
+        }
+
+        public async Task SendTroubleshootingHit(Troubleshooting hit)
+        {
+            await Strategy.SendTroubleshootingHit(hit);
         }
     }
 }

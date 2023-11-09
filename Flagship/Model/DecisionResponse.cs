@@ -6,6 +6,16 @@ using System.Text;
 
 namespace Flagship.Model
 {
+    public class Extras
+    {
+        public AccountSettings AccountSettings { get; set; }
+    }
+
+    public class AccountSettings
+    {
+        public TroubleshootingData Troubleshooting { get; set; }
+    }
+
     public class DecisionResponse
     {
         /// <summary>
@@ -22,6 +32,8 @@ namespace Flagship.Model
         /// Is the environment in panic mode
         /// </summary>
         public bool Panic { get; set; }
+
+        public Extras Extras { get; set; }
 
         public DecisionResponse()
         {

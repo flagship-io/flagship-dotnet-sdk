@@ -25,6 +25,8 @@ namespace Flagship.Enums
 
         public const string BASE_API_URL =  "https://decision.flagship.io/v2/";
 
+        public const string TROUBLESHOOTING_HIT_URL = "https://events.flagship.io/troubleshooting";
+
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 
         public const string HIT_EVENT_URL = "https://events.flagship.io/"; 

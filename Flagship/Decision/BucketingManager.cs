@@ -169,6 +169,10 @@ namespace Flagship.Decision
                     return campaigns;
                 }
 
+                if (BucketingContent.AccountSettings!=null)
+                {
+                    TroubleshootingData = BucketingContent.AccountSettings.Troubleshooting;
+                }
 
                 if (BucketingContent.Panic.HasValue && BucketingContent.Panic.Value)
                 {

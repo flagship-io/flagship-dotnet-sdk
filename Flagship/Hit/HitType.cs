@@ -16,6 +16,7 @@ namespace Flagship.Hit
         BATCH,
         ACTIVATE,
         SEGMENT,
-        TROUBLESHOOTING
+        TROUBLESHOOTING,
+        USAGE
     }
 }

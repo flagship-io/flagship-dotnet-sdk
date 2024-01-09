@@ -422,6 +422,8 @@ namespace Flagship.Hit
                 customVariable["batchTriggeredBy"] = $"{BatchTriggeredBy}";
             }
 
+            apiKeys["cv"] = customVariable;
+
             return apiKeys;
         }
     }

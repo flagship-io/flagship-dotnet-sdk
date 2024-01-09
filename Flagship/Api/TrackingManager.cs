@@ -83,6 +83,8 @@ namespace Flagship.Api
         public virtual async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
             await Strategy.SendBatch(batchTriggeredBy);
+            await Strategy.SendTroubleshootingQueue();
+            await Strategy.SendAnalyticQueue();
         }
 
         public void StartBatchingLoop()
@@ -223,6 +225,11 @@ namespace Flagship.Api
         public async Task SendTroubleshootingHit(Troubleshooting hit)
         {
             await Strategy.SendTroubleshootingHit(hit);
+        }
+
+        public async Task SendAnalyticHit(Analytic hit)
+        {
+            await Strategy.SendAnalyticHit(hit);
         }
     }
 }

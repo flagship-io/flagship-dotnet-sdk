@@ -19,6 +19,8 @@ namespace Flagship.Api
 
         Task SendTroubleshootingHit(Troubleshooting hit);
 
+        Task SendAnalyticHit(Analytic hit); 
+
         public TroubleshootingData TroubleshootingData { get; set; }
     }
 }

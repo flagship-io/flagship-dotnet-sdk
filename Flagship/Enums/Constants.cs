@@ -18,6 +18,8 @@ namespace Flagship.Enums
 
         public const int BATCH_MAX_SIZE = 2500000;
 
+        public const int ANALYTIC_HIT_ALLOCATION = 10;
+
         /// <summary>
         /// Default request timeout in second
         /// </summary>
@@ -26,6 +28,8 @@ namespace Flagship.Enums
         public const string BASE_API_URL =  "https://decision.flagship.io/v2/";
 
         public const string TROUBLESHOOTING_HIT_URL = "https://events.flagship.io/troubleshooting";
+
+        public const string ANALYTICS_HIT_URL = "https://events.flagship.io/analytics";
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 

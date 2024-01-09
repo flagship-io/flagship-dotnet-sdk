@@ -28,7 +28,7 @@ namespace Flagship.Decision
             try
             {
                 
-                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true";
+                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true&extras[]=accountSettings";
 
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);

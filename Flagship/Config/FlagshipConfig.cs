@@ -92,6 +92,8 @@ namespace Flagship.Config
         /// </summary>
         public ITrackingManagerConfig TrackingManagerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
 
+        public bool DisableDeveloperUsageTracking { get; set; }
+
         public FlagshipConfig(DecisionMode decisionMode = DecisionMode.DECISION_API)
         {
             DecisionMode = decisionMode;
@@ -100,7 +102,7 @@ namespace Flagship.Config
             {
                 Timeout = TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT);
             }
-
+            DisableDeveloperUsageTracking = false;
         }
 
     }

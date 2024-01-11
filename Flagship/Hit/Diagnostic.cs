@@ -10,7 +10,6 @@ namespace Flagship.Hit
     {
         public string Version { get; set; }
         public LogLevel LogLevel { get; set; }
-        public string EnvId { get; set; }
         public string Timestamp { get; set; }
         public string TimeZone { get; set; }
         public DiagnosticLabel Label { get; set; }
@@ -84,11 +83,10 @@ namespace Flagship.Hit
 
         public Diagnostic(HitType type) : base(type)
         {
-            Version ??= "1";
+            Version = "1";
             Timestamp = new DateTime().ToUniversalTime().ToString("u:");
             TimeZone = TimeZoneInfo.Local.StandardName;
             StackType = "SDK";
-            EnvId = Config.EnvId;
             StackName = Constants.SDK_LANGUAGE;
             StackVersion = Constants.SDK_VERSION;
         }
@@ -135,9 +133,9 @@ namespace Flagship.Hit
                 customVariable["lastBucketingTimestamp"] = LastBucketingTimestamp;
             }
 
-            if (!string.IsNullOrWhiteSpace(EnvId))
+            if (!string.IsNullOrWhiteSpace(Config?.EnvId))
             {
-                customVariable["envId"] = EnvId;
+                customVariable["envId"] = Config?.EnvId;
             }
 
             if (SdkBucketingFile!=null)

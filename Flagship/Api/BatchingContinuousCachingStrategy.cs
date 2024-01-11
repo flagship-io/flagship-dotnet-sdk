@@ -135,6 +135,24 @@ namespace Flagship.Api
                     duration = (DateTime.Now - now).TotalMilliseconds,
                     batchTriggeredBy = $"{batchTriggeredBy}"
                 }), SEND_ACTIVATE);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SEND_ACTIVATE_HIT_ROUTE_ERROR,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpRequestUrl = Constants.HIT_EVENT_URL,
+                    HttpsRequestBody = requestBody,
+                    HttpResponseBody = ex.Message,
+                    HttpResponseMethod = "POST",
+                    HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
+                    BatchTriggeredBy = batchTriggeredBy
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
             }
         }
 

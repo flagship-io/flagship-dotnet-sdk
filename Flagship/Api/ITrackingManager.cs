@@ -18,9 +18,9 @@ namespace Flagship.Api
         void StopBatchingLoop();
 
         Task SendTroubleshootingHit(Troubleshooting hit);
-
+        void AddTroubleshootingHit(Troubleshooting hit);
         Task SendAnalyticHit(Analytic hit); 
 
-        public TroubleshootingData TroubleshootingData { get; set; }
+        TroubleshootingData TroubleshootingData {  set; }
     }
 }

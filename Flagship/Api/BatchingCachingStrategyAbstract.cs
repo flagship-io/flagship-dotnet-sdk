@@ -56,12 +56,13 @@ namespace Flagship.Api
         public Dictionary<string, Activate> ActivatePoolQueue { get; set; }
         public Dictionary<string, Troubleshooting> TroubleshootingQueue { get; set; } 
         public Dictionary<string, Analytic> AnalyticQueue { get; set; }
-        bool _isAnalyticQueueSending; 
+        bool _isAnalyticQueueSending;
 
         public TroubleshootingData TroubleshootingData { get; set; }
+
         bool _isTroubleshootingQueueSending;
 
-
+        public string FlagshipInstanceId { get; set; }
 
         public BatchingCachingStrategyAbstract(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue)
         {
@@ -69,6 +70,8 @@ namespace Flagship.Api
             HttpClient = httpClient;
             HitsPoolQueue = hitsPoolQueue;
             ActivatePoolQueue = activatePoolQueue;
+            TroubleshootingQueue = new Dictionary<string, Troubleshooting>();
+            AnalyticQueue = new Dictionary<string, Analytic>();
         }
 
         abstract public Task Add(HitAbstract hit);
@@ -209,6 +212,24 @@ namespace Flagship.Api
                     duration = (DateTime.Now - now).TotalMilliseconds,
                     batchTriggeredBy = $"{batchTriggeredBy}"
                 }), SEND_BATCH);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label= DiagnosticLabel.SEND_BATCH_HIT_ROUTE_RESPONSE_ERROR,
+                    LogLevel= LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpRequestUrl = Constants.HIT_EVENT_URL,
+                    HttpsRequestBody = requestBody,
+                    HttpResponseBody = ex.Message,
+                    HttpResponseMethod = "POST",
+                    HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
+                    BatchTriggeredBy = batchTriggeredBy
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
             }
         }
 
@@ -336,7 +357,7 @@ namespace Flagship.Api
                 return false;
             }
 
-            var now = new DateTime();
+            var now = DateTime.Now.ToUniversalTime();
 
             var isStarted = now >= TroubleshootingData.StartDate;
             if (!isStarted)
@@ -356,11 +377,6 @@ namespace Flagship.Api
 
         public void AddTroubleshootingHit(Troubleshooting hit)
         {
-            if (!IsTroubleshootingActivated())
-            {
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(hit.Key))
             {
                 hit.Key = $"{hit.VisitorId}:{Guid.NewGuid()}";
@@ -428,7 +444,10 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                AddTroubleshootingHit(hit);
+                if (IsTroubleshootingActivated())
+                {
+                    AddTroubleshootingHit(hit); ;
+                }
 
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {

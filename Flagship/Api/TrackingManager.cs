@@ -33,7 +33,9 @@ namespace Flagship.Api
         public HttpClient HttpClient { get; set; }
         public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
         public Dictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
-        public TroubleshootingData TroubleshootingData { get; set; }
+        public TroubleshootingData TroubleshootingData { set { Strategy.TroubleshootingData = value; } }
+
+        public string FlagshipInstanceId { get; set; }
 
         protected Timer _timer;
         protected bool _isPolling;
@@ -66,7 +68,7 @@ namespace Flagship.Api
                     break;
             }
 
-            strategy.TroubleshootingData = TroubleshootingData;
+            strategy.FlagshipInstanceId = FlagshipInstanceId;
             return strategy;
         }
 
@@ -230,6 +232,11 @@ namespace Flagship.Api
         public async Task SendAnalyticHit(Analytic hit)
         {
             await Strategy.SendAnalyticHit(hit);
+        }
+
+        public void AddTroubleshootingHit(Troubleshooting hit)
+        {
+            Strategy.AddTroubleshootingHit(hit);
         }
     }
 }

@@ -34,7 +34,6 @@ namespace Flagship.Main
         private Visitor _visitor;
         private readonly SdkInitialData _sdkInitialData;
 
-
         protected static Fs GetInstance()
         {
             if (instance == null)
@@ -90,7 +89,7 @@ namespace Flagship.Main
         /// <summary>
         /// Will return any previous created visitor instance initialized with the SINGLE_INSTANCE
         /// </summary>
-        public static FsVisitor.Visitor Visitor
+        public static Visitor Visitor
         {
             get { return GetInstance()._visitor; }
             internal set { GetInstance()._visitor = value; }
@@ -161,6 +160,8 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             }
 
             var trackingManager = new TrackingManager(config, httpClient);
+
+            trackingManager.FlagshipInstanceId = instance._sdkInitialData.InstanceId;
 
             decisionManager.StatusChange += DecisionManager_StatusChange;
 

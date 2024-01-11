@@ -33,8 +33,9 @@ namespace Flagship.FsVisitor
         public FlagSyncStatus FlagSyncStatus { get; set; }
         public static FlagshipStatus SDKStatus { get; set; }
 
-        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager)
+        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null)
         {
+            SdkInitialData = sdkInitialData;
             ConfigManager = configManager;
             if (isAuthenticated && configManager.Config.DecisionMode == DecisionMode.DECISION_API)
             {

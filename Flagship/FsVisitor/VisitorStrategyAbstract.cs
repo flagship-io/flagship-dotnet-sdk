@@ -57,6 +57,21 @@ namespace Flagship.FsVisitor
 
             await TrackingManager.Add(hitEvent);
 
+
+            var troubleshootingHit = new Troubleshooting()
+            {
+                Label = DiagnosticLabel.VISITOR_SEND_HIT,
+                LogLevel = LogLevel.INFO,
+                Traffic = Visitor.Traffic,
+                VisitorSessionId = Visitor.SessionId,
+                FlagshipInstanceId = Visitor.SdkInitialData.InstanceId,
+                AnonymousId = Visitor.AnonymousId,
+                VisitorId = Visitor.VisitorId,
+                Config = Config,
+                HitContent = hitEvent.ToApiKeys()
+            };
+
+            TrackingManager.AddTroubleshootingHit(troubleshootingHit);
         }
 
         protected virtual void MigrateVisitorCacheData(JObject visitorData)
@@ -222,6 +237,8 @@ namespace Flagship.FsVisitor
             var hashBytes = Murmur32.ComputeHash(Encoding.UTF8.GetBytes(uniqueId));
             var hash = BitConverter.ToUInt32(hashBytes, 0);
             var traffic = hash % 100;
+
+            TrackingManager.TroubleshootingData = DecisionManager?.TroubleshootingData;
 
             Visitor.Traffic = traffic;
 

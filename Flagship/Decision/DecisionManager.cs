@@ -1,4 +1,5 @@
-﻿using Flagship.Config;
+﻿using Flagship.Api;
+using Flagship.Config;
 using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
@@ -42,6 +43,8 @@ namespace Flagship.Decision
         }
 
         abstract public Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
+
+        public ITrackingManager TrackingManager { get; set; }  
 
         public Task<ICollection<FlagDTO>> GetFlags(ICollection<Campaign> campaigns)
         {

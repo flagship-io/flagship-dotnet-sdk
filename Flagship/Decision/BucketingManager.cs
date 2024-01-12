@@ -146,12 +146,27 @@ namespace Flagship.Decision
             Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
         }
 
-        virtual public async void SendContextAsync(VisitorDelegateAbstract visitor)
+        virtual public async Task SendContextAsync(VisitorDelegateAbstract visitor)
         {
             try
             {
                 var segment = new Segment(visitor.Context);
                 await visitor.SendHit(segment);
+
+                var troubleshootingHit = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.VISITOR_SEND_HIT,
+                    LogLevel = LogLevel.INFO,
+                    Traffic = visitor.Traffic,
+                    VisitorSessionId = visitor.SessionId,
+                    FlagshipInstanceId = visitor.SdkInitialData.InstanceId,
+                    AnonymousId = visitor.AnonymousId,
+                    VisitorId = visitor.VisitorId,
+                    Config = Config,
+                    HitContent = segment.ToApiKeys()
+                };
+
+                visitor.SegmentHitTroubleshooting = troubleshootingHit;
             }
             catch (Exception ex)
             {
@@ -159,44 +174,41 @@ namespace Flagship.Decision
                 Log.LogError(Config, ex.Message, "SendContext");
             }
         }
-        public override Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
+        public override async Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
         {
-            return Task.Factory.StartNew(() =>
+            ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
+
+            if (BucketingContent == null)
             {
-                ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
-
-                if (BucketingContent == null)
-                {
-                    return campaigns;
-                }
-
-                if (BucketingContent.AccountSettings!=null)
-                {
-                    TroubleshootingData = BucketingContent.AccountSettings.Troubleshooting;
-                }
-
-                if (BucketingContent.Panic.HasValue && BucketingContent.Panic.Value)
-                {
-                    IsPanic = true;
-                    return campaigns;
-                }
-
-                IsPanic = false;
-
-                SendContextAsync(visitor);
-
-                foreach (var item in BucketingContent.Campaigns)
-                {
-                    var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id, item.Type);
-                    if (campaign != null)
-                    {
-                        campaign.Name = item.Name;
-                        campaigns.Add(campaign);
-                    }
-                }
-
                 return campaigns;
-            });
+            }
+
+            if (BucketingContent.AccountSettings != null)
+            {
+                TroubleshootingData = BucketingContent.AccountSettings.Troubleshooting;
+            }
+
+            if (BucketingContent.Panic.HasValue && BucketingContent.Panic.Value)
+            {
+                IsPanic = true;
+                return campaigns;
+            }
+
+            IsPanic = false;
+
+            await SendContextAsync(visitor);
+
+            foreach (var item in BucketingContent.Campaigns)
+            {
+                var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id, item.Type);
+                if (campaign != null)
+                {
+                    campaign.Name = item.Name;
+                    campaigns.Add(campaign);
+                }
+            }
+
+            return campaigns;
 
         }
 

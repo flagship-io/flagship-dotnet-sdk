@@ -164,7 +164,12 @@ namespace Flagship.FsVisitor
                     JsonConvert.SerializeObject(Visitor.Context),
                     JsonConvert.SerializeObject(Visitor.Flags)), FUNCTION_NAME);
 
-                _ = SendFetchFlagsTroubleshootingHit(campaigns, now);
+                if (DecisionManager?.TroubleshootingData != null)
+                {
+                    _ = SendFetchFlagsTroubleshootingHit(campaigns, now);
+                    _ = SendConsentHitTroubleshooting();
+                    _ = SendSegmentHitTroubleshooting();
+                }
 
                 _ = SendAnalyticHit();
              
@@ -212,6 +217,8 @@ namespace Flagship.FsVisitor
                 _ = TrackingManager.SendTroubleshootingHit(fetchFlagTroubleshootingHit);
             }
         }
+
+
 
         protected override async Task SendActivate(FlagDTO flag, object defaultValue = null)
         {
@@ -434,6 +441,11 @@ namespace Flagship.FsVisitor
                 }
 
                 await TrackingManager.Add(hit);
+
+                if (hit.Type == HitType.SEGMENT)
+                {
+                    return;
+                }
 
                 var troubleshootingHit = new Troubleshooting()
                 {

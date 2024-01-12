@@ -33,6 +33,11 @@ namespace Flagship.FsVisitor
         public FlagSyncStatus FlagSyncStatus { get; set; }
         public static FlagshipStatus SDKStatus { get; set; }
 
+        public Troubleshooting ConsentHitTroubleshooting { get; set; }
+
+        public Troubleshooting SegmentHitTroubleshooting { get; set; }
+
+
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null)
         {
             SdkInitialData = sdkInitialData;
@@ -97,7 +102,7 @@ namespace Flagship.FsVisitor
         virtual public void SetConsent(bool hasConsented)
         {
             _hasConsented = hasConsented;
-            _ = GetStrategy().SendConsentHitAsync(hasConsented);
+            GetStrategy().SendConsentHitAsync(hasConsented).Wait();
         }
 
         abstract public void ClearContext();

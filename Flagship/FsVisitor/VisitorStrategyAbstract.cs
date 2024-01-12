@@ -71,7 +71,12 @@ namespace Flagship.FsVisitor
                 HitContent = hitEvent.ToApiKeys()
             };
 
-            TrackingManager.AddTroubleshootingHit(troubleshootingHit);
+            if (DecisionManager.TroubleshootingData != null)
+            {
+                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                return;
+            }
+            Visitor.ConsentHitTroubleshooting = troubleshootingHit;
         }
 
         protected virtual void MigrateVisitorCacheData(JObject visitorData)
@@ -228,11 +233,6 @@ namespace Flagship.FsVisitor
 
         public async Task SendFetchFlagsTroubleshootingHit(ICollection<Campaign> campaigns, DateTime now)
         {
-            if (DecisionManager?.TroubleshootingData == null)
-            {
-                return;
-            }
-
             var uniqueId = Visitor.VisitorId + DecisionManager.TroubleshootingData.EndDate.ToString("u");
             var hashBytes = Murmur32.ComputeHash(Encoding.UTF8.GetBytes(uniqueId));
             var hash = BitConverter.ToUInt32(hashBytes, 0);
@@ -325,6 +325,30 @@ namespace Flagship.FsVisitor
             };
 
             await TrackingManager.SendAnalyticHit(analyticData);
+        }
+
+        public async Task SendConsentHitTroubleshooting()
+        {
+            var consentHitTroubleshooting = Visitor.ConsentHitTroubleshooting;
+            if (consentHitTroubleshooting == null)
+            {
+                return;
+            }
+            consentHitTroubleshooting.Traffic = Visitor.Traffic;
+            await TrackingManager.SendTroubleshootingHit(consentHitTroubleshooting);
+            Visitor.ConsentHitTroubleshooting = null;
+        }
+
+        public async Task SendSegmentHitTroubleshooting()
+        {
+            var segmentHitTroubleshooting = Visitor.SegmentHitTroubleshooting;
+            if (segmentHitTroubleshooting == null)
+            {
+                return;
+            }
+            segmentHitTroubleshooting.Traffic = Visitor.Traffic;
+            await TrackingManager.SendTroubleshootingHit(segmentHitTroubleshooting);
+            Visitor.SegmentHitTroubleshooting = null;
         }
         abstract public void ClearContext();
 

@@ -369,7 +369,7 @@ namespace Flagship.Api
 
             if (isFinished)
             {
-                return true;
+                return false;
             }
 
             return true;
@@ -468,7 +468,7 @@ namespace Flagship.Api
 
             _isTroubleshootingQueueSending = true;
 
-            foreach (var item in TroubleshootingQueue)
+            foreach (var item in TroubleshootingQueue.ToList())
             {
                 await SendTroubleshootingHit(item.Value);
             }

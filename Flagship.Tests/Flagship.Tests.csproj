@@ -73,6 +73,7 @@
     <Compile Include="Functional-test\TestCampaigns.cs" />
     <Compile Include="Hit\ActivateTests.cs" />
     <Compile Include="Hit\BatchTests.cs" />
+    <Compile Include="Hit\DiagnosticTests.cs" />
     <Compile Include="Hit\EventTests.cs" />
     <Compile Include="Hit\ItemTests.cs" />
     <Compile Include="Hit\PageTests.cs" />

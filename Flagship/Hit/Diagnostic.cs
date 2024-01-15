@@ -8,6 +8,15 @@ namespace Flagship.Hit
 {
     internal class Diagnostic : HitAbstract
     {
+        public const string TROUBLESHOOTING_VERSION = "version";
+        public const string LOG_LEVEL = "logLevel";
+        public const string TIMESTAMP = "timestamp";
+        public const string TIME_ZONE = "timeZone";
+        public const string LABEL = "label";
+        private const string STACK_TYPE = "stack.type";
+        private const string STACK_NAME = "stack.name";
+        private const string STACK_VERSION = "stack.version";
+
         public string Version { get; set; }
         public LogLevel LogLevel { get; set; }
         public string Timestamp { get; set; }
@@ -21,8 +30,6 @@ namespace Flagship.Hit
         public string StackType { get; set; }
         public string StackName { get; set; }
         public string StackVersion { get; set; }
-        public string StackOriginName { get; set; }
-        public string StackOriginVersion { get; set; }
 
         public FlagshipStatus? SdkStatus { get; set; }
         public DecisionMode? SdkConfigMode { get; set; }
@@ -49,7 +56,6 @@ namespace Flagship.Hit
         public object HttpResponseBody { get; set; }
         public int? HttpResponseTime { get; set; }
 
-        public string VisitorStatus { get; set; }
         public InstanceType? VisitorInstanceType { get; set; }
         public IDictionary<string, object> VisitorContext { get; set; }
         public bool? VisitorConsent { get; set; }
@@ -80,7 +86,6 @@ namespace Flagship.Hit
         public IDictionary<string, object> HitContent { get; set; }
         public CacheTriggeredBy? BatchTriggeredBy { get; set; }
 
-
         public Diagnostic(HitType type) : base(type)
         {
             Version = "1";
@@ -93,7 +98,7 @@ namespace Flagship.Hit
 
         internal override string GetErrorMessage()
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         internal override IDictionary<string, object> ToApiKeys()
@@ -108,14 +113,14 @@ namespace Flagship.Hit
 
             var customVariable = new Dictionary<string, string>()
             {
-                ["version"] = Version,
-                ["logLevel"] = $"{LogLevel}",
-                ["timestamp"] = Timestamp,
-                ["timeZone"] = TimeZone,
-                ["label"] = $"{Label}",
-                ["stack.type"] = StackType,
-                ["stack.name"] = StackName,
-                ["stack.version"] = StackVersion
+                [TROUBLESHOOTING_VERSION] = Version,
+                [LOG_LEVEL] = $"{LogLevel}",
+                [TIMESTAMP] = Timestamp,
+                [TIME_ZONE] = TimeZone,
+                [LABEL] = $"{Label}",
+                [STACK_TYPE] = StackType,
+                [STACK_NAME] = StackName,
+                [STACK_VERSION] = StackVersion
             };
 
             if (!string.IsNullOrWhiteSpace(FlagshipInstanceId))
@@ -141,16 +146,6 @@ namespace Flagship.Hit
             if (SdkBucketingFile!=null)
             {
                 customVariable["sdkBucketingFile"] = JsonConvert.SerializeObject(SdkBucketingFile);
-            }
-
-            if (!string.IsNullOrWhiteSpace(StackOriginName))
-            {
-                customVariable["stack.origin.name"] = StackOriginName;
-            }
-
-            if (!string.IsNullOrWhiteSpace(StackOriginVersion))
-            {
-                customVariable["stack.origin.version"] = StackOriginVersion;
             }
 
             if (SdkStatus != null)
@@ -272,11 +267,6 @@ namespace Flagship.Hit
             if (VisitorSessionId != null)
             {
                 customVariable["visitor.sessionId"] = VisitorSessionId;
-            }
-
-            if (VisitorStatus != null)
-            {
-                customVariable["visitor.status"] = VisitorStatus;
             }
 
             if (VisitorInstanceType != null)

@@ -34,10 +34,19 @@ namespace Flagship.FsVisitor.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
+                DisableDeveloperUsageTracking = true,
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
+
             trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var trackingManager = trackingManagerMock.Object;
+
             decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>(new object[] { null, null });
-            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+            
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManager, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>()
             {
@@ -225,6 +234,7 @@ namespace Flagship.FsVisitor.Tests
         async public Task FetchFlagsWithCacheV2Test()
         {
             ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+
             decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
                 .Returns(Task.FromResult(campaigns));
 

@@ -48,7 +48,7 @@ namespace Flagship.FsFlag.Tests
             var configManager = new ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>();
-            var visitorMock = new Mock<FsVisitor.VisitorDelegateAbstract>(new object[] { "visitorId", false, context, false, configManager });
+            var visitorMock = new Mock<FsVisitor.VisitorDelegateAbstract>(new object[] { "visitorId", false, context, false, configManager, null });
 
             visitorMock.Setup(x=> x.GetStrategy()).CallBase();
 
@@ -122,7 +122,7 @@ namespace Flagship.FsFlag.Tests
             var configManager = new ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>();
-            var visitorMock = new Mock<FsVisitor.VisitorDelegateAbstract>(new object[] { "visitorId", false, context, false, configManager });
+            var visitorMock = new Mock<FsVisitor.VisitorDelegateAbstract>(new object[] { "visitorId", false, context, false, configManager, null });
 
             visitorMock.Setup(x=> x.GetStrategy()).CallBase();
 

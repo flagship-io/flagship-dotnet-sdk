@@ -11,6 +11,9 @@ using Flagship.Tests.Data;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Flagship.Logger;
+using Flagship.Api;
+using Flagship.Config;
+using Flagship.Decision;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -23,21 +26,22 @@ namespace Flagship.FsVisitor.Tests
         {
             ["key"] = "value"
         };
-        Mock<Flagship.Config.IConfigManager> configManager;
+        Mock<Flagship.Config.ConfigManager> configManager;
         Mock<VisitorStrategyAbstract> defaultStrategy;
-
 
         public VisitorDelegateTests()
         {
+            var trackingManagerMock = new Mock<ITrackingManager>();
             var config = new Config.DecisionApiConfig();
-            configManager = new Mock<Flagship.Config.IConfigManager>()
+            var decisionManagerMock = new Mock<IDecisionManager>();
+
+            configManager = new Mock<Flagship.Config.ConfigManager>(config, decisionManagerMock.Object, trackingManagerMock.Object)
             {
                 CallBase = true
             };
-            configManager.Object.Config = config;
-            configManager.SetupGet(x => x.Config).Returns(config);
 
-            visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object });
+
+            visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object, null });
             visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
             defaultStrategy = new Mock<VisitorStrategyAbstract>(visitorDelegateMock.Object);
 
@@ -52,7 +56,7 @@ namespace Flagship.FsVisitor.Tests
         public void TestStrategy()
         {
             var flagship = new Mock<Flagship.Main.Fs>();
-            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object);
+            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object, null);
             var privateVisitor = new PrivateObject(visitorDelegate);
             privateVisitor.Invoke("GetStrategy");
         }
@@ -61,7 +65,7 @@ namespace Flagship.FsVisitor.Tests
         public void VisitorDelegateTest()
         {
             
-            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object );
+            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object, null );
 
             Assert.IsNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);

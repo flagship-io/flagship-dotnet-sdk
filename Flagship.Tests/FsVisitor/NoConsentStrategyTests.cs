@@ -93,7 +93,7 @@ namespace Flagship.FsVisitor.Tests
             {
                 ["key0"] = 1,
             };
-            var visitorDelegateMock = new Mock<VisitorDelegate>("visitorId", false, context, false, configManager) { CallBase = true };
+            var visitorDelegateMock = new Mock<VisitorDelegate>("visitorId", false, context, false, configManager, null) { CallBase = true };
 
             visitorDelegateMock.Setup(x => x.SetConsent(false));
             var visitorDelegate = visitorDelegateMock.Object;

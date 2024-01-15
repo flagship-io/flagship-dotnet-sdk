@@ -163,6 +163,10 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
 
             trackingManager.FlagshipInstanceId = instance._sdkInitialData.InstanceId;
 
+            decisionManager.FlagshipInstanceId = instance._sdkInitialData.InstanceId;
+
+            decisionManager.TrackingManager = trackingManager;
+
             decisionManager.StatusChange += DecisionManager_StatusChange;
 
             if (fsInstance._configManager == null)

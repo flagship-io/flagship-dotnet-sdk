@@ -36,6 +36,9 @@ namespace Flagship.Decision
 
         public HttpClient HttpClient { get; set; }
 
+        public string FlagshipInstanceId { get; set; }
+
+
         public DecisionManager(FlagshipConfig config, HttpClient httpClient)
         {
             Config = config;

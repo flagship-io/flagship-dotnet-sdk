@@ -28,5 +28,9 @@ namespace Flagship.Decision
 
         string LastBucketingTimestamp { get; set; }
 
+        string FlagshipInstanceId { get; set; }
+
+        ITrackingManager TrackingManager { get; set; }
+
     }
 }

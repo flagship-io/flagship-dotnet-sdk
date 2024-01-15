@@ -29,7 +29,7 @@ namespace Flagship.Decision
 
         protected Murmur32 _murmur32;
         protected bool _isPolling;
-        protected string _lastModified;
+        protected DateTimeOffset? _lastModified;
         private BucketingDTO bucketingContent;
         protected bool _isFirstPooling;
         new public BucketingConfig Config { get; set; }
@@ -72,6 +72,8 @@ namespace Flagship.Decision
 
         public async Task Polling()
         {
+            var now = DateTime.Now;
+            var url = string.Format(Constants.BUCKETING_API_URL, Config.EnvId);
             try
             {
                 if (_isPolling)
@@ -85,9 +87,6 @@ namespace Flagship.Decision
                     StatusChange?.Invoke(FlagshipStatus.POLLING);
                 }
 
-                var url = string.Format(Constants.BUCKETING_API_URL, Config.EnvId);
-
-
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
 
                 requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
@@ -98,7 +97,7 @@ namespace Flagship.Decision
 
                 if (_lastModified != null)
                 {
-                    requestMessage.Headers.Add(HttpRequestHeader.IfModifiedSince.ToString(), _lastModified);
+                    requestMessage.Headers.IfModifiedSince = _lastModified;
                 }
 
                 var response = await HttpClient.SendAsync(requestMessage);
@@ -109,12 +108,32 @@ namespace Flagship.Decision
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
                     LastBucketingTimestamp = DateTime.Now.ToUniversalTime().ToString("u");
+
+                    var troubleshootingHit = new Troubleshooting()
+                    {
+                        Label = DiagnosticLabel.SDK_BUCKETING_FILE,
+                        LogLevel = LogLevel.INFO,
+                        VisitorId = FlagshipInstanceId,
+                        FlagshipInstanceId = FlagshipInstanceId,
+                        Traffic = 0,
+                        Config = Config,
+                        HttpResponseTime = (DateTime.Now - now).Milliseconds,
+                        HttpRequestHeaders = new Dictionary<string, object>()
+                        {
+                            [Constants.HEADER_X_API_KEY] = Config.ApiKey,
+                            [Constants.HEADER_X_SDK_CLIENT] = Constants.SDK_LANGUAGE,
+                            [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION
+                        },
+                        HttpRequestMethod = "POST",
+                        HttpRequestUrl = url,
+                        HttpResponseBody = BucketingContent,
+                        HttpResponseCode = (int?)response.StatusCode
+                    };
+
+                    TrackingManager.AddTroubleshootingHit(troubleshootingHit);
                 }
 
-                if (response.Headers.TryGetValues(HttpResponseHeader.LastModified.ToString(), out IEnumerable<string> lastModified))
-                {
-                    _lastModified = lastModified.First();
-                };
+                _lastModified = response.Content.Headers.LastModified;
 
                 if (_isFirstPooling)
                 {
@@ -133,6 +152,28 @@ namespace Flagship.Decision
                     StatusChange?.Invoke(FlagshipStatus.NOT_INITIALIZED);
                 }
                 Log.LogError(Config, ex.Message, "Polling");
+
+                var troubleshootingHit = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SDK_BUCKETING_FILE,
+                    LogLevel = LogLevel.INFO,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpResponseTime = (DateTime.Now - now).Milliseconds,
+                    HttpRequestHeaders = new Dictionary<string, object>()
+                    {
+                        [Constants.HEADER_X_API_KEY] = Config.ApiKey,
+                        [Constants.HEADER_X_SDK_CLIENT] = Constants.SDK_LANGUAGE,
+                        [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION
+                    },
+                    HttpRequestMethod = "POST",
+                    HttpRequestUrl = url,
+                    HttpResponseBody = ex.Message
+                };
+
+                TrackingManager?.AddTroubleshootingHit(troubleshootingHit);
             }
         }
 

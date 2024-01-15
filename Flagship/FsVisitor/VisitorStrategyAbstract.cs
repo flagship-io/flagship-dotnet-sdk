@@ -64,7 +64,7 @@ namespace Flagship.FsVisitor
                 LogLevel = LogLevel.INFO,
                 Traffic = Visitor.Traffic,
                 VisitorSessionId = Visitor.SessionId,
-                FlagshipInstanceId = Visitor.SdkInitialData.InstanceId,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
                 AnonymousId = Visitor.AnonymousId,
                 VisitorId = Visitor.VisitorId,
                 Config = Config,

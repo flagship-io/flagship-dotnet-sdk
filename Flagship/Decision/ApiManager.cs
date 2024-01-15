@@ -85,7 +85,7 @@ namespace Flagship.Decision
                     Label = DiagnosticLabel.SEND_ACTIVATE_HIT_ROUTE_ERROR,
                     LogLevel = LogLevel.ERROR,
                     VisitorId = visitor.VisitorId,
-                    FlagshipInstanceId = visitor.SdkInitialData.InstanceId,
+                    FlagshipInstanceId = visitor.SdkInitialData?.InstanceId,
                     Traffic = 0,
                     Config = Config,
                     HttpRequestUrl = Constants.HIT_EVENT_URL,

@@ -80,6 +80,8 @@
     <Compile Include="Hit\ScreenTests.cs" />
     <Compile Include="Hit\SegmentTests.cs" />
     <Compile Include="Hit\TransactionTests.cs" />
+    <Compile Include="Hit\TroubleshootingTests.cs" />
+    <Compile Include="Hit\UsageHitTests.cs" />
     <Compile Include="Main\FlagshipTests.cs" />
     <Compile Include="Model\Bucketing\CampaignTests.cs" />
     <Compile Include="Model\CampaignTests.cs" />

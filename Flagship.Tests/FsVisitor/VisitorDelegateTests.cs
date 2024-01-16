@@ -14,6 +14,7 @@ using Flagship.Logger;
 using Flagship.Api;
 using Flagship.Config;
 using Flagship.Decision;
+using Flagship.Hit;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -28,10 +29,10 @@ namespace Flagship.FsVisitor.Tests
         };
         Mock<Flagship.Config.ConfigManager> configManager;
         Mock<VisitorStrategyAbstract> defaultStrategy;
+        Mock<ITrackingManager> trackingManagerMock = new Mock<ITrackingManager>();
 
         public VisitorDelegateTests()
         {
-            var trackingManagerMock = new Mock<ITrackingManager>();
             var config = new Config.DecisionApiConfig();
             var decisionManagerMock = new Mock<IDecisionManager>();
 
@@ -39,7 +40,6 @@ namespace Flagship.FsVisitor.Tests
             {
                 CallBase = true
             };
-
 
             visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object, null });
             visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
@@ -293,6 +293,7 @@ namespace Flagship.FsVisitor.Tests
             var visitorId = "newVisitorID";
             defaultStrategy.Setup(x => x.Authenticate(visitorId))
             .Verifiable();
+
             visitorDelegateMock.Object.Authenticate(visitorId);
 
             defaultStrategy.Verify(x=>x.Authenticate(visitorId),Times.Once());

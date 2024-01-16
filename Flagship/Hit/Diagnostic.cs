@@ -13,9 +13,34 @@ namespace Flagship.Hit
         public const string TIMESTAMP = "timestamp";
         public const string TIME_ZONE = "timeZone";
         public const string LABEL = "label";
-        private const string STACK_TYPE = "stack.type";
-        private const string STACK_NAME = "stack.name";
-        private const string STACK_VERSION = "stack.version";
+        public const string STACK_TYPE = "stack.type";
+        public const string STACK_NAME = "stack.name";
+        public const string STACK_VERSION = "stack.version";
+        public const string FLAGSHIP_INSTANCE_ID = "flagshipInstanceId";
+        public const string LAST_INITIALIZATION_TIMESTAMP = "lastInitializationTimestamp";
+        public const string LAST_BUCKETING_TIMESTAMP = "lastBucketingTimestamp";
+        public const string ENV_ID = "envId";
+        public const string SDK_BUCKETING_FILE = "sdkBucketingFile";
+        public const string SDK_STATUS = "sdk.status";
+        public const string SDK_CONFIG_MODE = "sdk.config.mode";
+        public const string SDK_CONFIG_TIMEOUT = "sdk.config.timeout";
+        public const string SDK_CONFIG_POLLING_TIME = "sdk.config.pollingTime";
+        public const string SDK_CONFIG_TRACKING_MANAGER_STRATEGY = "sdk.config.trackingManager.strategy";
+        public const string SDK_CONFIG_TRACKING_MANAGER_BATCH_INTERVALS = "sdk.config.trackingManager.batchIntervals";
+        public const string SDK_CONFIG_TRACKING_MANAGER_POOL_MAX_SIZE = "sdk.config.trackingManager.poolMaxSize";
+        public const string SDK_CONFIG_USING_CUSTOM_HIT_CACHE = "sdk.config.usingCustomHitCache";
+        public const string SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE = "sdk.config.usingCustomVisitorCache";
+        public const string SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED = "sdk.config.usingOnVisitorExposed";
+        public const string SDK_CONFIG_DISABLE_CACHE = "sdk.config.disableCache";
+        public const string METHOD = "method";
+        public const string HTTP = "http";
+        public const string REQUEST = "request";
+        public const string HEADERS = "headers";
+        public const string BODY = "body";
+        public const string RESPONSE = "response";
+        public const string URL = "url"; 
+        public const string CODE = "code";
+        public const string TIME = "time";
 
         public string Version { get; set; }
         public LogLevel LogLevel { get; set; }
@@ -125,133 +150,133 @@ namespace Flagship.Hit
 
             if (!string.IsNullOrWhiteSpace(FlagshipInstanceId))
             {
-                customVariable["flagshipInstanceId"] = FlagshipInstanceId;
+                customVariable[FLAGSHIP_INSTANCE_ID] = FlagshipInstanceId;
             }
 
             if (!string.IsNullOrWhiteSpace(LastInitializationTimestamp))
             {
-                customVariable["lastInitializationTimestamp"] = LastInitializationTimestamp;
+                customVariable[LAST_INITIALIZATION_TIMESTAMP] = LastInitializationTimestamp;
             }
 
             if (!string.IsNullOrWhiteSpace(LastBucketingTimestamp))
             {
-                customVariable["lastBucketingTimestamp"] = LastBucketingTimestamp;
+                customVariable[LAST_BUCKETING_TIMESTAMP] = LastBucketingTimestamp;
             }
 
             if (!string.IsNullOrWhiteSpace(Config?.EnvId))
             {
-                customVariable["envId"] = Config?.EnvId;
+                customVariable[ENV_ID] = Config?.EnvId;
             }
 
             if (SdkBucketingFile!=null)
             {
-                customVariable["sdkBucketingFile"] = JsonConvert.SerializeObject(SdkBucketingFile);
+                customVariable[SDK_BUCKETING_FILE] = JsonConvert.SerializeObject(SdkBucketingFile);
             }
 
             if (SdkStatus != null)
             {
-                customVariable["sdk.status"] = $"{SdkStatus}";
+                customVariable[SDK_STATUS] = $"{SdkStatus}";
             }
 
             if (SdkConfigMode != null)
 
             {
-                customVariable["sdk.config.mode"] = $"{SdkConfigMode}";
+                customVariable[SDK_CONFIG_MODE] = $"{SdkConfigMode}";
             }
 
             if (SdkConfigTimeout != null)
             {
-                customVariable["sdk.config.timeout"] = SdkConfigTimeout.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_TIMEOUT] = SdkConfigTimeout.GetValueOrDefault().ToString();
             }
 
             if (SdkConfigPollingInterval != null)
             {
-                customVariable["sdk.config.pollingTime"] = SdkConfigPollingInterval.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_POLLING_TIME] = SdkConfigPollingInterval.GetValueOrDefault().ToString();
             }
 
             if (SdkConfigTrackingManagerConfigStrategy != null)
             {
-                customVariable["sdk.config.trackingManager.strategy"] = $"{SdkConfigTrackingManagerConfigStrategy}";
+                customVariable[SDK_CONFIG_TRACKING_MANAGER_STRATEGY] = $"{SdkConfigTrackingManagerConfigStrategy}";
             }
 
             if (SdkConfigTrackingManagerConfigBatchIntervals != null)
             {
-                customVariable["sdk.config.trackingManager.batchIntervals"] = SdkConfigTrackingManagerConfigBatchIntervals.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_TRACKING_MANAGER_BATCH_INTERVALS] = SdkConfigTrackingManagerConfigBatchIntervals.GetValueOrDefault().ToString();
             }
 
             if (SdkConfigTrackingManagerConfigPoolMaxSize != null)
             {
-                customVariable["sdk.config.trackingManager.poolMaxSize"] = SdkConfigTrackingManagerConfigPoolMaxSize.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_TRACKING_MANAGER_POOL_MAX_SIZE] = SdkConfigTrackingManagerConfigPoolMaxSize.GetValueOrDefault().ToString();
             }
 
             if (SdkConfigUsingCustomHitCache != null)
             {
-                customVariable["sdk.config.usingCustomHitCache"] = SdkConfigUsingCustomHitCache.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_USING_CUSTOM_HIT_CACHE] = SdkConfigUsingCustomHitCache.GetValueOrDefault().ToString();
             }
 
             if (SdkConfigUsingCustomVisitorCache != null)
             {
-                customVariable["sdk.config.usingCustomVisitorCache"] = SdkConfigUsingCustomVisitorCache.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE] = SdkConfigUsingCustomVisitorCache.GetValueOrDefault().ToString();
             }
 
             if (SdkConfigUsingOnVisitorExposed != null)
             {
-                customVariable["sdk.config.usingOnVisitorExposed"] = SdkConfigUsingOnVisitorExposed.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED] = SdkConfigUsingOnVisitorExposed.GetValueOrDefault().ToString();
             }
 
             if (SdkConfigDisableCache != null)
             {
-                customVariable["sdk.config.disableCache"] = SdkConfigDisableCache.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_DISABLE_CACHE] = SdkConfigDisableCache.GetValueOrDefault().ToString();
             }
 
             if (HttpRequestUrl != null)
             {
-                customVariable["http.request.url"] = HttpRequestUrl;
+                customVariable[$"{HTTP}.{REQUEST}.{URL}"] = HttpRequestUrl;
             }
 
             if (HttpRequestMethod != null)
             {
-                customVariable["http.request.method"] = HttpRequestMethod;
+                customVariable[$"{HTTP}.{REQUEST}.{METHOD}"] = HttpRequestMethod;
             }
 
             if (HttpRequestHeaders != null)
             {
-                customVariable["http.request.headers"] = JsonConvert.SerializeObject(HttpRequestHeaders);
+                customVariable[$"{HTTP}.{REQUEST}.{HEADERS}"] = JsonConvert.SerializeObject(HttpRequestHeaders);
             }
 
             if (HttpsRequestBody != null)
             {
-                customVariable["http.request.body"] = JsonConvert.SerializeObject(HttpsRequestBody);
+                customVariable[$"{HTTP}.{REQUEST}.{BODY}"] = JsonConvert.SerializeObject(HttpsRequestBody);
             }
 
             if (HttpResponseUrl != null)
             {
-                customVariable["http.response.url"] = HttpResponseUrl;
+                customVariable[$"{HTTP}.{RESPONSE}.{URL}"] = HttpResponseUrl;
             }
 
             if (HttpResponseMethod != null)
             {
-                customVariable["http.response.method"] = HttpResponseMethod;
+                customVariable[$"{HTTP}.{RESPONSE}.{METHOD}"] = HttpResponseMethod;
             }
 
             if (HttpResponseHeaders != null)
             {
-                customVariable["http.response.headers"] = JsonConvert.SerializeObject(HttpResponseHeaders);
+                customVariable[$"{HTTP}.{RESPONSE}.{HEADERS}"] = JsonConvert.SerializeObject(HttpResponseHeaders);
             }
 
             if (HttpResponseCode != null)
             {
-                customVariable["http.response.code"] = HttpResponseCode.GetValueOrDefault().ToString();
+                customVariable[$"{HTTP}.{RESPONSE}.{CODE}"] = HttpResponseCode.GetValueOrDefault().ToString();
             }
 
             if (HttpResponseBody != null)
             {
-                customVariable["http.response.body"] = JsonConvert.SerializeObject(HttpResponseBody);
+                customVariable[$"{HTTP}.{RESPONSE}.{BODY}"] = JsonConvert.SerializeObject(HttpResponseBody);
             }
 
             if (HttpResponseTime != null)
             {
-                customVariable["http.response.time"] = HttpResponseTime.GetValueOrDefault().ToString();
+                customVariable[$"{HTTP}.{RESPONSE}.{TIME}"] = HttpResponseTime.GetValueOrDefault().ToString();
             }
 
             if (VisitorId!=null)

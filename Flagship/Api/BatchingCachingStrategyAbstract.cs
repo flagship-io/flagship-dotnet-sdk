@@ -459,7 +459,7 @@ namespace Flagship.Api
             }
         }
 
-        public async  Task SendTroubleshootingQueue()
+        public virtual async  Task SendTroubleshootingQueue()
         {
             if (!IsTroubleshootingActivated() || _isTroubleshootingQueueSending || TroubleshootingQueue.Count == 0)
             {
@@ -548,7 +548,7 @@ namespace Flagship.Api
             }
         }
 
-        public async Task SendUsageHitQueue() 
+        public virtual async Task SendUsageHitQueue() 
         {
             if (_isAnalyticQueueSending || UsageHitQueue.Count == 0)
             {

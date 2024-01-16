@@ -619,6 +619,7 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item=> item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
             shimeContext.Dispose();
@@ -1068,6 +1069,7 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y=> y.ContainsValue(activate))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
         }
@@ -1432,6 +1434,664 @@ namespace Flagship.Api.Tests
             fsLogManagerMock.Verify(x => x.Error(exception.Message, BatchingCachingStrategyAbstract.PROCESS_FLUSH_HIT), Times.Once());
 
 
+        }
+
+        [TestMethod()]
+        public void AddTroubleshootingHitTest() 
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            var troubleshooting = new Troubleshooting();
+
+            strategy.AddTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitTest() 
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var troubleshooting = new Troubleshooting()
+            {
+                Key = hitKey,
+                Config= config,
+                Traffic = 50
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(troubleshooting.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.TROUBLESHOOTING_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            var strategy = strategyMock.Object;
+
+            strategy.TroubleshootingQueue.Add(hitKey, troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            strategy.TroubleshootingData = new TroubleshootingData()
+            {
+                Traffic = 40
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(false);
+
+            await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            strategy.TroubleshootingData.Traffic = 100;
+
+           await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(0, strategy.TroubleshootingQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once() , new object[] { 
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            } );
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitFailedTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig() 
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.BadRequest,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var troubleshooting = new Troubleshooting()
+            {
+                Config = config,
+                Traffic = 100
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(troubleshooting.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.TROUBLESHOOTING_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            var strategy = strategyMock.Object;
+
+            strategy.TroubleshootingData = new TroubleshootingData()
+            {
+                Traffic = 100
+            };
+
+            await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            httpResponse.Dispose();
+        }
+
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitQueueTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var troubleshooting = new Troubleshooting()
+            {
+                Key = hitKey,
+                Config = config,
+                Traffic = 50
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(false);
+
+            strategyMock.Setup(x => x.SendTroubleshootingHit(troubleshooting)).Returns(Task.CompletedTask);
+
+            var strategy = strategyMock.Object;
+
+            await strategy.SendTroubleshootingQueue();
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            strategy.TroubleshootingQueue.Add(hitKey, troubleshooting);
+
+            await strategy.SendTroubleshootingQueue();
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Never(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            strategyMock.Verify(x => x.SendTroubleshootingHit(troubleshooting), Times.Once());
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public void AddUsageHitTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            var usageHit = new UsageHit();
+
+            strategy.AddUsageHit(usageHit);
+
+            Assert.AreEqual(1, strategy.UsageHitQueue.Count);
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendUsageHitTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var usageHit = new UsageHit()
+            {
+                Key = hitKey,
+                Config = config
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(usageHit.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.ANALYTICS_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+
+            var strategy = strategyMock.Object;
+
+            strategy.UsageHitQueue.Add(hitKey, usageHit);
+
+            Assert.AreEqual(1, strategy.UsageHitQueue.Count);
+
+            strategy.TroubleshootingData = new TroubleshootingData()
+            {
+                Traffic = 40
+            };
+
+            await strategy.SendUsageHit(usageHit);
+
+            Assert.AreEqual(0, strategy.UsageHitQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendUsageHitFailedTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.BadRequest,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var usageHit = new UsageHit()
+            {
+                Config = config
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(usageHit.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.ANALYTICS_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            await strategy.SendUsageHit(usageHit);
+
+            Assert.AreEqual(1, strategy.UsageHitQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendUsageHitQueueTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var usageHit = new UsageHit()
+            {
+                Key = hitKey,
+                Config = config
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+
+            strategyMock.Setup(x => x.SendUsageHit(usageHit)).Returns(Task.CompletedTask);
+
+            var strategy = strategyMock.Object;
+
+            await strategy.SendUsageHitQueue();
+
+            strategy.UsageHitQueue.Add(hitKey, usageHit);
+
+            await strategy.SendUsageHitQueue();
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Never(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            strategyMock.Verify(x => x.SendUsageHit(usageHit), Times.Once());
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public void IsTroubleshootingActivatedTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var usageHit = new UsageHit()
+            {
+                Key = hitKey,
+                Config = config
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
+            var activatePoolQueue = new Dictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            var check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsFalse(check);
+
+            strategy.TroubleshootingData = new TroubleshootingData
+            {
+                StartDate = DateTime.Now.ToUniversalTime().AddMinutes(5),
+            };
+
+            check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsFalse(check);
+
+            strategy.TroubleshootingData = new TroubleshootingData
+            {
+                StartDate = DateTime.Now.ToUniversalTime().AddMinutes(-2),
+                EndDate = DateTime.Now.ToUniversalTime().AddSeconds(-10),
+            };
+
+            check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsFalse(check);
+
+            strategy.TroubleshootingData = new TroubleshootingData
+            {
+                StartDate = DateTime.Now.ToUniversalTime().AddMinutes(-2),
+                EndDate = DateTime.Now.ToUniversalTime().AddMinutes(10),
+            };
+
+            check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsTrue(check);
+
+            httpResponse.Dispose();
         }
 
     }

@@ -75,8 +75,6 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
-            //fsLogManagerMock.Verify(x => x.Debug(string.Format(BatchingCachingStrategyAbstract.HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(page.ToApiKeys())), 
-            //    BatchingCachingStrategyAbstract.ADD_HIT), Times.Once());
         }
 
         [TestMethod()]
@@ -158,7 +156,6 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(hitsPoolQueue), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
-
             httpResponse.Dispose();
             shimeContext.Dispose();
         }
@@ -332,6 +329,7 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(hitsPoolQueue), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
             shimeContext.Dispose();
@@ -861,6 +859,7 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
         }

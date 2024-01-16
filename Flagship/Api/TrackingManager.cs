@@ -86,7 +86,7 @@ namespace Flagship.Api
         {
             await Strategy.SendBatch(batchTriggeredBy);
             await Strategy.SendTroubleshootingQueue();
-            await Strategy.SendAnalyticQueue();
+            await Strategy.SendUsageHitQueue();
         }
 
         public void StartBatchingLoop()
@@ -224,17 +224,17 @@ namespace Flagship.Api
             }
         }
 
-        public async Task SendTroubleshootingHit(Troubleshooting hit)
+        public virtual async Task SendTroubleshootingHit(Troubleshooting hit)
         {
             await Strategy.SendTroubleshootingHit(hit);
         }
 
-        public async Task SendAnalyticHit(Analytic hit)
+        public virtual async Task SendUsageHit(UsageHit hit)
         {
-            await Strategy.SendAnalyticHit(hit);
+            await Strategy.SendUsageHit(hit);
         }
 
-        public void AddTroubleshootingHit(Troubleshooting hit)
+        public virtual void AddTroubleshootingHit(Troubleshooting hit)
         {
             Strategy.AddTroubleshootingHit(hit);
         }

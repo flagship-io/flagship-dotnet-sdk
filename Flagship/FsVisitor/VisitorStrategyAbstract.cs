@@ -305,7 +305,7 @@ namespace Flagship.FsVisitor
                 return;
             }
 
-            var analyticData = new Analytic()
+            var analyticData = new UsageHit()
             {
                 Label= DiagnosticLabel.SDK_CONFIG,
                 LogLevel= LogLevel.INFO,
@@ -324,7 +324,7 @@ namespace Flagship.FsVisitor
                 SdkConfigDisableCache = Config.DisableCache
             };
 
-            await TrackingManager.SendAnalyticHit(analyticData);
+            await TrackingManager.SendUsageHit(analyticData);
         }
 
         public async Task SendConsentHitTroubleshooting()

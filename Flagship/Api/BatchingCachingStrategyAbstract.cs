@@ -55,7 +55,7 @@ namespace Flagship.Api
         public Dictionary<string,HitAbstract> HitsPoolQueue { get; set; }
         public Dictionary<string, Activate> ActivatePoolQueue { get; set; }
         public Dictionary<string, Troubleshooting> TroubleshootingQueue { get; set; } 
-        public Dictionary<string, Analytic> AnalyticQueue { get; set; }
+        public Dictionary<string, UsageHit> UsageHitQueue { get; set; }
         bool _isAnalyticQueueSending;
 
         public TroubleshootingData TroubleshootingData { get; set; }
@@ -71,7 +71,7 @@ namespace Flagship.Api
             HitsPoolQueue = hitsPoolQueue;
             ActivatePoolQueue = activatePoolQueue;
             TroubleshootingQueue = new Dictionary<string, Troubleshooting>();
-            AnalyticQueue = new Dictionary<string, Analytic>();
+            UsageHitQueue = new Dictionary<string, UsageHit>();
         }
 
         abstract public Task Add(HitAbstract hit);
@@ -375,7 +375,7 @@ namespace Flagship.Api
             return true;
         }
 
-        public void AddTroubleshootingHit(Troubleshooting hit)
+        public virtual void AddTroubleshootingHit(Troubleshooting hit)
         {
             if (string.IsNullOrWhiteSpace(hit.Key))
             {
@@ -478,23 +478,18 @@ namespace Flagship.Api
 
         #region Analytic
 
-        public void AddAnalyticHit(Analytic hit) 
+        public virtual void AddUsageHit(UsageHit hit) 
         {
-            if (!IsTroubleshootingActivated())
-            {
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(hit.Key))
             {
                 hit.Key = $"{hit.VisitorId}:{Guid.NewGuid()}";
             }
 
-            AnalyticQueue[hit.Key] = hit;
+            UsageHitQueue[hit.Key] = hit;
 
             Logger.Log.LogDebug(Config, string.Format(HIT_ANALYTIC_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_ANALYTIC_HIT);
         }
-        public async virtual Task SendAnalyticHit(Analytic hit)
+        public async virtual Task SendUsageHit(UsageHit hit)
         {
             var url = Constants.ANALYTICS_HIT_URL;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
@@ -536,12 +531,12 @@ namespace Flagship.Api
 
                 if (!string.IsNullOrWhiteSpace(hit.Key))
                 {
-                    AnalyticQueue.Remove(hit.Key);
+                    UsageHitQueue.Remove(hit.Key);
                 }
             }
             catch (Exception ex)
             {
-                AddAnalyticHit(hit);
+                AddUsageHit(hit);
 
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {
@@ -553,18 +548,18 @@ namespace Flagship.Api
             }
         }
 
-        public async Task SendAnalyticQueue() 
+        public async Task SendUsageHitQueue() 
         {
-            if (_isAnalyticQueueSending || AnalyticQueue.Count == 0)
+            if (_isAnalyticQueueSending || UsageHitQueue.Count == 0)
             {
                 return;
             }
 
             _isAnalyticQueueSending = true;
 
-            foreach (var item in AnalyticQueue)
+            foreach (var item in UsageHitQueue)
             {
-                await SendAnalyticHit(item.Value);
+                await SendUsageHit(item.Value);
             }
 
             _isAnalyticQueueSending = false;

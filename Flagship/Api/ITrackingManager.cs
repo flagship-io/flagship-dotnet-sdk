@@ -19,7 +19,7 @@ namespace Flagship.Api
 
         Task SendTroubleshootingHit(Troubleshooting hit);
         void AddTroubleshootingHit(Troubleshooting hit);
-        Task SendAnalyticHit(Analytic hit); 
+        Task SendUsageHit(UsageHit hit); 
 
         TroubleshootingData TroubleshootingData {  set; }
     }

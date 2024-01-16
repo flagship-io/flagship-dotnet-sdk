@@ -9,6 +9,14 @@ using Flagship.Enums;
 using System.Reflection.Emit;
 using Flagship.Model.Bucketing;
 using Flagship.Model;
+using System.Diagnostics;
+using Newtonsoft.Json;
+using static System.Net.WebRequestMethods;
+using System.Security.Policy;
+using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting.Contexts;
+using Newtonsoft.Json.Linq;
+using Moq;
 
 namespace Flagship.Hit.Tests
 {
@@ -23,10 +31,11 @@ namespace Flagship.Hit.Tests
                 EnvId = "envID",
                 ApiKey = "apiKey"
             };
-
+            var timestamp = new DateTime().ToUniversalTime().ToString("u:");
             var visitorId = "visitorId";
             var anonymousId = "anonymousId";
             var label = DiagnosticLabel.VISITOR_AUTHENTICATE;
+            var logLevel = LogLevel.INFO;
             var lastInitializationTimestamp = DateTime.Now.ToString();
             var lastBucketingTimestamp = DateTime.Now.ToString();
             uint traffic = 50;
@@ -49,7 +58,7 @@ namespace Flagship.Hit.Tests
             {
                 ["key"] = "value"
             };
-            var httpsRequestBody = new Dictionary<string, object>()
+            var httpRequestBody = new Dictionary<string, object>()
             {
                 ["key-body"] = "value"
             };
@@ -75,9 +84,16 @@ namespace Flagship.Hit.Tests
             {
                 ["campaignId"] = "variationId"
             };
+
+            var flagDto = new FlagDTO()
+            {
+                Key = "key",
+                Value = "value",
+                CampaignId = "campaignId"
+            };
             var visitorFlags = new List<FlagDTO>()
             {
-                new FlagDTO()
+                flagDto
             };
             var visitorCampaigns = new List<Model.Campaign>();
             var visitorIsAuthenticated = true;
@@ -97,74 +113,169 @@ namespace Flagship.Hit.Tests
             var flagMetadataCampaignSlug = "FlagMetadataCampaignSlug";
             var flagMetadataCampaignType = "FlagMetadataCampaignType";
             var flagMetadataCampaignIsReference = true;
-            var hitContent = new Page("https://test.com");
+            var hitContent = new Page("https://test.com").ToApiKeys();
             var batchTriggeredBy = CacheTriggeredBy.BatchLength;
 
-            var diagnostic = new Diagnostic(HitType.TROUBLESHOOTING)
-            {
-                VisitorId= visitorId,
-                AnonymousId = anonymousId,
-                Config = config,
-                Label = label,
-                LastInitializationTimestamp = lastInitializationTimestamp,
-                LastBucketingTimestamp = lastBucketingTimestamp,
-                Traffic = traffic,
-                FlagshipInstanceId = flagshipInstanceId,
-                SdkStatus = sdkStatus,
-                SdkConfigMode = sdkConfigMode,
-                SdkConfigTimeout = sdkConfigTimeout,
-                SdkConfigPollingInterval = sdkConfigPollingInterval,
-                SdkBucketingFile = sdkBucketingFile,
-                SdkConfigTrackingManagerConfigStrategy = sdkConfigTrackingManagerConfigStrategy,
-                SdkConfigTrackingManagerConfigBatchIntervals = sdkConfigTrackingManagerConfigBatchIntervals,
-                SdkConfigTrackingManagerConfigPoolMaxSize = sdkConfigTrackingManagerConfigPoolMaxSize,
-                SdkConfigUsingCustomHitCache = sdkConfigUsingCustomHitCache,
-                SdkConfigUsingCustomVisitorCache = sdkConfigUsingCustomVisitorCache,
-                SdkConfigUsingOnVisitorExposed = sdkConfigUsingOnVisitorExposed,
-                SdkConfigDisableCache = sdkConfigDisableCache,
-                HttpRequestUrl = httpRequestUrl,
-                HttpRequestMethod = httpRequestMethod,
-                HttpRequestHeaders = httpRequestHeaders,
-                HttpsRequestBody = httpsRequestBody,
-                HttpResponseUrl = httpResponseUrl,
-                HttpResponseMethod = httpResponseMethod,
-                HttpResponseHeaders = httpResponseHeaders,
-                HttpResponseCode = httpResponseCode,
-                HttpResponseBody = httpResponseBody,
-                HttpResponseTime = httpResponseTime,
-                VisitorInstanceType = visitorInstanceType,
-                VisitorContext = VisitorContext,
-                VisitorConsent = visitorConsent,
-                VisitorAssignmentHistory = visitorAssignmentHistory,
-                VisitorFlags = visitorFlags,
-                VisitorCampaigns = visitorCampaigns,
-                VisitorIsAuthenticated = visitorIsAuthenticated,
-                VisitorSessionId = visitorSessionId,
-                ContextKey = contextKey,
-                ContextValue = contextValue,
-                FlagKey = flagKey,
-                FlagValue = flagValue,
-                FlagDefaultValue = flagDefaultValue,
-                VisitorExposed = visitorExposed,
-                FlagMetadataCampaignId = flagMetadataCampaignId,
-                FlagMetadataCampaignName = flagMetadataCampaignName,
-                FlagMetadataVariationGroupId = flagMetadataVariationGroupId,
-                FlagMetadataVariationGroupName= flagMetadataVariationGroupName,
-                FlagMetadataVariationId = flagMetadataVariationId,
-                FlagMetadataVariationName = flagMetadataVariationName,
-                FlagMetadataCampaignSlug = flagMetadataCampaignSlug,
-                FlagMetadataCampaignType = flagMetadataCampaignType,
-                FlagMetadataCampaignIsReference = flagMetadataCampaignIsReference,
-                HitContent = hitContent.ToApiKeys(),
-                BatchTriggeredBy = batchTriggeredBy
-            };
+            var diagnosticMock = new Mock<Diagnostic>(HitType.TROUBLESHOOTING) { CallBase = true };
+
+            var currentTime = DateTime.Now;
+            diagnosticMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+
+            var diagnostic = diagnosticMock.Object;
+
+            diagnostic.VisitorId = visitorId;
+            diagnostic.AnonymousId = anonymousId;
+            diagnostic.Config = config;
+            diagnostic.Label = label;
+            diagnostic.LogLevel = logLevel;
+            diagnostic.LastInitializationTimestamp = lastInitializationTimestamp;
+            diagnostic.LastBucketingTimestamp = lastBucketingTimestamp;
+            diagnostic.Timestamp = timestamp;
+            diagnostic.Traffic = traffic;
+            diagnostic.FlagshipInstanceId = flagshipInstanceId;
+            diagnostic.SdkStatus = sdkStatus;
+            diagnostic.SdkConfigMode = sdkConfigMode;
+            diagnostic.SdkConfigTimeout = sdkConfigTimeout;
+            diagnostic.SdkConfigPollingInterval = sdkConfigPollingInterval;
+            diagnostic.SdkBucketingFile = sdkBucketingFile;
+            diagnostic.SdkConfigTrackingManagerConfigStrategy = sdkConfigTrackingManagerConfigStrategy;
+            diagnostic.SdkConfigTrackingManagerConfigBatchIntervals = sdkConfigTrackingManagerConfigBatchIntervals;
+            diagnostic.SdkConfigTrackingManagerConfigPoolMaxSize = sdkConfigTrackingManagerConfigPoolMaxSize;
+            diagnostic.SdkConfigUsingCustomHitCache = sdkConfigUsingCustomHitCache;
+            diagnostic.SdkConfigUsingCustomVisitorCache = sdkConfigUsingCustomVisitorCache;
+            diagnostic.SdkConfigUsingOnVisitorExposed = sdkConfigUsingOnVisitorExposed;
+            diagnostic.SdkConfigDisableCache = sdkConfigDisableCache;
+            diagnostic.HttpRequestUrl = httpRequestUrl;
+            diagnostic.HttpRequestMethod = httpRequestMethod;
+            diagnostic.HttpRequestHeaders = httpRequestHeaders;
+            diagnostic.HttpsRequestBody = httpRequestBody;
+            diagnostic.HttpResponseUrl = httpResponseUrl;
+            diagnostic.HttpResponseMethod = httpResponseMethod;
+            diagnostic.HttpResponseHeaders = httpResponseHeaders;
+            diagnostic.HttpResponseCode = httpResponseCode;
+            diagnostic.HttpResponseBody = httpResponseBody;
+            diagnostic.HttpResponseTime = httpResponseTime;
+            diagnostic.VisitorInstanceType = visitorInstanceType;
+            diagnostic.VisitorContext = VisitorContext;
+            diagnostic.VisitorConsent = visitorConsent;
+            diagnostic.VisitorAssignmentHistory = visitorAssignmentHistory;
+            diagnostic.VisitorFlags = visitorFlags;
+            diagnostic.VisitorCampaigns = visitorCampaigns;
+            diagnostic.VisitorIsAuthenticated = visitorIsAuthenticated;
+            diagnostic.VisitorSessionId = visitorSessionId;
+            diagnostic.ContextKey = contextKey;
+            diagnostic.ContextValue = contextValue;
+            diagnostic.FlagKey = flagKey;
+            diagnostic.FlagValue = flagValue;
+            diagnostic.FlagDefaultValue = flagDefaultValue;
+            diagnostic.VisitorExposed = visitorExposed;
+            diagnostic.FlagMetadataCampaignId = flagMetadataCampaignId;
+            diagnostic.FlagMetadataCampaignName = flagMetadataCampaignName;
+            diagnostic.FlagMetadataVariationGroupId = flagMetadataVariationGroupId;
+            diagnostic.FlagMetadataVariationGroupName = flagMetadataVariationGroupName;
+            diagnostic.FlagMetadataVariationId = flagMetadataVariationId;
+            diagnostic.FlagMetadataVariationName = flagMetadataVariationName;
+            diagnostic.FlagMetadataCampaignSlug = flagMetadataCampaignSlug;
+            diagnostic.FlagMetadataCampaignType = flagMetadataCampaignType;
+            diagnostic.FlagMetadataCampaignIsReference = flagMetadataCampaignIsReference;
+            diagnostic.HitContent = hitContent;
+            diagnostic.BatchTriggeredBy = batchTriggeredBy;
+      
 
             var keys = Newtonsoft.Json.JsonConvert.SerializeObject(diagnostic.ToApiKeys());
 
-            var apiKeys = new Dictionary<string, string>();
-            {
+            var commonKey = $"{Diagnostic.VISITOR}.{Diagnostic.FLAGS}.[{flagDto.Key}]";
+            var customVariableKeyMetadata = $"{commonKey}.{Diagnostic.METADATA}";
 
+
+            var customVariation = new Dictionary<string, string>()
+            {
+                [Diagnostic.TROUBLESHOOTING_VERSION] = "1",
+                [Diagnostic.LOG_LEVEL] = $"{logLevel}",
+                [Diagnostic.TIMESTAMP] = timestamp,
+                [Diagnostic.TIME_ZONE] = TimeZoneInfo.Local.StandardName,
+                [Diagnostic.LABEL] = $"{label}",
+                [Diagnostic.STACK_TYPE] = "SDK",
+                [Diagnostic.STACK_NAME] = Constants.SDK_LANGUAGE,
+                [Diagnostic.STACK_VERSION] = Constants.SDK_VERSION,
+                [Diagnostic.FLAGSHIP_INSTANCE_ID] = flagshipInstanceId,
+                [Diagnostic.LAST_INITIALIZATION_TIMESTAMP] = lastInitializationTimestamp,
+                [Diagnostic.LAST_BUCKETING_TIMESTAMP] = lastBucketingTimestamp,
+                [Diagnostic.ENV_ID] = config.EnvId,
+                [Diagnostic.SDK_BUCKETING_FILE] = JsonConvert.SerializeObject(sdkBucketingFile),
+                [Diagnostic.SDK_STATUS] = $"{sdkStatus}",
+                [Diagnostic.SDK_CONFIG_MODE] = $"{sdkConfigMode}",
+                [Diagnostic.SDK_CONFIG_TIMEOUT] = sdkConfigTimeout.ToString(),
+                [Diagnostic.SDK_CONFIG_POLLING_TIME] = sdkConfigPollingInterval.ToString(),
+                [Diagnostic.SDK_CONFIG_TRACKING_MANAGER_STRATEGY] = $"{sdkConfigTrackingManagerConfigStrategy}",
+                [Diagnostic.SDK_CONFIG_TRACKING_MANAGER_BATCH_INTERVALS] = sdkConfigTrackingManagerConfigBatchIntervals.ToString(),
+                [Diagnostic.SDK_CONFIG_TRACKING_MANAGER_POOL_MAX_SIZE] = sdkConfigTrackingManagerConfigPoolMaxSize.ToString(),
+                [Diagnostic.SDK_CONFIG_USING_CUSTOM_HIT_CACHE] = sdkConfigUsingCustomHitCache.ToString(),
+                [Diagnostic.SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE] = sdkConfigUsingCustomVisitorCache.ToString(),
+                [Diagnostic.SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED] = sdkConfigUsingOnVisitorExposed.ToString(),
+                [Diagnostic.SDK_CONFIG_DISABLE_CACHE] = sdkConfigDisableCache.ToString(),
+                [$"{Diagnostic.HTTP}.{Diagnostic.REQUEST}.{Diagnostic.URL}"] = httpRequestUrl,
+                [$"{Diagnostic.HTTP}.{Diagnostic.REQUEST}.{Diagnostic.METHOD}"] = httpRequestMethod,
+                [$"{Diagnostic.HTTP}.{Diagnostic.REQUEST}.{Diagnostic.HEADERS}"] = JsonConvert.SerializeObject(httpRequestHeaders),
+                [$"{Diagnostic.HTTP}.{Diagnostic.REQUEST}.{Diagnostic.BODY}"] = JsonConvert.SerializeObject(httpRequestBody),
+                [$"{Diagnostic.HTTP}.{Diagnostic.RESPONSE}.{Diagnostic.URL}"] = httpResponseUrl,
+                [$"{Diagnostic.HTTP}.{Diagnostic.RESPONSE}.{Diagnostic.METHOD}"] = httpResponseMethod,
+                [$"{Diagnostic.HTTP}.{Diagnostic.RESPONSE}.{Diagnostic.HEADERS}"] = JsonConvert.SerializeObject(httpResponseHeaders),
+                [$"{Diagnostic.HTTP}.{Diagnostic.RESPONSE}.{Diagnostic.CODE}"] = httpResponseCode.ToString(),
+                [$"{Diagnostic.HTTP}.{Diagnostic.RESPONSE}.{Diagnostic.BODY}"] = JsonConvert.SerializeObject(httpResponseBody),
+                [$"{Diagnostic.HTTP}.{Diagnostic.RESPONSE}.{Diagnostic.TIME}"] = httpResponseTime.ToString(),
+                [$"{Diagnostic.VISITOR}.{Diagnostic.VISITOR_ID}"] = visitorId,
+                [$"{Diagnostic.VISITOR}.{Diagnostic.ANONYMOUS_ID}"] = anonymousId,
+                [$"{Diagnostic.VISITOR}.{Diagnostic.SESSION_ID}"] = visitorSessionId,
+                [$"{Diagnostic.VISITOR}.{Diagnostic.INSTANCE_TYPE}"] = $"{visitorInstanceType}",
+                [$"{Diagnostic.VISITOR}.{Diagnostic.CONTEXT}.key-context"] = "value",
+                [$"{Diagnostic.VISITOR}.{Diagnostic.CONSENT}"] = visitorConsent.ToString(),
+                [$"{Diagnostic.VISITOR}.{Diagnostic.ASSIGNMENTS}.[campaignId]"] = "variationId",
+                [$"{commonKey}.{Diagnostic.KEY}"] = $"{flagDto.Key}",
+                [$"{commonKey}.{Diagnostic.VALUE}"] = flagDto.Value is string flagDtoValue ? flagDtoValue : JsonConvert.SerializeObject(flagDto.Value),
+                [$"{customVariableKeyMetadata}.{Diagnostic.CAMPAIGN_ID}"] = $"{flagDto.CampaignId}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.CAMPAIGN_NAME}"] = $"{flagDto.CampaignName}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.CAMAPAIGN_TYPE}"] = $"{flagDto.CampaignType}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.VARIATION_GROUP_ID}"] = $"{flagDto.VariationGroupId}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.VARIATION_GROUP_NAME}"] = $"{flagDto.VariationGroupName}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.VARIATION_ID}"] = $"{flagDto.VariationId}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.VARIATION_NAME}"] = $"{flagDto.VariationName}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.SLUG}"] = $"{flagDto.Slug}",
+                [$"{customVariableKeyMetadata}.{Diagnostic.IS_REFERENCE}"] = flagDto.IsReference.ToString(),
+                [$"{Diagnostic.VISITOR}.{Diagnostic.IS_AUTHENTICATED}"] = visitorIsAuthenticated.ToString(),
+                [$"{Diagnostic.VISITOR}.{Diagnostic.CAMPAIGNS}"] = JsonConvert.SerializeObject(visitorCampaigns),
+                [Diagnostic.CONTEXT_KEY] = contextKey,
+                [Diagnostic.CONTEXT_VALUE] = contextValue,
+                [$"{Diagnostic.FLAG}.{Diagnostic.KEY}"] = flagKey,
+                [$"{Diagnostic.FLAG}.{Diagnostic.VALUE}"] = flagValue is string value ? value : JsonConvert.SerializeObject(flagValue),
+                [$"{Diagnostic.FLAG}.{Diagnostic.DEFAULT}"] = flagDefaultValue is string flagDefaultValueString ? flagDefaultValueString : JsonConvert.SerializeObject(flagDefaultValue),
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.CAMPAIGN_ID}"] = flagMetadataCampaignId,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.CAMPAIGN_NAME}"] = flagMetadataCampaignName,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.VARIATION_GROUP_ID}"] = flagMetadataVariationGroupId,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.VARIATION_GROUP_NAME}"] = flagMetadataVariationGroupName,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.VARIATION_ID}"] = flagMetadataVariationId,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.VARIATION_NAME}"] = flagMetadataVariationName,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.CAMPAIGN_SLUG}"] = flagMetadataCampaignSlug,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.CAMAPAIGN_TYPE}"] = flagMetadataCampaignType,
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.IS_REFERENCE}"] = flagMetadataCampaignIsReference.ToString()
+            };
+
+
+            foreach ( var hitKey in hitContent)
+            {
+                customVariation[hitKey.Key] = hitKey.Value is string hitValue ? hitValue : JsonConvert.SerializeObject(hitKey.Value);
             }
+
+            customVariation[Diagnostic.BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";
+
+            var apiKeys = new Dictionary<string, object>()
+            {
+                [Constants.VISITOR_ID_API_ITEM] = visitorId,
+                [Constants.DS_API_ITEM] = "APP",
+                [Constants.CUSTOMER_ENV_ID_API_ITEM] = config.EnvId,
+                [Constants.T_API_ITEM] = $"{HitType.TROUBLESHOOTING}",
+                ["cv"] = customVariation
+            };
 
             var apiKeysJson = Newtonsoft.Json.JsonConvert.SerializeObject(apiKeys);
 

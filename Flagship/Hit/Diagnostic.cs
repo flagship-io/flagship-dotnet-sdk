@@ -41,6 +41,35 @@ namespace Flagship.Hit
         public const string URL = "url"; 
         public const string CODE = "code";
         public const string TIME = "time";
+        public const string VISITOR = "visitor";
+        public const string VISITOR_ID = "visitorId";
+        public const string ANONYMOUS_ID = "anonymousId";
+        public const string SESSION_ID = "sessionId";
+        public const string INSTANCE_TYPE = "instanceType";
+        public const string CONTEXT = "context";
+        public const string CONSENT = "consent";
+        public const string ASSIGNMENTS = "assignments";
+        public const string FLAGS = "flags";
+        public const string FLAG = "flag";
+        public const string METADATA = "metadata";
+        public const string CAMPAIGN_ID = "campaignId";
+        public const string CAMPAIGN_NAME = "campaignName";
+        public const string CAMAPAIGN_TYPE = "campaignType";
+        public const string VARIATION_GROUP_ID = "variationGroupId";
+        public const string VARIATION_GROUP_NAME = "variationGroupName";
+        public const string VARIATION_ID = "variationId";
+        public const string VARIATION_NAME = "variationName";
+        public const string SLUG = "slug";
+        public const string IS_REFERENCE = "isReference";
+        public const string CAMPAIGN_SLUG = "campaignSlug";
+        public const string DEFAULT = "default";
+        public const string VALUE = "value";
+        public const string KEY = "key";
+        public const string CONTEXT_VALUE = "contextValue";
+        public const string CONTEXT_KEY = "contextKey";
+        public const string CAMPAIGNS = "campaigns";
+        public const string IS_AUTHENTICATED = "isAuthenticated";
+        public const string BATCH_TRIGGERED_BY = "batchTriggeredBy";
 
         public string Version { get; set; }
         public LogLevel LogLevel { get; set; }
@@ -281,42 +310,42 @@ namespace Flagship.Hit
 
             if (VisitorId!=null)
             {
-                customVariable["visitor.visitorId"] = VisitorId;
+                customVariable[$"{VISITOR}.{VISITOR_ID}"] = VisitorId;
             }
 
             if (AnonymousId != null)
             {
-                customVariable["visitor.anonymousId"] = AnonymousId;
+                customVariable[$"{VISITOR}.{ANONYMOUS_ID}"] = AnonymousId;
             }
 
             if (VisitorSessionId != null)
             {
-                customVariable["visitor.sessionId"] = VisitorSessionId;
+                customVariable[$"{VISITOR}.{SESSION_ID}"] = VisitorSessionId;
             }
 
             if (VisitorInstanceType != null)
             {
-                customVariable["visitor.instanceType"] = $"{VisitorInstanceType}";
+                customVariable[$"{VISITOR}.{INSTANCE_TYPE}"] = $"{VisitorInstanceType}";
             }
 
             if (VisitorContext != null)
             {
                 foreach (var item in VisitorContext)
                 {
-                    customVariable[$"visitor.context.{item.Key}"] = item.Value.ToString();
+                    customVariable[$"{VISITOR}.{CONTEXT}.{item.Key}"] = item.Value.ToString();
                 }
             }
 
             if (VisitorConsent != null)
             {
-                customVariable["visitor.consent"] = VisitorConsent.GetValueOrDefault().ToString();
+                customVariable[$"{VISITOR}.{CONSENT}"] = VisitorConsent.GetValueOrDefault().ToString();
             }
 
             if (VisitorAssignmentHistory != null)
             {
                 foreach (var item in VisitorAssignmentHistory)
                 {
-                    customVariable[$"visitor.assignments.[{item.Key}]"] = item.Value.ToString();
+                    customVariable[$"{VISITOR}.{ASSIGNMENTS}.[{item.Key}]"] = item.Value.ToString();
                 }
             }
 
@@ -325,101 +354,101 @@ namespace Flagship.Hit
                 foreach (var flagDto in VisitorFlags)
                 {
                     var flagKey = flagDto.Key;
-                    var commonKey = $"visitor.flags.[{flagKey}]";
-                    var customVariableKeyMetadata = $"{commonKey}.metadata";
-                    customVariable[$"{commonKey}.key"] = flagKey;
-                    customVariable[$"{commonKey}.value"] = JsonConvert.SerializeObject(flagDto.Value);
-                    customVariable[$"{customVariableKeyMetadata}.campaignId"] = flagDto.CampaignId;
-                    customVariable[$"{customVariableKeyMetadata}.campaignName"] = flagDto.CampaignName;
-                    customVariable[$"{customVariableKeyMetadata}.campaignType"] = flagDto.CampaignType;
-                    customVariable[$"{customVariableKeyMetadata}.variationGroupId"] = flagDto.VariationGroupId;
-                    customVariable[$"{customVariableKeyMetadata}.variationGroupName"] = flagDto.VariationGroupName;
-                    customVariable[$"{customVariableKeyMetadata}.variationId"] = flagDto.VariationId;
-                    customVariable[$"{customVariableKeyMetadata}.variationName"] = flagDto.VariationName;
-                    customVariable[$"{customVariableKeyMetadata}.slug"] = flagDto.Slug;
-                    customVariable[$"{customVariableKeyMetadata}.isReference"] = flagDto.IsReference.ToString();
+                    var commonKey = $"{VISITOR}.{FLAGS}.[{flagKey}]";
+                    var customVariableKeyMetadata = $"{commonKey}.{METADATA}";
+                    customVariable[$"{commonKey}.{KEY}"] = $"{flagKey}";
+                    customVariable[$"{commonKey}.{VALUE}"] = flagDto.Value is string value ? value : JsonConvert.SerializeObject(flagDto.Value);
+                    customVariable[$"{customVariableKeyMetadata}.{CAMPAIGN_ID}"] = $"{flagDto.CampaignId}";
+                    customVariable[$"{customVariableKeyMetadata}.{CAMPAIGN_NAME}"] = $"{flagDto.CampaignName}";
+                    customVariable[$"{customVariableKeyMetadata}.{CAMAPAIGN_TYPE}"] = $"{flagDto.CampaignType}";
+                    customVariable[$"{customVariableKeyMetadata}.{VARIATION_GROUP_ID}"] = $"{flagDto.VariationGroupId}";
+                    customVariable[$"{customVariableKeyMetadata}.{VARIATION_GROUP_NAME}"] = $"{flagDto.VariationGroupName}";  
+                    customVariable[$"{customVariableKeyMetadata}.{VARIATION_ID}"] = $"{flagDto.VariationId}";
+                    customVariable[$"{customVariableKeyMetadata}.{VARIATION_NAME}"] = $"{flagDto.VariationName}";
+                    customVariable[$"{customVariableKeyMetadata}.{SLUG}"] = $"{flagDto.Slug}";
+                    customVariable[$"{customVariableKeyMetadata}.{IS_REFERENCE}"] = flagDto.IsReference.ToString();
 
                 }
             }
 
             if (VisitorIsAuthenticated != null)
             {
-                customVariable["visitor.isAuthenticated"] = VisitorIsAuthenticated.GetValueOrDefault().ToString();
+                customVariable[$"{VISITOR}.{IS_AUTHENTICATED}"] = VisitorIsAuthenticated.GetValueOrDefault().ToString();
             }
 
             if (VisitorCampaigns != null)
             {
-                customVariable["visitor.campaigns"] = JsonConvert.SerializeObject(VisitorCampaigns);
+                customVariable[$"{VISITOR}.{CAMPAIGNS}"] = JsonConvert.SerializeObject(VisitorCampaigns);
             }
 
             if (!string.IsNullOrWhiteSpace(ContextKey))
             {
-                customVariable["contextKey"] = ContextKey;
+                customVariable[CONTEXT_KEY] = ContextKey;
             }
 
             if (ContextValue != null)
             {
-                customVariable["contextValue"] = ContextValue.ToString();
+                customVariable[CONTEXT_VALUE] = ContextValue.ToString();
             }
 
             if (!string.IsNullOrWhiteSpace(FlagKey))
             {
-                customVariable["flag.key"] = FlagKey;
+                customVariable[$"{FLAG}.{KEY}"] = FlagKey;
             }
 
             if (FlagValue != null)
             {
-                customVariable["flag.value"] = JsonConvert.SerializeObject(FlagValue);
+                customVariable[$"{FLAG}.{VALUE}"] = FlagValue is string value ? value : JsonConvert.SerializeObject(FlagValue);
             }
 
             if (FlagDefaultValue != null)
             {
-                customVariable["flag.default"] = JsonConvert.SerializeObject(FlagDefaultValue);
+                customVariable[$"{FLAG}.{DEFAULT}"] = FlagDefaultValue is string value ? value : JsonConvert.SerializeObject(FlagDefaultValue);
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataCampaignId))
             {
-                customVariable["flag.metadata.campaignId"] = FlagMetadataCampaignId;
+                customVariable[$"{FLAG}.{METADATA}.{CAMPAIGN_ID}"] = FlagMetadataCampaignId;
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataCampaignName))
             {
-                customVariable["flag.metadata.campaignName"] = FlagMetadataCampaignName;
+                customVariable[$"{FLAG}.{METADATA}.{CAMPAIGN_NAME}"] = FlagMetadataCampaignName;
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataVariationGroupId))
             {
-                customVariable["flag.metadata.variationGroupId"] = FlagMetadataVariationGroupId;
+                customVariable[$"{FLAG}.{METADATA}.{VARIATION_GROUP_ID}"] = FlagMetadataVariationGroupId;
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataVariationGroupName))
             {
-                customVariable["flag.metadata.variationGroupName"] = FlagMetadataVariationGroupName;
+                customVariable[$"{FLAG}.{METADATA}.{VARIATION_GROUP_NAME}"] = FlagMetadataVariationGroupName;
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataVariationId))
             {
-                customVariable["flag.metadata.variationId"] = FlagMetadataVariationId;
+                customVariable[$"{FLAG}.{METADATA}.{VARIATION_ID}"] = FlagMetadataVariationId;
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataVariationName))
             {
-                customVariable["flag.metadata.variationName"] = FlagMetadataVariationName;
+                customVariable[$"{FLAG}.{METADATA}.{VARIATION_NAME}"] = FlagMetadataVariationName;
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataCampaignSlug))
             {
-                customVariable["flag.metadata.campaignSlug"] = FlagMetadataCampaignSlug;
+                customVariable[$"{FLAG}.{METADATA}.{CAMPAIGN_SLUG}"] = FlagMetadataCampaignSlug;
             }
 
             if (!string.IsNullOrWhiteSpace(FlagMetadataCampaignType))
             {
-                customVariable["flag.metadata.campaignType"] = FlagMetadataCampaignType;
+                customVariable[$"{FLAG}.{METADATA}.{CAMAPAIGN_TYPE}"] = FlagMetadataCampaignType;
             }
 
             if (FlagMetadataCampaignIsReference != null)
             {
-                customVariable["flag.metadata.isReference"] = FlagMetadataCampaignIsReference.GetValueOrDefault().ToString();
+                customVariable[$"{FLAG}.{METADATA}.{IS_REFERENCE}"] = FlagMetadataCampaignIsReference.GetValueOrDefault().ToString();
             }
 
             if (HitContent != null)
@@ -432,7 +461,7 @@ namespace Flagship.Hit
 
             if (BatchTriggeredBy != null)
             {
-                customVariable["batchTriggeredBy"] = $"{BatchTriggeredBy}";
+                customVariable[BATCH_TRIGGERED_BY] = $"{BatchTriggeredBy}";
             }
 
             apiKeys["cv"] = customVariable;

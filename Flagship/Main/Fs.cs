@@ -159,9 +159,8 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                 decisionManager = new ApiManager(config, httpClient);
             }
 
-            var trackingManager = new TrackingManager(config, httpClient);
+            var trackingManager = new TrackingManager(config, httpClient, instance._sdkInitialData.InstanceId);
 
-            trackingManager.FlagshipInstanceId = instance._sdkInitialData.InstanceId;
 
             decisionManager.FlagshipInstanceId = instance._sdkInitialData.InstanceId;
 
@@ -178,6 +177,8 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                 fsInstance._configManager.DecisionManager = decisionManager;
                 fsInstance._configManager.TrackingManager = trackingManager;
             }
+
+            instance._sdkInitialData.LastInitializationTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
 
             fsInstance.SetStatus(FlagshipStatus.READY);
             Log.LogInfo(config, string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION),

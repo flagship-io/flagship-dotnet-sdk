@@ -143,7 +143,7 @@ namespace Flagship.Hit
         public Diagnostic(HitType type) : base(type)
         {
             Version = "1";
-            Timestamp = new DateTime().ToUniversalTime().ToString("u:");
+            Timestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
             TimeZone = TimeZoneInfo.Local.StandardName;
             StackType = "SDK";
             StackName = Constants.SDK_LANGUAGE;
@@ -455,7 +455,7 @@ namespace Flagship.Hit
             {
                 foreach (var item in HitContent)
                 {
-                    customVariable[item.Key] = item.Value is string value ? value : JsonConvert.SerializeObject(item.Value);
+                    customVariable[$"hit.{item.Key}"] = item.Value is string value ? value : JsonConvert.SerializeObject(item.Value);
                 }
             }
 

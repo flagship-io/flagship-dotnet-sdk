@@ -52,6 +52,8 @@ namespace Flagship.Enums
         public const string HEADER_APPLICATION_JSON = "application/json";
         public const string SDK_LANGUAGE = ".NET";
 
+        public const string FORMAT_UTC = "yyyy-MM-ddTHH:mm:ss.fffZ";
+
         public const string FS_CONSENT = "fs_consent";
 
         public const string CONTEXT_PARAM_ERROR = "params {0} must be a non null String, and 'value' must be one of the following types string, Number, Boolean";

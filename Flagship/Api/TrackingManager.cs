@@ -40,13 +40,14 @@ namespace Flagship.Api
         protected Timer _timer;
         protected bool _isPolling;
 
-
-        public TrackingManager(FlagshipConfig config, HttpClient httpClient)
+        public TrackingManager(FlagshipConfig config, HttpClient httpClient, string flagshipInstanceId = null)
         {
+            FlagshipInstanceId = flagshipInstanceId;
             Config = config;
             HttpClient = httpClient;
             _hitsPoolQueue = new Dictionary<string, HitAbstract>();
             _activatePoolQueue = new Dictionary<string, Activate>();
+
             Strategy = InitStrategy();
             _ = LookupHitsAsync();
         }

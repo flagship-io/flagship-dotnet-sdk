@@ -130,7 +130,7 @@ namespace Flagship.Api
                     FlagshipInstanceId = FlagshipInstanceId,
                     Traffic = 0,
                     Config = Config,
-                    HttpRequestUrl = Constants.HIT_EVENT_URL,
+                    HttpRequestUrl = url,
                     HttpsRequestBody = requestBody,
                     HttpResponseBody = ex.Message,
                     HttpResponseMethod = "POST",

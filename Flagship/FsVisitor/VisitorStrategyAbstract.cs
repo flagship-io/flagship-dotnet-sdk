@@ -71,7 +71,7 @@ namespace Flagship.FsVisitor
                 HitContent = hitEvent.ToApiKeys()
             };
 
-            if (DecisionManager.TroubleshootingData != null)
+            if (DecisionManager.TroubleshootingData != null && Visitor.Traffic>0)
             {
                 _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
                 return;
@@ -278,7 +278,7 @@ namespace Flagship.FsVisitor
                 VisitorId = Visitor.VisitorId,
                 AnonymousId = Visitor.AnonymousId,
                 VisitorSessionId = Visitor.SessionId,
-                FlagshipInstanceId = Visitor.SdkInitialData.InstanceId,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
                 Traffic = traffic,
                 Config = Config,
                 SdkStatus = Visitor.GetSdkStatus(),
@@ -289,7 +289,7 @@ namespace Flagship.FsVisitor
                 VisitorFlags = Visitor.Flags,
                 VisitorAssignmentHistory = assignmentHistory,
                 LastBucketingTimestamp = "",
-                LastInitializationTimestamp = Visitor.SdkInitialData.LastInitializationTimestamp,
+                LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                 HttpResponseTime = (DateTime.Now - now).Milliseconds,
 
                 SdkConfigMode = Config.DecisionMode,

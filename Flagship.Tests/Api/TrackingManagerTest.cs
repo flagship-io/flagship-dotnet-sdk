@@ -72,7 +72,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -128,7 +128,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -162,7 +162,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -202,7 +202,7 @@ namespace Flagship.Tests.Api
                 5, TimeSpan.FromMilliseconds(500)),
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -234,7 +234,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig(),
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -262,7 +262,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig(),
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -299,7 +299,7 @@ namespace Flagship.Tests.Api
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -415,7 +415,7 @@ namespace Flagship.Tests.Api
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -478,7 +478,7 @@ namespace Flagship.Tests.Api
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };

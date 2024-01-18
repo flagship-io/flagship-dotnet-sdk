@@ -21,6 +21,6 @@ namespace Flagship.Api
         void AddTroubleshootingHit(Troubleshooting hit);
         Task SendUsageHit(UsageHit hit); 
 
-        TroubleshootingData TroubleshootingData {  set; }
+        TroubleshootingData TroubleshootingData { set; get; }
     }
 }

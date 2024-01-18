@@ -33,7 +33,13 @@ namespace Flagship.Api
         public HttpClient HttpClient { get; set; }
         public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
         public Dictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
-        public TroubleshootingData TroubleshootingData { set { Strategy.TroubleshootingData = value; } }
+        public TroubleshootingData TroubleshootingData { 
+            set { 
+                Strategy.TroubleshootingData = value;
+            } 
+            get { 
+                return Strategy.TroubleshootingData; 
+            } }
 
         public string FlagshipInstanceId { get; set; }
 

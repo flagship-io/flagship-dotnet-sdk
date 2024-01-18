@@ -69,6 +69,7 @@
     <Compile Include="FsVisitor\PanicStrategyTests.cs" />
     <Compile Include="FsVisitor\VisitorBuilderTests.cs" />
     <Compile Include="FsVisitor\VisitorDelegateTests.cs" />
+    <Compile Include="FsVisitor\VisitorStrategyAbstractTests.cs" />
     <Compile Include="FsVisitor\VisitorTests.cs" />
     <Compile Include="Functional-test\TestCampaigns.cs" />
     <Compile Include="Hit\ActivateTests.cs" />

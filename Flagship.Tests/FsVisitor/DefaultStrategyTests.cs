@@ -279,23 +279,23 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
-        public async Task UserExposedTest()
+        public async Task VisitorExposedTest()
         {
-            const string functionName = "UserExposed";
+            const string functionName = "VisitorExposed";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             var key = "key1";
-            await defaultStrategy.UserExposed(key, "defaultValue", null).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(key, "defaultValue", null).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_FLAG_ERROR, key), functionName), Times.Once());
 
             var flagDto = CampaignsData.GetFlag()[0];
-            await defaultStrategy.UserExposed(flagDto.Key, 1, flagDto).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDto.Key, 1, flagDto).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.USER_EXPOSED_CAST_ERROR, flagDto.Key), functionName), Times.Once());
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Exactly(2));
 
-            await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
 
             var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
 
@@ -304,7 +304,7 @@ namespace Flagship.FsVisitor.Tests
 
             var flagDtoValueNull = CampaignsData.GetFlag()[1];
 
-            await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
             trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
                 y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)

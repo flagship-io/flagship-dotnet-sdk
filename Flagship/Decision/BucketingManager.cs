@@ -130,10 +130,12 @@ namespace Flagship.Decision
                         HttpResponseCode = (int?)response.StatusCode
                     };
 
+                    _lastModified = response.Content.Headers.LastModified;
+
                     TrackingManager.AddTroubleshootingHit(troubleshootingHit);
                 }
 
-                _lastModified = response.Content.Headers.LastModified;
+
 
                 if (_isFirstPooling)
                 {

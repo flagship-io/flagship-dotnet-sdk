@@ -32,7 +32,7 @@ namespace Flagship.FsVisitor
 
         protected IDecisionManager DecisionManager => Visitor.ConfigManager.DecisionManager;
 
-        public Murmur32  Murmur32 { get; set; }
+        public Murmur32 Murmur32 { get; set; }
 
         public VisitorStrategyAbstract(VisitorDelegateAbstract visitor)
         {
@@ -87,7 +87,7 @@ namespace Flagship.FsVisitor
                 {
                     return;
                 }
-                
+
                 if (!visitorData.ContainsKey("Version"))
                 {
                     throw new Exception(LOOKUP_VISITOR_JSON_OBJECT_ERROR);
@@ -180,7 +180,7 @@ namespace Flagship.FsVisitor
                         Activated = false,
                         Flags = item.Variation.Modifications.Value,
                         Slug = item.Slug
-                       
+
                     });
                 }
 
@@ -231,14 +231,36 @@ namespace Flagship.FsVisitor
             }
         }
 
+        public virtual async Task SendTroubleshootingHit(Troubleshooting hit)
+        {
+            await TrackingManager.SendTroubleshootingHit(hit);
+        }
+
+        public virtual void AddTroubleshootingHit(Troubleshooting hit)
+        {
+            TrackingManager.AddTroubleshootingHit(hit);
+        }
+
+        public virtual TroubleshootingData GetTroubleshootingData()
+        {
+
+            TrackingManager.TroubleshootingData = DecisionManager?.TroubleshootingData;
+            return DecisionManager?.TroubleshootingData;
+        }
+
         public async Task SendFetchFlagsTroubleshootingHit(ICollection<Campaign> campaigns, DateTime now)
         {
-            var uniqueId = Visitor.VisitorId + DecisionManager.TroubleshootingData.EndDate.ToString("u");
+            var troubleshootingData = GetTroubleshootingData();
+            if (troubleshootingData==null)
+            {
+                return;
+            }
+
+            var uniqueId = Visitor.VisitorId + troubleshootingData.EndDate.ToString("u");
             var hashBytes = Murmur32.ComputeHash(Encoding.UTF8.GetBytes(uniqueId));
             var hash = BitConverter.ToUInt32(hashBytes, 0);
             var traffic = hash % 100;
 
-            TrackingManager.TroubleshootingData = DecisionManager?.TroubleshootingData;
 
             Visitor.Traffic = traffic;
 
@@ -286,7 +308,9 @@ namespace Flagship.FsVisitor
                 fetchFlagTroubleshootingHit.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
             }
 
-            await TrackingManager.SendTroubleshootingHit(fetchFlagTroubleshootingHit);
+            await SendTroubleshootingHit(fetchFlagTroubleshootingHit);
+            await SendConsentHitTroubleshooting();
+            await SendSegmentHitTroubleshooting();
 
         }
         public async virtual Task SendAnalyticHit()
@@ -335,7 +359,7 @@ namespace Flagship.FsVisitor
                 return;
             }
             consentHitTroubleshooting.Traffic = Visitor.Traffic;
-            await TrackingManager.SendTroubleshootingHit(consentHitTroubleshooting);
+            await SendTroubleshootingHit(consentHitTroubleshooting);
             Visitor.ConsentHitTroubleshooting = null;
         }
 
@@ -347,7 +371,7 @@ namespace Flagship.FsVisitor
                 return;
             }
             segmentHitTroubleshooting.Traffic = Visitor.Traffic;
-            await TrackingManager.SendTroubleshootingHit(segmentHitTroubleshooting);
+            await SendTroubleshootingHit(segmentHitTroubleshooting);
             Visitor.SegmentHitTroubleshooting = null;
         }
         abstract public void ClearContext();
@@ -356,7 +380,7 @@ namespace Flagship.FsVisitor
 
         abstract protected Task SendActivate(FlagDTO flag, object defaultValue = null);
 
-        abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
 

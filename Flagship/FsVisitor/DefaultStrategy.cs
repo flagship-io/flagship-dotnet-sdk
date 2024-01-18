@@ -164,13 +164,7 @@ namespace Flagship.FsVisitor
                     JsonConvert.SerializeObject(Visitor.Context),
                     JsonConvert.SerializeObject(Visitor.Flags)), FUNCTION_NAME);
 
-                if (DecisionManager?.TroubleshootingData != null)
-                {
-                    _ = SendFetchFlagsTroubleshootingHit(campaigns, now);
-                    _ = SendConsentHitTroubleshooting();
-                    _ = SendSegmentHitTroubleshooting();
-                }
-
+                _ = SendFetchFlagsTroubleshootingHit(campaigns, now);
                 _ = SendAnalyticHit();
              
             }
@@ -214,7 +208,7 @@ namespace Flagship.FsVisitor
                     fetchFlagTroubleshootingHit.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
                 }
 
-                _ = TrackingManager.SendTroubleshootingHit(fetchFlagTroubleshootingHit);
+                _ = SendTroubleshootingHit(fetchFlagTroubleshootingHit);
             }
         }
 
@@ -251,9 +245,9 @@ namespace Flagship.FsVisitor
 
             _= TrackingManager.SendTroubleshootingHit(activateTroubleshooting);
         }
-        public override async Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override async Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
-            const string functionName = "UserExposed";
+            const string functionName = "VisitorExposed";
             if (flag == null)
             {
                 Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
@@ -273,7 +267,7 @@ namespace Flagship.FsVisitor
                     FlagDefaultValue = defaultValue,
                 };
 
-                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                _ = SendTroubleshootingHit(troubleshootingHit);
 
                 return;
             }
@@ -295,7 +289,7 @@ namespace Flagship.FsVisitor
                     FlagDefaultValue = defaultValue,
                 };
 
-                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                _ = SendTroubleshootingHit(troubleshootingHit);
 
                 return;
             }
@@ -327,7 +321,7 @@ namespace Flagship.FsVisitor
                     VisitorExposed = userExposed
                 };
 
-                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                _ = SendTroubleshootingHit(troubleshootingHit);
 
                 return defaultValue;
             }
@@ -336,7 +330,7 @@ namespace Flagship.FsVisitor
             {
                 if (userExposed)
                 {
-                    _ = UserExposed(key, defaultValue, flag);
+                    _ = VisitorExposed(key, defaultValue, flag);
                 }
                 return defaultValue;
             }
@@ -361,14 +355,14 @@ namespace Flagship.FsVisitor
                     VisitorExposed = userExposed
                 };
 
-                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                _ = SendTroubleshootingHit(troubleshootingHit);
 
                 return defaultValue;
             }
 
             if (userExposed)
             {
-                _ = UserExposed(key, defaultValue, flag);
+                _ = VisitorExposed(key, defaultValue, flag);
             }
 
             return (T)flag.Value;
@@ -404,7 +398,7 @@ namespace Flagship.FsVisitor
                     FlagMetadataVariationName = metadata.VariationName
                 };
 
-                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                _ = SendTroubleshootingHit(troubleshootingHit);
 
                 return FlagMetadata.EmptyMetadata();
             }
@@ -460,7 +454,7 @@ namespace Flagship.FsVisitor
                     HitContent = hit.ToApiKeys()
                 };
 
-                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                _ = SendTroubleshootingHit(troubleshootingHit);
             }
             catch (Exception ex)
             {
@@ -500,7 +494,7 @@ namespace Flagship.FsVisitor
                 Config = Config,
             };
 
-            _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+            _ = SendTroubleshootingHit(troubleshootingHit);
         }
 
         public override void Unauthenticate()
@@ -535,7 +529,7 @@ namespace Flagship.FsVisitor
                 Config = Config,
             };
 
-            _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+            _ = SendTroubleshootingHit(troubleshootingHit);
 
         }
 

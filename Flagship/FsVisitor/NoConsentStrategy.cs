@@ -32,7 +32,7 @@ namespace Flagship.FsVisitor
             return new Collection<Campaign>();
         }
 
-        public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
 
             return Task.Factory.StartNew(() =>
@@ -53,6 +53,24 @@ namespace Flagship.FsVisitor
         private void Log(string methodName)
         {
             Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, methodName, Visitor.VisitorId), methodName);
+        }
+
+        public override void AddTroubleshootingHit(Troubleshooting hit)
+        {
+            //
+        }
+
+        public override Task SendTroubleshootingHit(Troubleshooting hit)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            tcs.SetResult(null);
+            return tcs.Task;
+        }
+
+        public override TroubleshootingData GetTroubleshootingData()
+        {
+            TrackingManager.TroubleshootingData =null;
+            return null;
         }
     }
 }

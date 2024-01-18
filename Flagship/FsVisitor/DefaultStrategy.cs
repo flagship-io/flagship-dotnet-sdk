@@ -165,7 +165,7 @@ namespace Flagship.FsVisitor
                     JsonConvert.SerializeObject(Visitor.Flags)), FUNCTION_NAME);
 
                 _ = SendFetchFlagsTroubleshootingHit(campaigns, now);
-                _ = SendAnalyticHit();
+                _ = SendUsageHitSdkConfig();
 
             }
             catch (Exception ex)

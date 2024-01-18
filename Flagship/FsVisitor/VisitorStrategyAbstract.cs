@@ -313,7 +313,7 @@ namespace Flagship.FsVisitor
             await SendSegmentHitTroubleshooting();
 
         }
-        public async virtual Task SendAnalyticHit()
+        public async virtual Task SendUsageHitSdkConfig()
         {
             if (Config.DisableDeveloperUsageTracking)
             {
@@ -333,7 +333,7 @@ namespace Flagship.FsVisitor
             {
                 Label= DiagnosticLabel.SDK_CONFIG,
                 LogLevel= LogLevel.INFO,
-                FlagshipInstanceId = Visitor.SdkInitialData.InstanceId,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
                 Config= Config,
                 SdkStatus = Visitor.GetSdkStatus(),
                 LastBucketingTimestamp  = "",

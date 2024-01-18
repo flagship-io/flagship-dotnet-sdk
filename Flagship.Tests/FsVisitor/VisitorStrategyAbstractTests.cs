@@ -54,7 +54,7 @@ namespace Flagship.FsVisitor.Tests
 
             await strategy.SendTroubleshootingHit(troubleshootingHit);
 
-            trackingManagerMock.Verify(x=> x.SendTroubleshootingHit(troubleshootingHit), Times.Once());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(troubleshootingHit), Times.Once());
 
             //Test AddTroubleshootingHitTest
 
@@ -83,7 +83,7 @@ namespace Flagship.FsVisitor.Tests
             var decisionManager = decisionManagerMock.Object;
             decisionManager.TrackingManager = trackingManager;
 
-            var troubleshootingData = new TroubleshootingData(); 
+            var troubleshootingData = new TroubleshootingData();
 
             decisionManager.TroubleshootingData = troubleshootingData;
 
@@ -98,7 +98,7 @@ namespace Flagship.FsVisitor.Tests
 
             var strategy = new DefaultStrategy(visitorDelegate);
 
-            var check = strategy.GetTroubleshootingData(); 
+            var check = strategy.GetTroubleshootingData();
 
             Assert.AreEqual(troubleshootingData, check);
             Assert.AreEqual(troubleshootingData, trackingManager.TroubleshootingData);
@@ -147,7 +147,7 @@ namespace Flagship.FsVisitor.Tests
 
             await strategy.SendFetchFlagsTroubleshootingHit(new List<Campaign>(), DateTime.Now);
 
-            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y=> y.Label == Enums.DiagnosticLabel.VISITOR_FETCH_CAMPAIGNS)), Times.Once());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_FETCH_CAMPAIGNS)), Times.Once());
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_SEND_HIT)), Times.Exactly(2));
 
             decisionManager.TroubleshootingData = null;
@@ -156,6 +156,55 @@ namespace Flagship.FsVisitor.Tests
 
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_FETCH_CAMPAIGNS)), Times.Once());
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_SEND_HIT)), Times.Exactly(2));
+        }
+
+        [TestMethod()]
+        public async Task SendUsageHitTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var trackingManagerMock = new Mock<Api.ITrackingManager>();
+            var trackingManager = trackingManagerMock.Object;
+
+            var decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
+
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var troubleshootingData = new TroubleshootingData();
+
+            decisionManager.TroubleshootingData = troubleshootingData;
+
+            var configManager = new ConfigManager(config, decisionManager, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key"] = 1,
+            };
+
+            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+
+            visitorDelegate.ConsentHitTroubleshooting = new Troubleshooting();
+            visitorDelegate.SegmentHitTroubleshooting = new Troubleshooting();
+
+            var strategy = new DefaultStrategy(visitorDelegate)
+            {
+                Murmur32 = MurmurHash.Create32()
+            };
+
+            await strategy.SendUsageHitSdkConfig();
+
+            config.DisableDeveloperUsageTracking = true;
+
+            await strategy.SendUsageHitSdkConfig();
+
+            trackingManagerMock.Verify(x => x.SendUsageHit(It.Is<UsageHit>(y => y.Label == Enums.DiagnosticLabel.SDK_CONFIG)), Times.Once());
         }
     }
 }

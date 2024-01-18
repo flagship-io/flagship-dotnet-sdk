@@ -92,6 +92,10 @@ namespace Flagship.Config
         /// </summary>
         public ITrackingManagerConfig TrackingManagerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
 
+        /// <summary>
+        /// The SDK will collect usage data to help us improve our product
+        /// <br/> If set true no usage data will be collected
+        /// </summary>
         public bool DisableDeveloperUsageTracking { get; set; }
 
         public FlagshipConfig(DecisionMode decisionMode = DecisionMode.DECISION_API)

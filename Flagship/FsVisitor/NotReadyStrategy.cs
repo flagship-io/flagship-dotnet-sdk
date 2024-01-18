@@ -45,7 +45,7 @@ namespace Flagship.FsVisitor
 
         public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
-            return Task.Factory.StartNew(() => { Log("UserExposed"); });
+            return Task.Factory.StartNew(() => { Log("VisitorExposed"); });
         }
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)

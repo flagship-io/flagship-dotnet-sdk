@@ -166,7 +166,7 @@ namespace Flagship.FsVisitor
 
                 _ = SendFetchFlagsTroubleshootingHit(campaigns, now);
                 _ = SendAnalyticHit();
-             
+
             }
             catch (Exception ex)
             {

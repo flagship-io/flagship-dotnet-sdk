@@ -73,7 +73,7 @@ namespace Flagship.FsVisitor
         {
             return Task.Factory.StartNew(() =>
             {
-                Log("UserExposed");
+                Log("VisitorExposed");
             });
         }
 

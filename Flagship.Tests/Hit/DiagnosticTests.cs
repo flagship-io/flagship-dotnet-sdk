@@ -263,7 +263,7 @@ namespace Flagship.Hit.Tests
 
             foreach ( var hitKey in hitContent)
             {
-                customVariation[hitKey.Key] = hitKey.Value is string hitValue ? hitValue : JsonConvert.SerializeObject(hitKey.Value);
+                customVariation[$"hit.{hitKey.Key}"] = hitKey.Value is string hitValue ? hitValue : JsonConvert.SerializeObject(hitKey.Value);
             }
 
             customVariation[Diagnostic.BATCH_TRIGGERED_BY] = $"{batchTriggeredBy}";

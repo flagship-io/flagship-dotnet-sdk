@@ -18,7 +18,7 @@ namespace Flagship.Enums
 
         public const int BATCH_MAX_SIZE = 2500000;
 
-        public const int ANALYTIC_HIT_ALLOCATION = 10;
+        public const int USAGE_HIT_ALLOCATION = 20;
 
         /// <summary>
         /// Default request timeout in second

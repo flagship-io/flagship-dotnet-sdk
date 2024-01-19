@@ -75,14 +75,13 @@ namespace Flagship.FsVisitor.Tests
 
             visitor = new VisitorDelegate(null, false, context, false, configManager.Object);
             Assert.IsNotNull(visitor.VisitorId);
-            Assert.AreEqual(visitor.VisitorId.Length, 19);
+            Assert.AreEqual(visitor.VisitorId.Length, 36);
 
             visitor = new VisitorDelegate(visitorId, true, context, false, configManager.Object);
             Assert.IsNotNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.AreEqual(36,visitor.AnonymousId.Length);
             Assert.AreEqual(Enums.FlagSyncStatus.CREATED, visitor.FlagSyncStatus);
-
         }
 
         [TestMethod()]

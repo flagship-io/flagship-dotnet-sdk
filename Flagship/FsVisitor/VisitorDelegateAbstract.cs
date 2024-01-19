@@ -60,8 +60,7 @@ namespace Flagship.FsVisitor
        
         protected string CreateVisitorId()
         {
-            var date = DateTime.Now;
-            return $"{date.Year}{Utils.Utils.TwoDigit(date.Month)}{Utils.Utils.TwoDigit(date.Day)}{Utils.Utils.TwoDigit(date.Hour)}{Utils.Utils.TwoDigit(date.Minute)}{Utils.Utils.TwoDigit(date.Second)}{new Random().Next(10000, 99999)}";
+            return Guid.NewGuid().ToString();
         }
 
         public FlagshipStatus GetSdkStatus()

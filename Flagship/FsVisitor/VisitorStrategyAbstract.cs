@@ -288,7 +288,7 @@ namespace Flagship.FsVisitor
                 VisitorIsAuthenticated = string.IsNullOrEmpty(Visitor.AnonymousId),
                 VisitorFlags = Visitor.Flags,
                 VisitorAssignmentHistory = assignmentHistory,
-                LastBucketingTimestamp = "",
+                LastBucketingTimestamp = DecisionManager.LastBucketingTimestamp,
                 LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                 HttpResponseTime = (DateTime.Now - now).Milliseconds,
 
@@ -311,7 +311,6 @@ namespace Flagship.FsVisitor
             await SendTroubleshootingHit(fetchFlagTroubleshootingHit);
             await SendConsentHitTroubleshooting();
             await SendSegmentHitTroubleshooting();
-
         }
         public async virtual Task SendUsageHitSdkConfig()
         {
@@ -324,19 +323,20 @@ namespace Flagship.FsVisitor
             var hash = BitConverter.ToUInt32(hashBytes, 0);
             var traffic = hash % 100;
 
-            if (traffic >= Constants.ANALYTIC_HIT_ALLOCATION)
+            if (traffic >= Constants.USAGE_HIT_ALLOCATION)
             {
                 return;
             }
 
             var analyticData = new UsageHit()
             {
-                Label= DiagnosticLabel.SDK_CONFIG,
+                VisitorId= Visitor.SdkInitialData?.InstanceId,
+                Label = DiagnosticLabel.SDK_CONFIG,
                 LogLevel= LogLevel.INFO,
                 FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
                 Config= Config,
                 SdkStatus = Visitor.GetSdkStatus(),
-                LastBucketingTimestamp  = "",
+                LastBucketingTimestamp  = DecisionManager.LastBucketingTimestamp,
                 SdkConfigMode = Config.DecisionMode,
                 SdkConfigTimeout = Config.Timeout,
                 SdkConfigTrackingManagerConfigStrategy = Config.TrackingManagerConfig.CacheStrategy,

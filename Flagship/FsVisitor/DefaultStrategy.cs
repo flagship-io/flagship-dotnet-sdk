@@ -188,7 +188,7 @@ namespace Flagship.FsVisitor
                     VisitorConsent = Visitor.HasConsented,
                     VisitorIsAuthenticated = string.IsNullOrEmpty(Visitor.AnonymousId),
                     VisitorFlags = Visitor.Flags,
-                    LastBucketingTimestamp = "",
+                    LastBucketingTimestamp = DecisionManager.LastBucketingTimestamp,
                     LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                     HttpResponseTime = (DateTime.Now - now).Milliseconds,
 

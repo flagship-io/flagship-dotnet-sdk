@@ -240,22 +240,22 @@ namespace Flagship.Hit
 
             if (SdkConfigUsingCustomHitCache != null)
             {
-                customVariable[SDK_CONFIG_USING_CUSTOM_HIT_CACHE] = SdkConfigUsingCustomHitCache.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_USING_CUSTOM_HIT_CACHE] = SdkConfigUsingCustomHitCache.GetValueOrDefault().ToString().ToLower();
             }
 
             if (SdkConfigUsingCustomVisitorCache != null)
             {
-                customVariable[SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE] = SdkConfigUsingCustomVisitorCache.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE] = SdkConfigUsingCustomVisitorCache.GetValueOrDefault().ToString().ToLower();
             }
 
             if (SdkConfigUsingOnVisitorExposed != null)
             {
-                customVariable[SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED] = SdkConfigUsingOnVisitorExposed.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED] = SdkConfigUsingOnVisitorExposed.GetValueOrDefault().ToString().ToLower();
             }
 
             if (SdkConfigDisableCache != null)
             {
-                customVariable[SDK_CONFIG_DISABLE_CACHE] = SdkConfigDisableCache.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_DISABLE_CACHE] = SdkConfigDisableCache.GetValueOrDefault().ToString().ToLower();
             }
 
             if (HttpRequestUrl != null)
@@ -338,7 +338,7 @@ namespace Flagship.Hit
 
             if (VisitorConsent != null)
             {
-                customVariable[$"{VISITOR}.{CONSENT}"] = VisitorConsent.GetValueOrDefault().ToString();
+                customVariable[$"{VISITOR}.{CONSENT}"] = VisitorConsent.GetValueOrDefault().ToString().ToLower();
             }
 
             if (VisitorAssignmentHistory != null)
@@ -366,14 +366,14 @@ namespace Flagship.Hit
                     customVariable[$"{customVariableKeyMetadata}.{VARIATION_ID}"] = $"{flagDto.VariationId}";
                     customVariable[$"{customVariableKeyMetadata}.{VARIATION_NAME}"] = $"{flagDto.VariationName}";
                     customVariable[$"{customVariableKeyMetadata}.{SLUG}"] = $"{flagDto.Slug}";
-                    customVariable[$"{customVariableKeyMetadata}.{IS_REFERENCE}"] = flagDto.IsReference.ToString();
+                    customVariable[$"{customVariableKeyMetadata}.{IS_REFERENCE}"] = flagDto.IsReference.ToString().ToLower();
 
                 }
             }
 
             if (VisitorIsAuthenticated != null)
             {
-                customVariable[$"{VISITOR}.{IS_AUTHENTICATED}"] = VisitorIsAuthenticated.GetValueOrDefault().ToString();
+                customVariable[$"{VISITOR}.{IS_AUTHENTICATED}"] = VisitorIsAuthenticated.GetValueOrDefault().ToString().ToLower();
             }
 
             if (VisitorCampaigns != null)
@@ -448,7 +448,7 @@ namespace Flagship.Hit
 
             if (FlagMetadataCampaignIsReference != null)
             {
-                customVariable[$"{FLAG}.{METADATA}.{IS_REFERENCE}"] = FlagMetadataCampaignIsReference.GetValueOrDefault().ToString();
+                customVariable[$"{FLAG}.{METADATA}.{IS_REFERENCE}"] = FlagMetadataCampaignIsReference.GetValueOrDefault().ToString().ToLower();
             }
 
             if (HitContent != null)

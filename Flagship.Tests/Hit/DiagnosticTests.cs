@@ -210,10 +210,10 @@ namespace Flagship.Hit.Tests
                 [Diagnostic.SDK_CONFIG_TRACKING_MANAGER_STRATEGY] = $"{sdkConfigTrackingManagerConfigStrategy}",
                 [Diagnostic.SDK_CONFIG_TRACKING_MANAGER_BATCH_INTERVALS] = sdkConfigTrackingManagerConfigBatchIntervals.ToString(),
                 [Diagnostic.SDK_CONFIG_TRACKING_MANAGER_POOL_MAX_SIZE] = sdkConfigTrackingManagerConfigPoolMaxSize.ToString(),
-                [Diagnostic.SDK_CONFIG_USING_CUSTOM_HIT_CACHE] = sdkConfigUsingCustomHitCache.ToString(),
-                [Diagnostic.SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE] = sdkConfigUsingCustomVisitorCache.ToString(),
-                [Diagnostic.SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED] = sdkConfigUsingOnVisitorExposed.ToString(),
-                [Diagnostic.SDK_CONFIG_DISABLE_CACHE] = sdkConfigDisableCache.ToString(),
+                [Diagnostic.SDK_CONFIG_USING_CUSTOM_HIT_CACHE] = sdkConfigUsingCustomHitCache.ToString().ToLower(),
+                [Diagnostic.SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE] = sdkConfigUsingCustomVisitorCache.ToString().ToLower(),
+                [Diagnostic.SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED] = sdkConfigUsingOnVisitorExposed.ToString().ToLower(),
+                [Diagnostic.SDK_CONFIG_DISABLE_CACHE] = sdkConfigDisableCache.ToString().ToLower(),
                 [$"{Diagnostic.HTTP}.{Diagnostic.REQUEST}.{Diagnostic.URL}"] = httpRequestUrl,
                 [$"{Diagnostic.HTTP}.{Diagnostic.REQUEST}.{Diagnostic.METHOD}"] = httpRequestMethod,
                 [$"{Diagnostic.HTTP}.{Diagnostic.REQUEST}.{Diagnostic.HEADERS}"] = JsonConvert.SerializeObject(httpRequestHeaders),
@@ -229,7 +229,7 @@ namespace Flagship.Hit.Tests
                 [$"{Diagnostic.VISITOR}.{Diagnostic.SESSION_ID}"] = visitorSessionId,
                 [$"{Diagnostic.VISITOR}.{Diagnostic.INSTANCE_TYPE}"] = $"{visitorInstanceType}",
                 [$"{Diagnostic.VISITOR}.{Diagnostic.CONTEXT}.key-context"] = "value",
-                [$"{Diagnostic.VISITOR}.{Diagnostic.CONSENT}"] = visitorConsent.ToString(),
+                [$"{Diagnostic.VISITOR}.{Diagnostic.CONSENT}"] = visitorConsent.ToString().ToLower(),
                 [$"{Diagnostic.VISITOR}.{Diagnostic.ASSIGNMENTS}.[campaignId]"] = "variationId",
                 [$"{commonKey}.{Diagnostic.KEY}"] = $"{flagDto.Key}",
                 [$"{commonKey}.{Diagnostic.VALUE}"] = flagDto.Value is string flagDtoValue ? flagDtoValue : JsonConvert.SerializeObject(flagDto.Value),
@@ -241,8 +241,8 @@ namespace Flagship.Hit.Tests
                 [$"{customVariableKeyMetadata}.{Diagnostic.VARIATION_ID}"] = $"{flagDto.VariationId}",
                 [$"{customVariableKeyMetadata}.{Diagnostic.VARIATION_NAME}"] = $"{flagDto.VariationName}",
                 [$"{customVariableKeyMetadata}.{Diagnostic.SLUG}"] = $"{flagDto.Slug}",
-                [$"{customVariableKeyMetadata}.{Diagnostic.IS_REFERENCE}"] = flagDto.IsReference.ToString(),
-                [$"{Diagnostic.VISITOR}.{Diagnostic.IS_AUTHENTICATED}"] = visitorIsAuthenticated.ToString(),
+                [$"{customVariableKeyMetadata}.{Diagnostic.IS_REFERENCE}"] = flagDto.IsReference.ToString().ToLower(),
+                [$"{Diagnostic.VISITOR}.{Diagnostic.IS_AUTHENTICATED}"] = visitorIsAuthenticated.ToString().ToLower(),
                 [$"{Diagnostic.VISITOR}.{Diagnostic.CAMPAIGNS}"] = JsonConvert.SerializeObject(visitorCampaigns),
                 [Diagnostic.CONTEXT_KEY] = contextKey,
                 [Diagnostic.CONTEXT_VALUE] = contextValue,
@@ -257,7 +257,7 @@ namespace Flagship.Hit.Tests
                 [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.VARIATION_NAME}"] = flagMetadataVariationName,
                 [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.CAMPAIGN_SLUG}"] = flagMetadataCampaignSlug,
                 [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.CAMAPAIGN_TYPE}"] = flagMetadataCampaignType,
-                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.IS_REFERENCE}"] = flagMetadataCampaignIsReference.ToString()
+                [$"{Diagnostic.FLAG}.{Diagnostic.METADATA}.{Diagnostic.IS_REFERENCE}"] = flagMetadataCampaignIsReference.ToString().ToLower()
             };
 
 

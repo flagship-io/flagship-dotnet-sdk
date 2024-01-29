@@ -188,15 +188,22 @@ namespace Flagship.FsVisitor.Tests
                 ["key"] = 1,
             };
 
-            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
-
-            visitorDelegate.ConsentHitTroubleshooting = new Troubleshooting();
-            visitorDelegate.SegmentHitTroubleshooting = new Troubleshooting();
-
-            var strategy = new DefaultStrategy(visitorDelegate)
+            var visitorDelegate = new VisitorDelegate("8b48f7c7-97ff-4002-a958-108f8aa8b58e", false, context, false, configManager)
             {
-                Murmur32 = MurmurHash.Create32()
+                ConsentHitTroubleshooting = new Troubleshooting(),
+                SegmentHitTroubleshooting = new Troubleshooting()
             };
+
+            var strategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+
+            var currentTime = new DateTime(2024,1,29);
+            strategyMock.SetupGet(x => x.CurrentDateTime).Returns(currentTime);
+
+            var strategy = strategyMock.Object;
+            strategy.Murmur32 = MurmurHash.Create32();
 
             await strategy.SendUsageHitSdkConfig();
 

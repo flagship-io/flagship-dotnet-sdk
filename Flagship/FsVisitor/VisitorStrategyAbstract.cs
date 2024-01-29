@@ -39,6 +39,8 @@ namespace Flagship.FsVisitor
             Visitor = visitor;
         }
 
+        internal virtual DateTime CurrentDateTime { get => DateTime.Now; }
+
         virtual public async Task SendConsentHitAsync(bool hasConsented)
         {
             if (!hasConsented)
@@ -318,12 +320,12 @@ namespace Flagship.FsVisitor
             {
                 return;
             }
-            var uniqueId = Visitor.VisitorId + new DateTime().ToShortDateString();
+            var uniqueId = Visitor.VisitorId + CurrentDateTime.ToShortDateString();
             var hashBytes = Murmur32.ComputeHash(Encoding.UTF8.GetBytes(uniqueId));
             var hash = BitConverter.ToUInt32(hashBytes, 0);
-            var traffic = hash % 100;
+            var traffic = hash % 1000;
 
-            if (traffic >= Constants.USAGE_HIT_ALLOCATION)
+            if (traffic > Constants.USAGE_HIT_ALLOCATION)
             {
                 return;
             }

@@ -107,7 +107,7 @@ namespace Flagship.Decision
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
-                    LastBucketingTimestamp = DateTime.Now.ToUniversalTime().ToString("u");
+                    LastBucketingTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
 
                     var troubleshootingHit = new Troubleshooting()
                     {

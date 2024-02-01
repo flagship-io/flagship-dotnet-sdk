@@ -301,6 +301,7 @@ namespace Flagship.FsVisitor
                 SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,
                 SdkConfigUsingCustomHitCache = Config.HitCacheImplementation != null,
                 SdkConfigUsingCustomVisitorCache = Config.VisitorCacheImplementation != null,
+                SdkConfigUsingCustomLogManagere = Config.LogManager is Logger.FsLogManager, 
                 SdkConfigUsingOnVisitorExposed = Config.HasOnVisitorExposed(),
                 SdkConfigDisableCache = Config.DisableCache
             };
@@ -339,16 +340,23 @@ namespace Flagship.FsVisitor
                 Config= Config,
                 SdkStatus = Visitor.GetSdkStatus(),
                 LastBucketingTimestamp  = DecisionManager.LastBucketingTimestamp,
+                LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                 SdkConfigMode = Config.DecisionMode,
                 SdkConfigTimeout = Config.Timeout,
                 SdkConfigTrackingManagerConfigStrategy = Config.TrackingManagerConfig.CacheStrategy,
                 SdkConfigTrackingManagerConfigBatchIntervals = Config.TrackingManagerConfig.BatchIntervals,
                 SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,
+                SdkConfigUsingCustomLogManagere = !(Config.LogManager is Logger.FsLogManager),
                 SdkConfigUsingCustomHitCache = Config.HitCacheImplementation != null,
                 SdkConfigUsingCustomVisitorCache = Config.VisitorCacheImplementation != null,
                 SdkConfigUsingOnVisitorExposed = Config.HasOnVisitorExposed(),
                 SdkConfigDisableCache = Config.DisableCache
             };
+
+            if (Config is BucketingConfig bucketingConfig)
+            {
+                analyticData.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
+            }
 
             await TrackingManager.SendUsageHit(analyticData);
         }

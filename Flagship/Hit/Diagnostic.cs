@@ -30,6 +30,7 @@ namespace Flagship.Hit
         public const string SDK_CONFIG_TRACKING_MANAGER_POOL_MAX_SIZE = "sdk.config.trackingManager.poolMaxSize";
         public const string SDK_CONFIG_USING_CUSTOM_HIT_CACHE = "sdk.config.usingCustomHitCache";
         public const string SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE = "sdk.config.usingCustomVisitorCache";
+        public const string SDK_CONFIG_USING_CUSTOM_LOG_MANAGER = "sdk.config.usingCustomLogManager";
         public const string SDK_CONFIG_USIGN_ON_VISITOR_EXPOSED = "sdk.config.usingOnVisitorExposed";
         public const string SDK_CONFIG_DISABLE_CACHE = "sdk.config.disableCache";
         public const string METHOD = "method";
@@ -97,6 +98,8 @@ namespace Flagship.Hit
         public bool? SdkConfigUsingCustomVisitorCache { get; set; }
         public bool? SdkConfigUsingOnVisitorExposed { get; set; }
         public bool? SdkConfigDisableCache { get; set; }
+         
+        public bool? SdkConfigUsingCustomLogManagere { get; set; }
 
         public string HttpRequestUrl { get; set; }
         public string HttpRequestMethod { get; set; }
@@ -215,12 +218,12 @@ namespace Flagship.Hit
 
             if (SdkConfigTimeout != null)
             {
-                customVariable[SDK_CONFIG_TIMEOUT] = SdkConfigTimeout.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_TIMEOUT] = SdkConfigTimeout.GetValueOrDefault().TotalMilliseconds.ToString();
             }
 
             if (SdkConfigPollingInterval != null)
             {
-                customVariable[SDK_CONFIG_POLLING_TIME] = SdkConfigPollingInterval.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_POLLING_TIME] = SdkConfigPollingInterval.GetValueOrDefault().TotalMilliseconds.ToString();
             }
 
             if (SdkConfigTrackingManagerConfigStrategy != null)
@@ -230,7 +233,7 @@ namespace Flagship.Hit
 
             if (SdkConfigTrackingManagerConfigBatchIntervals != null)
             {
-                customVariable[SDK_CONFIG_TRACKING_MANAGER_BATCH_INTERVALS] = SdkConfigTrackingManagerConfigBatchIntervals.GetValueOrDefault().ToString();
+                customVariable[SDK_CONFIG_TRACKING_MANAGER_BATCH_INTERVALS] = SdkConfigTrackingManagerConfigBatchIntervals.GetValueOrDefault().TotalMilliseconds.ToString();
             }
 
             if (SdkConfigTrackingManagerConfigPoolMaxSize != null)
@@ -246,6 +249,11 @@ namespace Flagship.Hit
             if (SdkConfigUsingCustomVisitorCache != null)
             {
                 customVariable[SDK_CONFIG_USING_CUSTOM_VISITOR_CACHE] = SdkConfigUsingCustomVisitorCache.GetValueOrDefault().ToString().ToLower();
+            }
+
+            if (SdkConfigUsingCustomLogManagere != null)
+            {
+                customVariable[SDK_CONFIG_USING_CUSTOM_LOG_MANAGER] = SdkConfigUsingCustomLogManagere.GetValueOrDefault().ToString().ToLower();
             }
 
             if (SdkConfigUsingOnVisitorExposed != null)

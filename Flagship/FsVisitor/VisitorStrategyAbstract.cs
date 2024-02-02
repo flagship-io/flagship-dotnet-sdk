@@ -294,6 +294,7 @@ namespace Flagship.FsVisitor
                 LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                 HttpResponseTime = (DateTime.Now - now).Milliseconds,
 
+                SdkConfigLogLevel = Config.LogLevel,
                 SdkConfigMode = Config.DecisionMode,
                 SdkConfigTimeout = Config.Timeout,
                 SdkConfigTrackingManagerConfigStrategy = Config.TrackingManagerConfig.CacheStrategy,
@@ -343,6 +344,7 @@ namespace Flagship.FsVisitor
                 LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                 SdkConfigMode = Config.DecisionMode,
                 SdkConfigTimeout = Config.Timeout,
+                SdkConfigLogLevel = Config.LogLevel,
                 SdkConfigTrackingManagerConfigStrategy = Config.TrackingManagerConfig.CacheStrategy,
                 SdkConfigTrackingManagerConfigBatchIntervals = Config.TrackingManagerConfig.BatchIntervals,
                 SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,

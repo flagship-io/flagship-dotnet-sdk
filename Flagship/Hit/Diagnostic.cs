@@ -23,6 +23,7 @@ namespace Flagship.Hit
         public const string SDK_BUCKETING_FILE = "sdkBucketingFile";
         public const string SDK_STATUS = "sdk.status";
         public const string SDK_CONFIG_MODE = "sdk.config.mode";
+        public const string SDK_CONFIG_LOG_LEVEL = "sdk.config.logLevel";
         public const string SDK_CONFIG_TIMEOUT = "sdk.config.timeout";
         public const string SDK_CONFIG_POLLING_TIME = "sdk.config.pollingTime";
         public const string SDK_CONFIG_TRACKING_MANAGER_STRATEGY = "sdk.config.trackingManager.strategy";
@@ -88,6 +89,9 @@ namespace Flagship.Hit
 
         public FlagshipStatus? SdkStatus { get; set; }
         public DecisionMode? SdkConfigMode { get; set; }
+
+        public LogLevel? SdkConfigLogLevel { get; set; }
+
         public TimeSpan? SdkConfigTimeout { get; set; }
         public TimeSpan? SdkConfigPollingInterval { get; set; }
         public Model.Bucketing.BucketingDTO SdkBucketingFile { get; set; }
@@ -208,6 +212,12 @@ namespace Flagship.Hit
             if (SdkStatus != null)
             {
                 customVariable[SDK_STATUS] = $"{SdkStatus}";
+            }
+
+            if (SdkConfigLogLevel != null)
+
+            {
+                customVariable[SDK_CONFIG_LOG_LEVEL] = $"{SdkConfigLogLevel}";
             }
 
             if (SdkConfigMode != null)

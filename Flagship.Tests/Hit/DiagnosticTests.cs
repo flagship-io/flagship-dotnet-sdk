@@ -134,6 +134,7 @@ namespace Flagship.Hit.Tests
             diagnostic.Traffic = traffic;
             diagnostic.FlagshipInstanceId = flagshipInstanceId;
             diagnostic.SdkStatus = sdkStatus;
+            diagnostic.SdkConfigLogLevel = config.LogLevel;
             diagnostic.SdkConfigMode = sdkConfigMode;
             diagnostic.SdkConfigTimeout = sdkConfigTimeout;
             diagnostic.SdkConfigPollingInterval = sdkConfigPollingInterval;
@@ -204,6 +205,7 @@ namespace Flagship.Hit.Tests
                 [Diagnostic.ENV_ID] = config.EnvId,
                 [Diagnostic.SDK_BUCKETING_FILE] = JsonConvert.SerializeObject(sdkBucketingFile),
                 [Diagnostic.SDK_STATUS] = $"{sdkStatus}",
+                [Diagnostic.SDK_CONFIG_LOG_LEVEL] = $"{config.LogLevel}",
                 [Diagnostic.SDK_CONFIG_MODE] = $"{sdkConfigMode}",
                 [Diagnostic.SDK_CONFIG_TIMEOUT] = sdkConfigTimeout.TotalMilliseconds.ToString(),
                 [Diagnostic.SDK_CONFIG_POLLING_TIME] = sdkConfigPollingInterval.TotalMilliseconds.ToString(),

@@ -350,7 +350,7 @@ namespace Flagship.Hit
             {
                 foreach (var item in VisitorContext)
                 {
-                    customVariable[$"{VISITOR}.{CONTEXT}.{item.Key}"] = item.Value.ToString();
+                    customVariable[$"{VISITOR}.{CONTEXT}.[{item.Key}]"] = item.Value.ToString();
                 }
             }
 

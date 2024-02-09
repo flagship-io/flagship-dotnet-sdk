@@ -230,7 +230,7 @@ namespace Flagship.Hit.Tests
                 [$"{Diagnostic.VISITOR}.{Diagnostic.ANONYMOUS_ID}"] = anonymousId,
                 [$"{Diagnostic.VISITOR}.{Diagnostic.SESSION_ID}"] = visitorSessionId,
                 [$"{Diagnostic.VISITOR}.{Diagnostic.INSTANCE_TYPE}"] = $"{visitorInstanceType}",
-                [$"{Diagnostic.VISITOR}.{Diagnostic.CONTEXT}.key-context"] = "value",
+                [$"{Diagnostic.VISITOR}.{Diagnostic.CONTEXT}.[key-context]"] = "value",
                 [$"{Diagnostic.VISITOR}.{Diagnostic.CONSENT}"] = visitorConsent.ToString().ToLower(),
                 [$"{Diagnostic.VISITOR}.{Diagnostic.ASSIGNMENTS}.[campaignId]"] = "variationId",
                 [$"{commonKey}.{Diagnostic.KEY}"] = $"{flagDto.Key}",

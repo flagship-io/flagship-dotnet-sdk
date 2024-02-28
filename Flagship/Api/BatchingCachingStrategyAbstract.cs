@@ -133,7 +133,9 @@ namespace Flagship.Api
 
             var hitKeysToRemove = new List<string>();
 
-            foreach (var item in HitsPoolQueue)
+            var HitsPoolQueueClone = HitsPoolQueue.ToList();
+
+            foreach (var item in HitsPoolQueueClone)
             {
                 if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
                 {

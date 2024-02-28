@@ -72,7 +72,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             await panicStrategy.SendConsentHitAsync(false).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendConsentHitAsync", FlagshipStatus.READY_PANIC_ON), "SendConsentHitAsync"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendConsentHitAsync", FlagshipStatus.READY_PANIC_ON), "SendConsentHitAsync"), Times.Once());
         }
 
         [TestMethod()]
@@ -80,7 +80,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             panicStrategy.UpdateContext(new Dictionary<string, object>());
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
         }
 
         [TestMethod()]
@@ -88,7 +88,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             panicStrategy.UpdateContext("key","value");
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
         }
 
         [TestMethod()]
@@ -96,7 +96,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             panicStrategy.ClearContext();
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "ClearContext", FlagshipStatus.READY_PANIC_ON), "ClearContext"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "ClearContext", FlagshipStatus.READY_PANIC_ON), "ClearContext"), Times.Once());
         }
 
         [TestMethod()]
@@ -104,7 +104,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             await panicStrategy.SendHit(new Flagship.Hit.Screen("")).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FlagshipStatus.READY_PANIC_ON), "SendHit"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FlagshipStatus.READY_PANIC_ON), "SendHit"), Times.Once());
         }
 
         [TestMethod()]
@@ -113,7 +113,7 @@ namespace Flagship.FsVisitor.Tests
             var panicStrategy = new PanicStrategy(visitorDelegate);
             var value = panicStrategy.GetFlagValue("key", "defaultValue", null);
             Assert.AreEqual(value, "defaultValue");
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FlagshipStatus.READY_PANIC_ON), "Flag.value"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FlagshipStatus.READY_PANIC_ON), "Flag.value"), Times.Once());
         }
 
         [TestMethod()]
@@ -121,7 +121,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             await panicStrategy.VisitorExposed("key", "defaultValue", null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FlagshipStatus.READY_PANIC_ON), "VisitorExposed"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FlagshipStatus.READY_PANIC_ON), "VisitorExposed"), Times.Once());
         }
 
         [TestMethod()]
@@ -130,7 +130,7 @@ namespace Flagship.FsVisitor.Tests
             var panicStrategy = new PanicStrategy(visitorDelegate);
             var value = panicStrategy.GetFlagMetadata(null, "key", false);
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(value));
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.metadata", FlagshipStatus.READY_PANIC_ON), "Flag.metadata"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.metadata", FlagshipStatus.READY_PANIC_ON), "Flag.metadata"), Times.Once());
         }
 
         [TestMethod()]

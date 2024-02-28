@@ -74,7 +74,7 @@ namespace Flagship.FsVisitor.Tests
             var noConsentStategy = new NoConsentStrategy(visitorDelegate);
             var defaultValue = "default";
             await noConsentStategy.VisitorExposed("key", defaultValue, null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "VisitorExposed", visitorDelegate.VisitorId), "VisitorExposed"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "VisitorExposed", visitorDelegate.VisitorId), "VisitorExposed"), Times.Once());
         }
 
         [TestMethod()]
@@ -104,7 +104,7 @@ namespace Flagship.FsVisitor.Tests
 
             await noConsentStategy.SendHit(new Flagship.Hit.Screen("Home")).ConfigureAwait(false);
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "SendHit", visitorDelegate.VisitorId), "SendHit"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "SendHit", visitorDelegate.VisitorId), "SendHit"), Times.Once());
         }
 
         [TestMethod()]

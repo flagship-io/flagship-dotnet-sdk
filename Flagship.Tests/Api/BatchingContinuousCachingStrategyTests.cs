@@ -1825,7 +1825,7 @@ namespace Flagship.Api.Tests
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var url = Constants.ANALYTICS_HIT_URL;
+                var url = Constants.USAGE_HIT_URL;
 
                 var result = x.Content.ReadAsStringAsync().Result;
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
@@ -1907,7 +1907,7 @@ namespace Flagship.Api.Tests
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var url = Constants.ANALYTICS_HIT_URL;
+                var url = Constants.USAGE_HIT_URL;
 
                 var result = x.Content.ReadAsStringAsync().Result;
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post

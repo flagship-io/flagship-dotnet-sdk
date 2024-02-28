@@ -52,7 +52,7 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, methodName, Visitor.VisitorId), methodName);
+            Logger.Log.LogInfo(Config, string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, methodName, Visitor.VisitorId), methodName);
         }
 
         public override void AddTroubleshootingHit(Troubleshooting hit)

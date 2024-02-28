@@ -865,22 +865,28 @@ namespace Flagship.Decision.Tests
                 ["age"] = 20
             };
 
-            var visitorDelegate = new Mock<FsVisitor.VisitorDelegate>("visitor_1", false, context, false, configManager, null)
+            var visitorDelegateMock = new Mock<FsVisitor.VisitorDelegate>("visitor_1", false, context, false, configManager, null)
             {
                 CallBase = true
             };
 
-            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])));
+            visitorDelegateMock.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])));
 
-            await decisionManagerMock.SendContextAsync(visitorDelegate.Object);
+            var visitorDelegate = visitorDelegateMock.Object;
 
-            visitorDelegate.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
+            await decisionManagerMock.SendContextAsync(visitorDelegate);
+
+            visitorDelegate.SetConsent(true);
+
+            await decisionManagerMock.SendContextAsync(visitorDelegate);
+
+            visitorDelegateMock.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
 
             var exception = new Exception("sendHit error");
 
-            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);
+            visitorDelegateMock.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);
 
-            await decisionManagerMock.SendContextAsync(visitorDelegate.Object);
+            await decisionManagerMock.SendContextAsync(visitorDelegateMock.Object);
 
             fsLogManagerMock.Verify(x => x.Error(exception.Message, "SendContext"), Times.Once());
 

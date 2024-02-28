@@ -85,7 +85,7 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.READY_PANIC_ON), methodName);
+            Logger.Log.LogInfo(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.READY_PANIC_ON), methodName);
         }
 
         public override void AddTroubleshootingHit(Troubleshooting hit)

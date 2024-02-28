@@ -35,12 +35,12 @@ namespace Flagship.Api
         static public string SEND_HIT = "SEND HIT";
         static public string SEND_ACTIVATE = "SEND ACTIVATE";
         static public string SEND_TROUBLESHOOTING = "SEND TROUBLESHOOTING";
-        static public string SEND_ANALYTIC = "SEND ANALYTIC";
+        static public string SEND_USAGE_HIT = "SEND USAGE HIT";
         static public string ON_VISITOR_EXPOSED = "ON_VISITOR_EXPOSED";
         static public string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
         static public string HIT_SENT_SUCCESS = "hit has been sent : {0}";
         static public string TROUBLESHOOTING_SENT_SUCCESS = "Troubleshooting hit has been sent : {0}";
-        static public string ANALYTIC_SENT_SUCCESS = "Analytic hit has been sent : {0}";
+        static public string USAGE_SENT_SUCCESS = "Usage hit has been sent : {0}";
         static public string URL_ACTIVATE = "activate";
         static public string URL_EVENT = "events";
         static public string STATUS_CODE = "StatusCode:";
@@ -493,7 +493,7 @@ namespace Flagship.Api
         }
         public async virtual Task SendUsageHit(UsageHit hit)
         {
-            var url = Constants.ANALYTICS_HIT_URL;
+            var url = Constants.USAGE_HIT_URL;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
 
             requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
@@ -523,13 +523,13 @@ namespace Flagship.Api
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                Logger.Log.LogDebug(Config, string.Format(ANALYTIC_SENT_SUCCESS, JsonConvert.SerializeObject(new
+                Logger.Log.LogDebug(Config, string.Format(USAGE_SENT_SUCCESS, JsonConvert.SerializeObject(new
                 {
                     url,
                     headers = new Dictionary<string, string>(),
                     body = requestBody,
                     duration = (DateTime.Now - now).TotalMilliseconds
-                })), SEND_ANALYTIC);
+                })), SEND_USAGE_HIT);
 
                 if (!string.IsNullOrWhiteSpace(hit.Key))
                 {
@@ -546,7 +546,7 @@ namespace Flagship.Api
                     headers = new Dictionary<string, string>(),
                     body = requestBody,
                     duration = (DateTime.Now - now).TotalMilliseconds,
-                }), SEND_ANALYTIC);
+                }), SEND_USAGE_HIT);
             }
         }
 

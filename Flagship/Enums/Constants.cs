@@ -29,7 +29,7 @@ namespace Flagship.Enums
 
         public const string TROUBLESHOOTING_HIT_URL = "https://events.flagship.io/troubleshooting";
 
-        public const string ANALYTICS_HIT_URL = "https://events.flagship.io/analytics";
+        public const string USAGE_HIT_URL = "https://events.flagship.io/analytics";
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 

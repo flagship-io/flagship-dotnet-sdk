@@ -193,6 +193,10 @@ namespace Flagship.Decision
         {
             try
             {
+                if(!visitor.HasConsented)
+                {
+                    return;
+                }
                 var segment = new Segment(visitor.Context);
                 await visitor.SendHit(segment);
 
@@ -213,7 +217,6 @@ namespace Flagship.Decision
             }
             catch (Exception ex)
             {
-
                 Log.LogError(Config, ex.Message, "SendContext");
             }
         }
@@ -226,12 +229,12 @@ namespace Flagship.Decision
                 return campaigns;
             }
 
-            if (BucketingContent.AccountSettings != null)
+            if (BucketingContent.AccountSettings?.Troubleshooting != null)
             {
                 TroubleshootingData = BucketingContent.AccountSettings.Troubleshooting;
             }
 
-            if (BucketingContent.Panic.HasValue && BucketingContent.Panic.Value)
+            if (BucketingContent.Panic.GetValueOrDefault())
             {
                 IsPanic = true;
                 return campaigns;
@@ -252,27 +255,22 @@ namespace Flagship.Decision
             }
 
             return campaigns;
-
         }
 
         protected Model.Campaign GetMatchingVisitorVariationGroup(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId, string campaignType)
         {
-            foreach (var item in variationGroups)
+            var matchingGroup = variationGroups.FirstOrDefault(item => IsMatchedTargeting(item, visitor));
+            if (matchingGroup != null)
             {
-                var check = IsMatchedTargeting(item, visitor);
-                if (check)
+                var variation = GetVariation(matchingGroup, visitor);
+                if (variation != null)
                 {
-                    var variation = GetVariation(item, visitor);
-                    if (variation == null)
-                    {
-                        return null;
-                    }
                     return new Model.Campaign
                     {
                         Id = campaignId,
                         Variation = variation,
-                        VariationGroupId = item.Id,
-                        VariationGroupName = item.Name,
+                        VariationGroupId = matchingGroup.Id,
+                        VariationGroupName = matchingGroup.Name,
                         Type = campaignType
                     };
                 }
@@ -373,7 +371,7 @@ namespace Flagship.Decision
                 }
                 else
                 {
-                    if (!(visitor.Context.ContainsKey(item.Key)))
+                    if (!visitor.Context.ContainsKey(item.Key))
                     {
                         check = false;
                         break;

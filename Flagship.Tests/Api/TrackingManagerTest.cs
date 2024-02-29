@@ -72,7 +72,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -92,6 +92,28 @@ namespace Flagship.Tests.Api
             await trackingManager.Add(page).ConfigureAwait(false);
 
             strategyMock.Verify(x => x.Add(page), Times.Once());
+
+            // Test SendTroubleshootingHit
+
+            var troubleshooting = new Troubleshooting();
+
+            await trackingManager.SendTroubleshootingHit(troubleshooting);
+
+            strategyMock.Verify(x=> x.SendTroubleshootingHit(troubleshooting), Times.Once());
+
+            //Test AddTroubleshootingHit
+
+            trackingManager.AddTroubleshootingHit(troubleshooting);
+
+            strategyMock.Verify(x => x.AddTroubleshootingHit(troubleshooting), Times.Once());
+
+            //Test
+
+            var usageHit = new UsageHit();
+
+            await trackingManager.SendUsageHit(usageHit);
+
+            strategyMock.Verify(x=> x.SendUsageHit(usageHit), Times.Once());    
         }
 
         [TestMethod]
@@ -106,7 +128,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -140,7 +162,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig()
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -156,10 +178,14 @@ namespace Flagship.Tests.Api
             trackingManagerMock.Protected().SetupGet<BatchingCachingStrategyAbstract>("Strategy").Returns(strategyMock.Object);
             
             strategyMock.Setup(x => x.SendBatch(CacheTriggeredBy.BatchLength)).Returns(Task.CompletedTask);
+            strategyMock.Setup(x => x.SendTroubleshootingQueue()).Returns(Task.CompletedTask);
+            strategyMock.Setup(x => x.SendUsageHitQueue()).Returns(Task.CompletedTask);
 
             await trackingManager.SendBatch().ConfigureAwait(false);
 
             strategyMock.Verify(x => x.SendBatch(CacheTriggeredBy.BatchLength), Times.Once());
+            strategyMock.Verify(x => x.SendTroubleshootingQueue(), Times.Once());
+            strategyMock.Verify(x => x.SendUsageHitQueue(), Times.Once());
         }
 
         [TestMethod]
@@ -176,7 +202,7 @@ namespace Flagship.Tests.Api
                 5, TimeSpan.FromMilliseconds(500)),
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -208,7 +234,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig(),
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -236,7 +262,7 @@ namespace Flagship.Tests.Api
                 TrackingManagerConfig = new Config.TrackingManagerConfig(),
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -273,7 +299,7 @@ namespace Flagship.Tests.Api
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -389,7 +415,7 @@ namespace Flagship.Tests.Api
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };
@@ -452,7 +478,7 @@ namespace Flagship.Tests.Api
                 HitCacheImplementation = hitCacheImplementation.Object,
             };
 
-            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object)
+            var trackingManagerMock = new Mock<Flagship.Api.TrackingManager>(config, httpClientMock.Object, null)
             {
                 CallBase = true,
             };

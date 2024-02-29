@@ -92,17 +92,35 @@ namespace Flagship.Api
                     duration = (DateTime.Now - now).TotalMilliseconds,
                     batchTriggeredBy = $"{CacheTriggeredBy.DirectHit}"
                 }), SEND_HIT);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SEND_HIT_ROUTE_ERROR,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpRequestUrl = Constants.HIT_EVENT_URL,
+                    HttpsRequestBody = requestBody,
+                    HttpResponseBody = ex.Message,
+                    HttpResponseMethod = "POST",
+                    HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
+                    BatchTriggeredBy = CacheTriggeredBy.DirectHit
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
             }
         }
 
         public async override Task NotConsent(string visitorId)
         {
             var keysHit = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-            (x.Value.VisitorId==visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
+            (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
 
             var keysActivate = ActivatePoolQueue.Where(x => (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
 
-            var visitorCacheKeys = _cacheHitKeys.Where(x=> x.Value ==  visitorId).Select(x => x.Key).ToArray();
+            var visitorCacheKeys = _cacheHitKeys.Where(x => x.Value == visitorId).Select(x => x.Key).ToArray();
 
             foreach (var item in keysHit)
             {
@@ -127,7 +145,7 @@ namespace Flagship.Api
             {
                 return;
             }
-            
+
             await FlushHitsAsync(mergedKeys.ToArray());
         }
 
@@ -137,7 +155,7 @@ namespace Flagship.Api
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
             var activateHitPool = new List<Activate>();
-          
+
             await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength);
         }
 
@@ -236,6 +254,25 @@ namespace Flagship.Api
                     duration = (DateTime.Now - now).TotalMilliseconds,
                     batchTriggeredBy = $"{batchTriggeredBy}"
                 }), SEND_ACTIVATE);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SEND_ACTIVATE_HIT_ROUTE_ERROR,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpRequestUrl = url,
+                    HttpsRequestBody = requestBody,
+                    HttpResponseBody = ex.Message,
+                    HttpResponseMethod = "POST",
+                    HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
+                    BatchTriggeredBy = batchTriggeredBy
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
+
             }
         }
     }

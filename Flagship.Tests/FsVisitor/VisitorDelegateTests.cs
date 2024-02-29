@@ -11,6 +11,10 @@ using Flagship.Tests.Data;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Flagship.Logger;
+using Flagship.Api;
+using Flagship.Config;
+using Flagship.Decision;
+using Flagship.Hit;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -23,21 +27,21 @@ namespace Flagship.FsVisitor.Tests
         {
             ["key"] = "value"
         };
-        Mock<Flagship.Config.IConfigManager> configManager;
+        Mock<Flagship.Config.ConfigManager> configManager;
         Mock<VisitorStrategyAbstract> defaultStrategy;
-
+        Mock<ITrackingManager> trackingManagerMock = new Mock<ITrackingManager>();
 
         public VisitorDelegateTests()
         {
             var config = new Config.DecisionApiConfig();
-            configManager = new Mock<Flagship.Config.IConfigManager>()
+            var decisionManagerMock = new Mock<IDecisionManager>();
+
+            configManager = new Mock<Flagship.Config.ConfigManager>(config, decisionManagerMock.Object, trackingManagerMock.Object)
             {
                 CallBase = true
             };
-            configManager.Object.Config = config;
-            configManager.SetupGet(x => x.Config).Returns(config);
 
-            visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object });
+            visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object, null });
             visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
             defaultStrategy = new Mock<VisitorStrategyAbstract>(visitorDelegateMock.Object);
 
@@ -52,7 +56,7 @@ namespace Flagship.FsVisitor.Tests
         public void TestStrategy()
         {
             var flagship = new Mock<Flagship.Main.Fs>();
-            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object);
+            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object, null);
             var privateVisitor = new PrivateObject(visitorDelegate);
             privateVisitor.Invoke("GetStrategy");
         }
@@ -61,7 +65,7 @@ namespace Flagship.FsVisitor.Tests
         public void VisitorDelegateTest()
         {
             
-            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object );
+            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object, null );
 
             Assert.IsNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
@@ -71,14 +75,13 @@ namespace Flagship.FsVisitor.Tests
 
             visitor = new VisitorDelegate(null, false, context, false, configManager.Object);
             Assert.IsNotNull(visitor.VisitorId);
-            Assert.AreEqual(visitor.VisitorId.Length, 19);
+            Assert.AreEqual(visitor.VisitorId.Length, 36);
 
             visitor = new VisitorDelegate(visitorId, true, context, false, configManager.Object);
             Assert.IsNotNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.AreEqual(36,visitor.AnonymousId.Length);
             Assert.AreEqual(Enums.FlagSyncStatus.CREATED, visitor.FlagSyncStatus);
-
         }
 
         [TestMethod()]
@@ -200,7 +203,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UserExposedTest()
         {
-            defaultStrategy.Setup(x => x.UserExposed("key", "default", null))
+            defaultStrategy.Setup(x => x.VisitorExposed("key", "default", null))
                 .Verifiable();
             visitorDelegateMock.Object.VisitorExposed("key", "default", null);
             defaultStrategy.Verify();
@@ -289,6 +292,7 @@ namespace Flagship.FsVisitor.Tests
             var visitorId = "newVisitorID";
             defaultStrategy.Setup(x => x.Authenticate(visitorId))
             .Verifiable();
+
             visitorDelegateMock.Object.Authenticate(visitorId);
 
             defaultStrategy.Verify(x=>x.Authenticate(visitorId),Times.Once());

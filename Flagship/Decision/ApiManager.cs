@@ -1,9 +1,12 @@
-﻿using Flagship.Config;
+﻿using Flagship.Api;
+using Flagship.Config;
 using Flagship.Enums;
 using Flagship.FsVisitor;
+using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,11 +27,22 @@ namespace Flagship.Decision
 
         public async override Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
         {
-            
+
+            var postData = new Dictionary<string, object>
+            {
+                ["visitorId"] = visitor.VisitorId,
+                ["anonymousId"] = visitor.AnonymousId,
+                ["trigger_hit"] = false,
+                ["context"] = visitor.Context,
+                ["visitor_consent"] = visitor.HasConsented
+            };
+
+            var now = DateTime.Now;
+
             try
             {
                 
-                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true";
+                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true&extras[]=accountSettings";
 
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
@@ -38,16 +52,6 @@ namespace Flagship.Decision
                 requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
                 requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
                 
-               
-                var postData = new Dictionary<string, object>
-                {
-                    ["visitorId"] = visitor.VisitorId,
-                    ["anonymousId"] = visitor.AnonymousId,
-                    ["trigger_hit"] = false,
-                    ["context"] = visitor.Context,
-                    ["visitor_consent"] = visitor.HasConsented
-                };
-
                 var postDatajson = JsonConvert.SerializeObject(postData);
 
                 var stringContent = new StringContent(postDatajson, Encoding.UTF8, "application/json");
@@ -63,16 +67,36 @@ namespace Flagship.Decision
 
                 string responseBody = await response.Content.ReadAsStringAsync();
 
-                var decisionResponse = JsonConvert.DeserializeObject<DecisionResponse>(responseBody);
+                var decisionResponse = JsonConvert.DeserializeObject<DecisionResponse>(responseBody, new IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ" });
 
+                
                 IsPanic = decisionResponse.Panic;
 
-                return decisionResponse.Campaigns;
+                TroubleshootingData = decisionResponse?.Extras?.AccountSettings?.Troubleshooting;
 
+                return decisionResponse.Campaigns;
             }
             catch (Exception ex)
             {
                 Log.LogError(Config, ex.Message, "GetCampaigns");
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SEND_ACTIVATE_HIT_ROUTE_ERROR,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = visitor.VisitorId,
+                    FlagshipInstanceId = visitor.SdkInitialData?.InstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpRequestUrl = Constants.HIT_EVENT_URL,
+                    HttpsRequestBody = postData,
+                    HttpResponseBody = ex.Message,
+                    HttpResponseMethod = "POST",
+                    HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds
+                };
+
+                TrackingManager?.AddTroubleshootingHit(troubleshooting);
+
                 return new Collection<Campaign>();
             }
         }

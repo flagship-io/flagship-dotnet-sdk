@@ -18,12 +18,20 @@ namespace Flagship.Enums
 
         public const int BATCH_MAX_SIZE = 2500000;
 
+        public const int USAGE_HIT_ALLOCATION = 1;
+
+        public const int NB_MIN_CONTEXT_KEYS = 3;
+
         /// <summary>
         /// Default request timeout in second
         /// </summary>
         public const int REQUEST_TIME_OUT = 2000;
 
         public const string BASE_API_URL =  "https://decision.flagship.io/v2/";
+
+        public const string TROUBLESHOOTING_HIT_URL = "https://events.flagship.io/troubleshooting";
+
+        public const string USAGE_HIT_URL = "https://events.flagship.io/analytics";
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 
@@ -35,7 +43,7 @@ namespace Flagship.Enums
 
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
-        public const string SDK_VERSION = "3.1.3";
+        public const string SDK_VERSION = "3.3.0";
 
         public const string FLAGSHIP_SDK = "Flagship SDK";
 
@@ -45,6 +53,8 @@ namespace Flagship.Enums
         public const string HEADER_X_SDK_VERSION = "x-sdk-version";
         public const string HEADER_APPLICATION_JSON = "application/json";
         public const string SDK_LANGUAGE = ".NET";
+
+        public const string FORMAT_UTC = "yyyy-MM-ddTHH:mm:ss.fffZ";
 
         public const string FS_CONSENT = "fs_consent";
 

@@ -10,6 +10,7 @@ using Flagship.Enums;
 using Newtonsoft.Json;
 using Flagship.Logger;
 using Newtonsoft.Json.Linq;
+using Flagship.Hit;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -91,8 +92,8 @@ namespace Flagship.FsVisitor.Tests
         public async Task UserExposedTest()
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
-            await notReadyStategy.UserExposed("key","defaultValue", null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UserExposed", FlagshipStatus.NOT_INITIALIZED), "UserExposed"), Times.Once());
+            await notReadyStategy.VisitorExposed("key","defaultValue", null).ConfigureAwait(false);
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FlagshipStatus.NOT_INITIALIZED), "VisitorExposed"), Times.Once());
         }
 
         [TestMethod()]
@@ -105,5 +106,52 @@ namespace Flagship.FsVisitor.Tests
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "flag.metadata", FlagshipStatus.NOT_INITIALIZED), "flag.metadata"), Times.Once());
         }
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                DisableDeveloperUsageTracking = true,
+            };
+
+            var trackingManagerMock = new Mock<Api.ITrackingManager>();
+            var trackingManager = trackingManagerMock.Object;
+
+            var decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
+
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var configManager = new Config.ConfigManager(config, decisionManager, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key"] = 1,
+            };
+
+            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var strategy = new NotReadyStrategy(visitorDelegate);
+
+            var troubleshootingHit = new Troubleshooting();
+
+            //Test SendTroubleshootingHit
+
+            await strategy.SendTroubleshootingHit(troubleshootingHit);
+
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
+
+            //Test AddTroubleshootingHitTest
+
+            strategy.AddTroubleshootingHit(troubleshootingHit);
+
+            trackingManagerMock.Verify(x => x.AddTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
+        }
     }
+
+
 }

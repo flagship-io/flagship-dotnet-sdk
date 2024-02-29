@@ -33,17 +33,27 @@ namespace Flagship.Api
         public HttpClient HttpClient { get; set; }
         public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
         public Dictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
+        public TroubleshootingData TroubleshootingData { 
+            set { 
+                Strategy.TroubleshootingData = value;
+            } 
+            get { 
+                return Strategy.TroubleshootingData; 
+            } }
+
+        public string FlagshipInstanceId { get; set; }
 
         protected Timer _timer;
         protected bool _isPolling;
 
-
-        public TrackingManager(FlagshipConfig config, HttpClient httpClient)
+        public TrackingManager(FlagshipConfig config, HttpClient httpClient, string flagshipInstanceId = null)
         {
+            FlagshipInstanceId = flagshipInstanceId;
             Config = config;
             HttpClient = httpClient;
             _hitsPoolQueue = new Dictionary<string, HitAbstract>();
             _activatePoolQueue = new Dictionary<string, Activate>();
+
             Strategy = InitStrategy();
             _ = LookupHitsAsync();
         }
@@ -64,6 +74,8 @@ namespace Flagship.Api
                     strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
                     break;
             }
+
+            strategy.FlagshipInstanceId = FlagshipInstanceId;
             return strategy;
         }
 
@@ -80,6 +92,8 @@ namespace Flagship.Api
         public virtual async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
             await Strategy.SendBatch(batchTriggeredBy);
+            await Strategy.SendTroubleshootingQueue();
+            await Strategy.SendUsageHitQueue();
         }
 
         public void StartBatchingLoop()
@@ -215,6 +229,21 @@ namespace Flagship.Api
             {
                 Log.LogError(Config, ex.Message, PROCESS_LOOKUP_HIT);
             }
+        }
+
+        public virtual async Task SendTroubleshootingHit(Troubleshooting hit)
+        {
+            await Strategy.SendTroubleshootingHit(hit);
+        }
+
+        public virtual async Task SendUsageHit(UsageHit hit)
+        {
+            await Strategy.SendUsageHit(hit);
+        }
+
+        public virtual void AddTroubleshootingHit(Troubleshooting hit)
+        {
+            Strategy.AddTroubleshootingHit(hit);
         }
     }
 }

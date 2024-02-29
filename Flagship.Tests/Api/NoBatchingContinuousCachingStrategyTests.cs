@@ -165,6 +165,7 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y=> y.ContainsValue(page))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
             shimeContext.Dispose();
@@ -533,6 +534,7 @@ namespace Flagship.Api.Tests
 
             strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y=> y.ContainsValue(activate))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
             shimeContext.Dispose();

@@ -43,9 +43,9 @@ namespace Flagship.FsVisitor
             return defaultValue;
         }
 
-        public override Task UserExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
         {
-            return Task.Factory.StartNew(() => { Log("UserExposed"); });
+            return Task.Factory.StartNew(() => { Log("VisitorExposed"); });
         }
 
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
@@ -57,6 +57,24 @@ namespace Flagship.FsVisitor
         private void Log(string methodName)
         {
             Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.NOT_INITIALIZED), methodName);
+        }
+
+        public override void AddTroubleshootingHit(Troubleshooting hit)
+        {
+            //
+        }
+
+        public override Task SendTroubleshootingHit(Troubleshooting hit)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            tcs.SetResult(null);
+            return tcs.Task;
+        }
+
+        public override TroubleshootingData GetTroubleshootingData()
+        {
+            TrackingManager.TroubleshootingData = null;
+            return null;
         }
     }
 }

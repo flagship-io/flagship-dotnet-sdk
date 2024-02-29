@@ -1,4 +1,5 @@
-﻿using Flagship.Config;
+﻿using Flagship.Api;
+using Flagship.Config;
 using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
@@ -28,7 +29,7 @@ namespace Flagship.Decision
 
         protected Murmur32 _murmur32;
         protected bool _isPolling;
-        protected string _lastModified;
+        protected DateTimeOffset? _lastModified;
         private BucketingDTO bucketingContent;
         protected bool _isFirstPooling;
         new public BucketingConfig Config { get; set; }
@@ -71,6 +72,8 @@ namespace Flagship.Decision
 
         public async Task Polling()
         {
+            var now = DateTime.Now;
+            var url = string.Format(Constants.BUCKETING_API_URL, Config.EnvId);
             try
             {
                 if (_isPolling)
@@ -84,9 +87,6 @@ namespace Flagship.Decision
                     StatusChange?.Invoke(FlagshipStatus.POLLING);
                 }
 
-                var url = string.Format(Constants.BUCKETING_API_URL, Config.EnvId);
-
-
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
 
                 requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
@@ -97,22 +97,45 @@ namespace Flagship.Decision
 
                 if (_lastModified != null)
                 {
-                    requestMessage.Headers.Add(HttpRequestHeader.IfModifiedSince.ToString(), _lastModified);
+                    requestMessage.Headers.IfModifiedSince = _lastModified;
                 }
 
                 var response = await HttpClient.SendAsync(requestMessage);
 
 
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
+                    LastBucketingTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
+
+                    var troubleshootingHit = new Troubleshooting()
+                    {
+                        Label = DiagnosticLabel.SDK_BUCKETING_FILE,
+                        LogLevel = LogLevel.INFO,
+                        VisitorId = FlagshipInstanceId,
+                        FlagshipInstanceId = FlagshipInstanceId,
+                        Traffic = 0,
+                        Config = Config,
+                        HttpResponseTime = (DateTime.Now - now).Milliseconds,
+                        HttpRequestHeaders = new Dictionary<string, object>()
+                        {
+                            [Constants.HEADER_X_API_KEY] = Config.ApiKey,
+                            [Constants.HEADER_X_SDK_CLIENT] = Constants.SDK_LANGUAGE,
+                            [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION
+                        },
+                        HttpRequestMethod = "POST",
+                        HttpRequestUrl = url,
+                        HttpResponseBody = BucketingContent,
+                        HttpResponseCode = (int?)response.StatusCode
+                    };
+
+                    _lastModified = response.Content.Headers.LastModified;
+
+                    TrackingManager.AddTroubleshootingHit(troubleshootingHit);
                 }
 
-                if (response.Headers.TryGetValues(HttpResponseHeader.LastModified.ToString(), out IEnumerable<string> lastModified))
-                {
-                    _lastModified = lastModified.First();
-                };
+
 
                 if (_isFirstPooling)
                 {
@@ -131,6 +154,28 @@ namespace Flagship.Decision
                     StatusChange?.Invoke(FlagshipStatus.NOT_INITIALIZED);
                 }
                 Log.LogError(Config, ex.Message, "Polling");
+
+                var troubleshootingHit = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SDK_BUCKETING_FILE,
+                    LogLevel = LogLevel.INFO,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpResponseTime = (DateTime.Now - now).Milliseconds,
+                    HttpRequestHeaders = new Dictionary<string, object>()
+                    {
+                        [Constants.HEADER_X_API_KEY] = Config.ApiKey,
+                        [Constants.HEADER_X_SDK_CLIENT] = Constants.SDK_LANGUAGE,
+                        [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION
+                    },
+                    HttpRequestMethod = "POST",
+                    HttpRequestUrl = url,
+                    HttpResponseBody = ex.Message
+                };
+
+                TrackingManager?.AddTroubleshootingHit(troubleshootingHit);
             }
         }
 
@@ -144,74 +189,88 @@ namespace Flagship.Decision
             Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
         }
 
-        virtual public async void SendContextAsync(VisitorDelegateAbstract visitor)
+        virtual public async Task SendContextAsync(VisitorDelegateAbstract visitor)
         {
             try
             {
+                if(!visitor.HasConsented || visitor.Context.Count <= Constants.NB_MIN_CONTEXT_KEYS)
+                {
+                    return;
+                }
                 var segment = new Segment(visitor.Context);
                 await visitor.SendHit(segment);
+
+                var troubleshootingHit = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.VISITOR_SEND_HIT,
+                    LogLevel = LogLevel.INFO,
+                    Traffic = visitor.Traffic,
+                    VisitorSessionId = visitor.SessionId,
+                    FlagshipInstanceId = visitor.SdkInitialData.InstanceId,
+                    AnonymousId = visitor.AnonymousId,
+                    VisitorId = visitor.VisitorId,
+                    Config = Config,
+                    HitContent = segment.ToApiKeys()
+                };
+
+                visitor.SegmentHitTroubleshooting = troubleshootingHit;
             }
             catch (Exception ex)
             {
-
                 Log.LogError(Config, ex.Message, "SendContext");
             }
         }
-        public override Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
+        public override async Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
         {
-            return Task.Factory.StartNew(() =>
+            ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
+
+            if (BucketingContent == null)
             {
-                ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
-
-                if (BucketingContent == null)
-                {
-                    return campaigns;
-                }
-
-
-                if (BucketingContent.Panic.HasValue && BucketingContent.Panic.Value)
-                {
-                    IsPanic = true;
-                    return campaigns;
-                }
-
-                IsPanic = false;
-
-                SendContextAsync(visitor);
-
-                foreach (var item in BucketingContent.Campaigns)
-                {
-                    var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id, item.Type);
-                    if (campaign != null)
-                    {
-                        campaign.Name = item.Name;
-                        campaigns.Add(campaign);
-                    }
-                }
-
                 return campaigns;
-            });
+            }
 
+            if (BucketingContent.AccountSettings?.Troubleshooting != null)
+            {
+                TroubleshootingData = BucketingContent.AccountSettings.Troubleshooting;
+            }
+
+            if (BucketingContent.Panic.GetValueOrDefault())
+            {
+                IsPanic = true;
+                return campaigns;
+            }
+
+            IsPanic = false;
+
+            await SendContextAsync(visitor);
+
+            foreach (var item in BucketingContent.Campaigns)
+            {
+                var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id, item.Type);
+                if (campaign != null)
+                {
+                    campaign.Name = item.Name;
+                    campaigns.Add(campaign);
+                }
+            }
+
+            return campaigns;
         }
 
         protected Model.Campaign GetMatchingVisitorVariationGroup(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId, string campaignType)
         {
-            foreach (var item in variationGroups)
+            var matchingGroup = variationGroups.FirstOrDefault(item => IsMatchedTargeting(item, visitor));
+            if (matchingGroup != null)
             {
-                var check = IsMatchedTargeting(item, visitor);
-                if (check)
+                var variation = GetVariation(matchingGroup, visitor);
+                if (variation != null)
                 {
-                    var variation = GetVariation(item, visitor);
-                    if (variation == null)
-                    {
-                        return null;
-                    }
                     return new Model.Campaign
                     {
                         Id = campaignId,
                         Variation = variation,
-                        VariationGroupId = item.Id,
-                        VariationGroupName = item.Name,
+                        VariationGroupId = matchingGroup.Id,
+                        VariationGroupName = matchingGroup.Name,
                         Type = campaignType
                     };
                 }
@@ -312,7 +371,7 @@ namespace Flagship.Decision
                 }
                 else
                 {
-                    if (!(visitor.Context.ContainsKey(item.Key)))
+                    if (!visitor.Context.ContainsKey(item.Key))
                     {
                         check = false;
                         break;

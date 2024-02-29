@@ -193,7 +193,7 @@ namespace Flagship.Decision
         {
             try
             {
-                if(!visitor.HasConsented)
+                if(!visitor.HasConsented || visitor.Context.Count <= Constants.NB_MIN_CONTEXT_KEYS)
                 {
                     return;
                 }

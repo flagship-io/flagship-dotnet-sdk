@@ -20,6 +20,8 @@ namespace Flagship.Enums
 
         public const int USAGE_HIT_ALLOCATION = 1;
 
+        public const int NB_MIN_CONTEXT_KEYS = 3;
+
         /// <summary>
         /// Default request timeout in second
         /// </summary>

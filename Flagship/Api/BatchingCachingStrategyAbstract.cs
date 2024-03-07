@@ -36,7 +36,9 @@ namespace Flagship.Api
         static public string SEND_HIT = "SEND HIT";
         static public string SEND_ACTIVATE = "SEND ACTIVATE";
         static public string SEND_TROUBLESHOOTING = "SEND TROUBLESHOOTING";
+        static public string SEND_TROUBLESHOOTING_QUEUE = "SEND TROUBLESHOOTING QUEUE";
         static public string SEND_USAGE_HIT = "SEND USAGE HIT";
+        static public string SEND_USAGE_HIT_QUEUE = "SEND USAGE HIT QUEUE";
         static public string ON_VISITOR_EXPOSED = "ON_VISITOR_EXPOSED";
         static public string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
         static public string HIT_SENT_SUCCESS = "hit has been sent : {0}";
@@ -122,7 +124,7 @@ namespace Flagship.Api
             {
                 lock (ActivatePoolQueue)
                 {
-                    activateHits = ActivatePoolQueue.Values.ToList();
+                    activateHits = ActivatePoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value).Values.ToList();
                     var keys = activateHits.Select(x => x.Key);
                     foreach (var item in keys)
                     {
@@ -171,7 +173,7 @@ namespace Flagship.Api
                 lock (HitsPoolQueue)
                 {
 
-                    var HitsPoolQueueClone = HitsPoolQueue.ToList();
+                    var HitsPoolQueueClone = HitsPoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
                     foreach (var item in HitsPoolQueueClone)
                     {
                         if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
@@ -342,7 +344,7 @@ namespace Flagship.Api
             var hit = new ConcurrentDictionary<string, HitAbstract>();
             foreach (var item in activatesHits)
             {
-                hit[item.Key] = item.Value;
+                hit.TryAdd(item.Key, item.Value);
             }
             await CacheHitAsync(hit);
         }
@@ -537,14 +539,45 @@ namespace Flagship.Api
 
         public virtual async  Task SendTroubleshootingQueue()
         {
-            if (!IsTroubleshootingActivated() || _isTroubleshootingQueueSending || TroubleshootingQueue.Count == 0)
+            var troubleshootingQueueClone = new Dictionary<string, Troubleshooting>();
+            try
+            {
+                lock (TroubleshootingQueue)
+                {
+                    troubleshootingQueueClone = TroubleshootingQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    errorStackTrace = ex.StackTrace,
+                }), SEND_TROUBLESHOOTING_QUEUE);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.ERROR_CATCHED,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    ErrorMessage = ex.Message,
+                    ErrorStackTrace = ex.StackTrace,
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
+            }
+
+
+            if (!IsTroubleshootingActivated() || _isTroubleshootingQueueSending || troubleshootingQueueClone.Count == 0)
             {
                 return; 
             }
 
             _isTroubleshootingQueueSending = true;
 
-            foreach (var item in TroubleshootingQueue.ToList())
+            foreach (var item in troubleshootingQueueClone)
             {
                 await SendTroubleshootingHit(item.Value);
             }
@@ -626,14 +659,46 @@ namespace Flagship.Api
 
         public virtual async Task SendUsageHitQueue() 
         {
-            if (_isAnalyticQueueSending || UsageHitQueue.Count == 0)
+            var usageHitQueue = new Dictionary<string, UsageHit>();
+
+            try
+            {
+                lock (UsageHitQueue)
+                {
+                    usageHitQueue = UsageHitQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    errorStackTrace = ex.StackTrace,
+                }), SEND_USAGE_HIT_QUEUE); 
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.ERROR_CATCHED,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    ErrorMessage = ex.Message,
+                    ErrorStackTrace = ex.StackTrace,
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
+            }
+
+
+            if (_isAnalyticQueueSending || usageHitQueue.Count == 0)
             {
                 return;
             }
 
             _isAnalyticQueueSending = true;
 
-            foreach (var item in UsageHitQueue)
+            foreach (var item in usageHitQueue)
             {
                 await SendUsageHit(item.Value);
             }

@@ -144,6 +144,9 @@ namespace Flagship.Hit
         public string FlagMetadataCampaignType { get; set; }
         public bool? FlagMetadataCampaignIsReference { get; set; }
 
+        public string ErrorMessage { get; set; }
+        public string ErrorStackTrace { get; set; }
+
         public IDictionary<string, object> HitContent { get; set; }
         public CacheTriggeredBy? BatchTriggeredBy { get; set; }
 
@@ -480,6 +483,16 @@ namespace Flagship.Hit
             if (BatchTriggeredBy != null)
             {
                 customVariable[BATCH_TRIGGERED_BY] = $"{BatchTriggeredBy}";
+            }
+
+            if (string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                customVariable["error.message"] = ErrorMessage;
+            }
+
+            if (string.IsNullOrWhiteSpace(ErrorStackTrace))
+            {
+                customVariable["error.stack.trace "] = ErrorStackTrace;
             }
 
             apiKeys["cv"] = customVariable;

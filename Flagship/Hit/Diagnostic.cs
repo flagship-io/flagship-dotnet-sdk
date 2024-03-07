@@ -72,6 +72,8 @@ namespace Flagship.Hit
         public const string CAMPAIGNS = "campaigns";
         public const string IS_AUTHENTICATED = "isAuthenticated";
         public const string BATCH_TRIGGERED_BY = "batchTriggeredBy";
+        public const string ERROR_MESSAGE = "error.message";
+        public const string ERROR_STACK_TRACE = "error.stack.trace"; 
 
         public string Version { get; set; }
         public LogLevel LogLevel { get; set; }
@@ -485,14 +487,14 @@ namespace Flagship.Hit
                 customVariable[BATCH_TRIGGERED_BY] = $"{BatchTriggeredBy}";
             }
 
-            if (string.IsNullOrWhiteSpace(ErrorMessage))
+            if (!string.IsNullOrWhiteSpace(ErrorMessage))
             {
-                customVariable["error.message"] = ErrorMessage;
+                customVariable[ERROR_MESSAGE] = ErrorMessage;
             }
 
-            if (string.IsNullOrWhiteSpace(ErrorStackTrace))
+            if (!string.IsNullOrWhiteSpace(ErrorStackTrace))
             {
-                customVariable["error.stack.trace "] = ErrorStackTrace;
+                customVariable[ERROR_STACK_TRACE] = ErrorStackTrace;
             }
 
             apiKeys["cv"] = customVariable;

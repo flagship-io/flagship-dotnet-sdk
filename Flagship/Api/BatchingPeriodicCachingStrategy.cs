@@ -154,18 +154,47 @@ namespace Flagship.Api
             var hasActivateHit = false;
             _isBatchSending = true;
 
-            List<Activate> activateHits;
-            lock (ActivatePoolQueue)
+            List<Activate> activateHits = new List<Activate>();
+
+            try
             {
-                activateHits = ActivatePoolQueue.Values.ToList();
-                var keys = activateHits.Select(x => x.Key);
-                foreach (var item in keys)
+                lock (ActivatePoolQueue)
                 {
-                    ActivatePoolQueue.TryRemove(item, out _);
+                    activateHits = ActivatePoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value).Values.ToList();
+                    var keys = activateHits.Select(x => x.Key);
+                    foreach (var item in keys)
+                    {
+                        ActivatePoolQueue.TryRemove(item, out _);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
 
-            if (activateHits.Any())
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    errorStackTrace = ex.StackTrace,
+                    batchTriggeredBy = $"{batchTriggeredBy}"
+                }), SEND_BATCH);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.ERROR_CATCHED,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    ErrorMessage = ex.Message,
+                    ErrorStackTrace = ex.StackTrace,
+                    BatchTriggeredBy = batchTriggeredBy
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
+            }
+
+
+            if (activateHits.Count > 0)
             {
                 await SendActivate(activateHits, null, batchTriggeredBy);
                 hasActivateHit = true;
@@ -182,7 +211,7 @@ namespace Flagship.Api
             {
                 lock (HitsPoolQueue)
                 {
-                    var HitsPoolQueueClone = HitsPoolQueue.ToList();
+                    var HitsPoolQueueClone = HitsPoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
 
                     foreach (var item in HitsPoolQueueClone)
                     {

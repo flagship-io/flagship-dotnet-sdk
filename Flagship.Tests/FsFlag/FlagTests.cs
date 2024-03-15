@@ -68,7 +68,7 @@ namespace Flagship.FsFlag.Tests
 
             var value = flag.GetValue();
 
-            await flag.UserExposed().ConfigureAwait(false);
+            await flag.VisitorExposed().ConfigureAwait(false);
             var resultMeta = flag.Metadata;
 
             Assert.AreEqual(flagDTO.Value, value);
@@ -98,7 +98,7 @@ namespace Flagship.FsFlag.Tests
 
             value = flag.GetValue();
 
-            await flag.UserExposed().ConfigureAwait(false);
+            await flag.VisitorExposed().ConfigureAwait(false);
             resultMeta = flag.Metadata;
 
             Assert.AreEqual(defaultValue, value);

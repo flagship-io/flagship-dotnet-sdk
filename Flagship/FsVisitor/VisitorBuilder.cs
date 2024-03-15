@@ -12,28 +12,28 @@ namespace Flagship.FsVisitor
     public class VisitorBuilder
     {
         private bool _isAuthenticated;
-        private bool _hasConsented;
+        private readonly bool _hasConsented;
         private IDictionary<string, object> _context;
         private readonly string _visitorId;
         private readonly IConfigManager _configManager;
-        private readonly InstanceType _instanceType;
+        private  InstanceType _instanceType;
         private readonly SdkInitialData _sdkInitialData;
 
 
-        private VisitorBuilder(IConfigManager configManager, string visitorId, InstanceType instanceType, SdkInitialData sdkInitialData = null)
+        private VisitorBuilder(IConfigManager configManager, string visitorId, bool hasConsented, SdkInitialData sdkInitialData = null)
         {
             _visitorId = visitorId;
             _isAuthenticated = false;
-            _hasConsented = true;
             _context = new Dictionary<string, object>();
             _configManager = configManager;
-            _instanceType = instanceType;
+            _hasConsented = hasConsented;
             _sdkInitialData = sdkInitialData;
+            _instanceType = InstanceType.NEW_INSTANCE;
         }
 
-        internal static VisitorBuilder Builder(IConfigManager configManager, string visitorId, InstanceType instanceType, SdkInitialData sdkInitialData = null)
+        internal static VisitorBuilder Builder(IConfigManager configManager, string visitorId, bool hasConsented, SdkInitialData sdkInitialData = null)
         {
-            return new VisitorBuilder(configManager, visitorId, instanceType, sdkInitialData);
+            return new VisitorBuilder(configManager, visitorId, hasConsented, sdkInitialData);
         }
 
         /// <summary>
@@ -48,13 +48,13 @@ namespace Flagship.FsVisitor
         }
 
         /// <summary>
-        /// Specify if the Visitor has consented for personal data usage. When false some features will be deactivated, cache will be deactivated and cleared.
+        /// If NEW_INSTANCE, the newly created visitor instance won't be saved and will simply be returned. Otherwise, the newly created visitor instance will be returned and saved into the Flagship.
         /// </summary>
-        /// <param name="hasConsented">Set to true when the visitor has consented, false otherwise.</param>
+        /// <param name="instanceType"></param>
         /// <returns></returns>
-        public VisitorBuilder HasConsented(bool hasConsented)
+        public VisitorBuilder WithInstanceType(InstanceType instanceType)
         {
-            _hasConsented = hasConsented;
+            _instanceType = instanceType;
             return this;
         }
 
@@ -71,6 +71,7 @@ namespace Flagship.FsVisitor
             }
             return this;
         }
+
 
         /// <summary>
         /// Complete the Visitor Creation process 

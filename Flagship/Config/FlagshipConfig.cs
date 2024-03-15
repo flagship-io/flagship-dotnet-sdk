@@ -83,13 +83,6 @@ namespace Flagship.Config
         /// <summary>
         /// Define options to configure hit batching
         /// </summary>
-        /// 
-        [Obsolete("Please use TrackingManagerConfig instead ")]
-        public ITrackingManagerConfig TrackingMangerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
-
-        /// <summary>
-        /// Define options to configure hit batching
-        /// </summary>
         public ITrackingManagerConfig TrackingManagerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
 
         /// <summary>

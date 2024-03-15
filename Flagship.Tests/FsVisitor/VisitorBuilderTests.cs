@@ -26,7 +26,7 @@ namespace Flagship.FsVisitor.Tests
             var trackingManager = new Mock<ITrackingManager>().Object;
             var configManager = new ConfigManager(config, decisionManager, trackingManager);
             
-            Builder = VisitorBuilder.Builder(configManager, visitorId, Enums.InstanceType.NEW_INSTANCE);
+            Builder = VisitorBuilder.Builder(configManager, visitorId, true);
 
             var visitor = Builder.Build();
 
@@ -39,12 +39,6 @@ namespace Flagship.FsVisitor.Tests
             {
                 ["key1"] = "value1",
             };
-
-            Builder.HasConsented(false).IsAuthenticated(false).WithContext(context);
-            visitor = Builder.Build();
-
-            Assert.AreEqual(4, visitor.Context.Count);
-            Assert.IsFalse(visitor.HasConsented);
 
             var context2 = new Dictionary<string, object>()
             {
@@ -66,7 +60,8 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(4, visitor.Context.Count);
 
 
-            Builder = VisitorBuilder.Builder(configManager, visitorId, Enums.InstanceType.SINGLE_INSTANCE);
+            Builder = VisitorBuilder.Builder(configManager, visitorId, true);
+            Builder.WithInstanceType(Enums.InstanceType.SINGLE_INSTANCE);
             visitor = Builder.Build();
             Assert.AreEqual(visitor, Flagship.Main.Fs.Visitor);
         }

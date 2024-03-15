@@ -198,49 +198,23 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             GetInstance().SetStatus(status);
         }
 
-        /// <summary>
-        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
-        /// </summary>
-        /// <param name="visitorId"></param>
-        /// <returns>VisitorBuilder | null</returns>
-        public static VisitorBuilder NewVisitor(string visitorId)
-        {
-            return NewVisitor(visitorId, InstanceType.NEW_INSTANCE);
-        }
-
-        /// <summary>
-        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
-        /// </summary>
-        /// <returns></returns>
-        public static VisitorBuilder NewVisitor()
-        {
-            return NewVisitor(null, InstanceType.NEW_INSTANCE);
-        }
-
+    
         /// <summary>
         /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
         /// </summary>
         /// <param name="visitorId"></param>
         /// <param name="instanceType"></param>
         /// <returns></returns>
-        public static VisitorBuilder NewVisitor(string visitorId, InstanceType instanceType)
+        public static VisitorBuilder NewVisitor(string visitorId, bool hasConsented)
         {
             if (!IsReady())
             {
                 return null;
             }
             var instance = GetInstance();
-            return VisitorBuilder.Builder(instance._configManager, visitorId, instanceType, instance._sdkInitialData);
+            return VisitorBuilder.Builder(instance._configManager, visitorId, hasConsented, instance._sdkInitialData);
         }
 
-        /// <summary>
-        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
-        /// </summary>
-        /// <param name="instanceType"></param>
-        /// <returns></returns>
-        public static VisitorBuilder NewVisitor(InstanceType instanceType)
-        {
-            return NewVisitor(null, instanceType);
-        }
+   
     }
 }

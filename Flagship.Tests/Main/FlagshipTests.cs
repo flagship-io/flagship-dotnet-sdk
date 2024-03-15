@@ -109,11 +109,11 @@ namespace Flagship.Main.Tests
         [TestMethod()]
         public void NewVisitorTest()
         {
-            var visitorBuilder = Fs.NewVisitor();
+            var visitorBuilder = Fs.NewVisitor("visitorId", true);
 
             Fs.Start(null, null);
 
-            visitorBuilder = Fs.NewVisitor();
+            visitorBuilder = Fs.NewVisitor("visitorId", true);
             Assert.IsNull(visitorBuilder);
 
             var envId = "envId";
@@ -121,21 +121,17 @@ namespace Flagship.Main.Tests
 
             Fs.Start(envId, apiKey);
 
-            visitorBuilder = Fs.NewVisitor();
+            visitorBuilder = Fs.NewVisitor("visitorId", true);
 
             Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
 
             var visitorId = "visitorId";
-            visitorBuilder = Fs.NewVisitor(visitorId);
+            visitorBuilder = Fs.NewVisitor(visitorId, true);
             Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
-            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
 
-            visitorBuilder = Fs.NewVisitor(visitorId, InstanceType.SINGLE_INSTANCE);
-            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
-            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
-
-            visitorBuilder = Fs.NewVisitor(InstanceType.SINGLE_INSTANCE);
-            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+            var visitor = visitorBuilder.Build();
+            Assert.AreEqual(visitor.VisitorId, visitorId);
+            Assert.AreEqual(visitor.HasConsented, true);
 
         }
     }

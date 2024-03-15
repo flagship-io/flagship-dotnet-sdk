@@ -669,6 +669,7 @@ namespace Flagship.Api.Tests
 
             await strategy.ActivateFlag(activate).ConfigureAwait(false);
 
+            await Task.Delay(300);
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 

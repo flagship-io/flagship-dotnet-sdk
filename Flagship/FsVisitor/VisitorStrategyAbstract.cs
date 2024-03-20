@@ -287,7 +287,7 @@ namespace Flagship.FsVisitor
                 VisitorContext = Visitor.Context,
                 VisitorCampaigns = campaigns,
                 VisitorConsent = Visitor.HasConsented,
-                VisitorIsAuthenticated = string.IsNullOrEmpty(Visitor.AnonymousId),
+                VisitorIsAuthenticated = !string.IsNullOrEmpty(Visitor.AnonymousId),
                 VisitorFlags = Visitor.Flags,
                 VisitorAssignmentHistory = assignmentHistory,
                 LastBucketingTimestamp = DecisionManager.LastBucketingTimestamp,

@@ -39,12 +39,9 @@ namespace Flagship.Decision
 
             var now = DateTime.Now;
 
+                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true&extras[]=accountSettings";
             try
             {
-                
-                var url = $"{Constants.BASE_API_URL}{Config.EnvId}/campaigns?exposeAllKeys=true&extras[]=accountSettings";
-
-
                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
 
                 requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
@@ -82,13 +79,13 @@ namespace Flagship.Decision
 
                 var troubleshooting = new Troubleshooting()
                 {
-                    Label = DiagnosticLabel.SEND_ACTIVATE_HIT_ROUTE_ERROR,
+                    Label = DiagnosticLabel.GET_CAMPAIGNS_ROUTE_RESPONSE_ERROR,
                     LogLevel = LogLevel.ERROR,
                     VisitorId = visitor.VisitorId,
                     FlagshipInstanceId = visitor.SdkInitialData?.InstanceId,
                     Traffic = 0,
                     Config = Config,
-                    HttpRequestUrl = Constants.HIT_EVENT_URL,
+                    HttpRequestUrl = url,
                     HttpsRequestBody = postData,
                     HttpResponseBody = ex.Message,
                     HttpResponseMethod = "POST",

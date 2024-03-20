@@ -16,6 +16,8 @@ using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using Microsoft.QualityTools.Testing.Fakes;
 using Flagship.Config;
+using System.Collections.Concurrent;
+using Newtonsoft.Json.Linq;
 
 namespace Flagship.Api.Tests
 {
@@ -74,8 +76,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -89,7 +91,7 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
@@ -148,8 +150,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -163,7 +165,7 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y=> y.ContainsValue(page))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Contains(page))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
             strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
@@ -195,8 +197,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -292,16 +294,16 @@ namespace Flagship.Api.Tests
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
-    "SendAsync",
-    ItExpr.IsAny<HttpRequestMessage>(),
-    ItExpr.IsAny<CancellationToken>()
-    ).ReturnsAsync(httpResponse).Verifiable();
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            ).ReturnsAsync(httpResponse).Verifiable();
 
             await strategy.Add(hitEvent).ConfigureAwait(false);
 
             Assert.AreEqual(2, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(hitEvent))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Any(z => z.Value == hitEvent))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 5)), Times.Once());
 
             httpResponse.Dispose();
@@ -334,8 +336,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -372,7 +374,7 @@ namespace Flagship.Api.Tests
 
             Assert.AreEqual(1, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(hitEvent))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Contains(hitEvent))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
@@ -436,8 +438,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -451,7 +453,7 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
@@ -517,8 +519,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -532,7 +534,7 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y=> y.ContainsValue(activate))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Contains(activate))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
             strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
@@ -608,7 +610,12 @@ namespace Flagship.Api.Tests
                 var url = Constants.BASE_API_URL + BatchingCachingStrategyAbstract.URL_ACTIVATE;
 
                 var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                return result.Contains(activate.VariationId) && 
+                result.Contains(activate.VariationGroupId) && 
+                result.Contains(activate2.VariationId) && 
+                result.Contains(activate2.VariationGroupId) && 
+                result.Contains(activate3.VariationId) && 
+                result.Contains(activate3.VariationGroupId) && x.Method == HttpMethod.Post
                 && x.RequestUri.ToString() == url;
             };
 
@@ -620,8 +627,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -641,7 +648,7 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Contains(activate2.Key)
             && y.Contains(activate3.Key) && y.Contains(activate.Key)
             && y.Length == 3)), Times.Once());

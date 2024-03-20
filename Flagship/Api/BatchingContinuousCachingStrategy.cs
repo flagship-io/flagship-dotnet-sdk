@@ -3,6 +3,7 @@ using Flagship.Enums;
 using Flagship.Hit;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -15,7 +16,7 @@ namespace Flagship.Api
 {
     internal class BatchingContinuousCachingStrategy : BatchingCachingStrategyAbstract
     {
-        public BatchingContinuousCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
+        public BatchingContinuousCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue, ref ConcurrentDictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
         {
         }
 
@@ -24,9 +25,12 @@ namespace Flagship.Api
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
 
-            HitsPoolQueue[hitKey] = hit;
+            HitsPoolQueue.TryAdd(hitKey, hit);
 
-            await CacheHitAsync(new Dictionary<string, HitAbstract>() { { hitKey, hit } });
+            var hitsDictionary = new ConcurrentDictionary<string, HitAbstract>();
+            hitsDictionary.TryAdd(hitKey, hit);
+
+            await CacheHitAsync(hitsDictionary);
 
             if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
@@ -34,9 +38,12 @@ namespace Flagship.Api
             }
             Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
 
-            if (HitsPoolQueue.Count>= Config.TrackingManagerConfig.PoolMaxSize)
+            lock (HitsPoolQueue)
             {
-                _ = SendBatch(CacheTriggeredBy.BatchLength);
+                if (HitsPoolQueue.Count >= Config.TrackingManagerConfig.PoolMaxSize)
+                {
+                    _ = SendBatch(CacheTriggeredBy.BatchLength);
+                }
             }
         }
 
@@ -114,12 +121,14 @@ namespace Flagship.Api
             {
                 foreach (var item in activateBatch.Hits)
                 {
-                    ActivatePoolQueue[item.Key] = item;
+                    ActivatePoolQueue.TryAdd(item.Key, item);
                 }
 
                 if (currentActivate != null)
                 {
-                    await CacheHitAsync(new Dictionary<string, HitAbstract>() { { currentActivate.Key, currentActivate } });
+                    var hitsDictionary = new ConcurrentDictionary<string, HitAbstract>();
+                    hitsDictionary.TryAdd(currentActivate.Key, currentActivate);
+                    await CacheHitAsync(hitsDictionary);
                 }
 
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new

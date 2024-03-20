@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -26,13 +27,13 @@ namespace Flagship.Api
         public const string PROCESS_LOOKUP_HIT = "LOOKUP HIT";
         public const string HIT_DATA_LOADED = "Hits data has been loaded from database: {0}";
 
-        private Dictionary<string, HitAbstract> _hitsPoolQueue;
-        private Dictionary<string, Activate> _activatePoolQueue;
+        private ConcurrentDictionary<string, HitAbstract> _hitsPoolQueue;
+        private ConcurrentDictionary<string, Activate> _activatePoolQueue;
         protected virtual BatchingCachingStrategyAbstract Strategy { get; set; }
         public FlagshipConfig Config { get; set; }
         public HttpClient HttpClient { get; set; }
-        public Dictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
-        public Dictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
+        public ConcurrentDictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
+        public ConcurrentDictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
         public TroubleshootingData TroubleshootingData { 
             set { 
                 Strategy.TroubleshootingData = value;
@@ -51,8 +52,8 @@ namespace Flagship.Api
             FlagshipInstanceId = flagshipInstanceId;
             Config = config;
             HttpClient = httpClient;
-            _hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            _activatePoolQueue = new Dictionary<string, Activate>();
+            _hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            _activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             Strategy = InitStrategy();
             _ = LookupHitsAsync();
@@ -91,6 +92,7 @@ namespace Flagship.Api
 
         public virtual async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
+
             await Strategy.SendBatch(batchTriggeredBy);
             await Strategy.SendTroubleshootingQueue();
             await Strategy.SendUsageHitQueue();
@@ -215,7 +217,7 @@ namespace Flagship.Api
                     }
                     else
                     {
-                        HitsPoolQueue[hit.Key]= hit;
+                        HitsPoolQueue.TryAdd(hit.Key, hit);
                     }
 
                 }

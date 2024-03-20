@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Flagship.Model;
 using Newtonsoft.Json.Serialization;
+using System.Collections.Concurrent;
 
 namespace Flagship.Tests.Api
 {
@@ -80,8 +81,8 @@ namespace Flagship.Tests.Api
             var trackingManager = trackingManagerMock.Object;
 
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingCachingStrategyAbstract>(config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue);
 
@@ -136,8 +137,8 @@ namespace Flagship.Tests.Api
             var trackingManager = trackingManagerMock.Object;
 
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingCachingStrategyAbstract>(config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue);
 
@@ -170,8 +171,8 @@ namespace Flagship.Tests.Api
             var trackingManager = trackingManagerMock.Object;
 
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingCachingStrategyAbstract>(config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue);
 

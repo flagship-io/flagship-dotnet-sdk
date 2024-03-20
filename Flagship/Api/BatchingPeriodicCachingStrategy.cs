@@ -3,6 +3,7 @@ using Flagship.Enums;
 using Flagship.Hit;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -16,27 +17,33 @@ namespace Flagship.Api
 {
     internal class BatchingPeriodicCachingStrategy : BatchingCachingStrategyAbstract
     {
+        protected bool _isBatchSending;
 
-
-        public BatchingPeriodicCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
+        public BatchingPeriodicCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue, ref ConcurrentDictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
         {
+            _isBatchSending = false;
         }
 
         public async override Task Add(HitAbstract hit)
         {
+
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
-            HitsPoolQueue[hitKey] = hit;
+            HitsPoolQueue.TryAdd(hitKey, hit);
             if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
                 await NotConsent(hit.VisitorId);
             }
             Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
 
-            if (HitsPoolQueue.Count >= Config.TrackingManagerConfig.PoolMaxSize)
+            lock (HitsPoolQueue)
             {
-                _ = SendBatch(CacheTriggeredBy.BatchLength);
+                if (HitsPoolQueue.Count >= Config.TrackingManagerConfig.PoolMaxSize)
+                {
+                    _ = SendBatch(CacheTriggeredBy.BatchLength);
+                }
             }
+
         }
 
         protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
@@ -104,7 +111,7 @@ namespace Flagship.Api
             {
                 foreach (var item in activateBatch.Hits)
                 {
-                    ActivatePoolQueue[item.Key] = item;
+                    ActivatePoolQueue.TryAdd(item.Key, item);
                 }
 
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
@@ -145,15 +152,50 @@ namespace Flagship.Api
         public async override Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
             var hasActivateHit = false;
+            _isBatchSending = true;
 
-            if (ActivatePoolQueue.Any())
+            List<Activate> activateHits = new List<Activate>();
+
+            try
             {
-                var activateHits = ActivatePoolQueue.Values.ToList();
-                var keys = activateHits.Select(x => x.Key);
-                foreach (var item in keys)
+                lock (ActivatePoolQueue)
                 {
-                    ActivatePoolQueue.Remove(item);
+                    activateHits = ActivatePoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value).Values.ToList();
+                    var keys = activateHits.Select(x => x.Key);
+                    foreach (var item in keys)
+                    {
+                        ActivatePoolQueue.TryRemove(item, out _);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    errorStackTrace = ex.StackTrace,
+                    batchTriggeredBy = $"{batchTriggeredBy}"
+                }), SEND_BATCH);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.ERROR_CATCHED,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    ErrorMessage = ex.Message,
+                    ErrorStackTrace = ex.StackTrace,
+                    BatchTriggeredBy = batchTriggeredBy
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
+            }
+
+
+            if (activateHits.Count > 0)
+            {
                 await SendActivate(activateHits, null, batchTriggeredBy);
                 hasActivateHit = true;
             }
@@ -165,28 +207,57 @@ namespace Flagship.Api
 
             var hitKeysToRemove = new List<string>();
 
-            var HitsPoolQueueClone = HitsPoolQueue.ToList();
-
-            foreach (var item in HitsPoolQueueClone)
+            try
             {
-                if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
+                lock (HitsPoolQueue)
                 {
-                    hitKeysToRemove.Add(item.Key);
-                    continue;
-                }
+                    var HitsPoolQueueClone = HitsPoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
 
-                var batchSize = JsonConvert.SerializeObject(batch).Length;
-                if (batchSize > Constants.BATCH_MAX_SIZE)
-                {
-                    break;
+                    foreach (var item in HitsPoolQueueClone)
+                    {
+                        if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
+                        {
+                            hitKeysToRemove.Add(item.Key);
+                            continue;
+                        }
+
+                        var batchSize = JsonConvert.SerializeObject(batch).Length;
+                        if (batchSize > Constants.BATCH_MAX_SIZE)
+                        {
+                            break;
+                        }
+                        batch.Hits.Add(item.Value);
+                        hitKeysToRemove.Add(item.Key);
+                    }
+
+                    foreach (var key in hitKeysToRemove)
+                    {
+                        HitsPoolQueue.TryRemove(key, out _);
+                    }
                 }
-                batch.Hits.Add(item.Value);
-                hitKeysToRemove.Add(item.Key);
             }
-
-            foreach (var key in hitKeysToRemove)
+            catch (Exception ex)
             {
-                HitsPoolQueue.Remove(key);
+                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                {
+                    errorStackTrace = ex.StackTrace,
+                    batchTriggeredBy = $"{batchTriggeredBy}"
+                }), SEND_BATCH);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.ERROR_CATCHED,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    ErrorMessage = ex.Message,
+                    ErrorStackTrace = ex.StackTrace,
+                    BatchTriggeredBy = batchTriggeredBy
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
             }
 
 
@@ -241,7 +312,7 @@ namespace Flagship.Api
             {
                 foreach (var item in batch.Hits)
                 {
-                    HitsPoolQueue[item.Key] = item;
+                    HitsPoolQueue.TryAdd(item.Key, item);
                 }
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {
@@ -270,14 +341,15 @@ namespace Flagship.Api
                 _ = SendTroubleshootingHit(troubleshooting);
             }
 
-            var mergedQueue = new Dictionary<string, HitAbstract>(HitsPoolQueue);
+            var mergedQueue = new ConcurrentDictionary<string, HitAbstract>(HitsPoolQueue);
             foreach (var item in ActivatePoolQueue)
             {
-                mergedQueue[item.Key]= item.Value;
+                mergedQueue.TryAdd(item.Key, item.Value);
             }
 
             await FlushAllHitsAsync();
             await CacheHitAsync(mergedQueue);
+            _isBatchSending = false;
         }
     }
 }

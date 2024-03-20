@@ -72,6 +72,8 @@ namespace Flagship.Hit
         public const string CAMPAIGNS = "campaigns";
         public const string IS_AUTHENTICATED = "isAuthenticated";
         public const string BATCH_TRIGGERED_BY = "batchTriggeredBy";
+        public const string ERROR_MESSAGE = "error.message";
+        public const string ERROR_STACK_TRACE = "error.stack.trace"; 
 
         public string Version { get; set; }
         public LogLevel LogLevel { get; set; }
@@ -143,6 +145,9 @@ namespace Flagship.Hit
         public string FlagMetadataCampaignSlug { get; set; }
         public string FlagMetadataCampaignType { get; set; }
         public bool? FlagMetadataCampaignIsReference { get; set; }
+
+        public string ErrorMessage { get; set; }
+        public string ErrorStackTrace { get; set; }
 
         public IDictionary<string, object> HitContent { get; set; }
         public CacheTriggeredBy? BatchTriggeredBy { get; set; }
@@ -480,6 +485,16 @@ namespace Flagship.Hit
             if (BatchTriggeredBy != null)
             {
                 customVariable[BATCH_TRIGGERED_BY] = $"{BatchTriggeredBy}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                customVariable[ERROR_MESSAGE] = ErrorMessage;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ErrorStackTrace))
+            {
+                customVariable[ERROR_STACK_TRACE] = ErrorStackTrace;
             }
 
             apiKeys["cv"] = customVariable;

@@ -82,6 +82,7 @@ namespace Flagship.Decision
                     Label = DiagnosticLabel.GET_CAMPAIGNS_ROUTE_RESPONSE_ERROR,
                     LogLevel = LogLevel.ERROR,
                     VisitorId = visitor.VisitorId,
+                    AnonymousId = visitor.AnonymousId,
                     FlagshipInstanceId = visitor.SdkInitialData?.InstanceId,
                     Traffic = 0,
                     Config = Config,

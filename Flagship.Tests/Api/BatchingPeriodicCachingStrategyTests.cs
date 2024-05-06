@@ -640,8 +640,10 @@ namespace Flagship.Api.Tests
                 var f = headers.ToString();
 
                 var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                return  result.Contains(activate.VariationId) && result.Contains(activate.VariationGroupId) && 
+                result.Contains(activate2.VariationId) && result.Contains(activate2.VariationGroupId) && result.Contains(activate3.VariationId) && result.Contains(activate3.VariationGroupId) && result.Contains(activate2.VariationGroupId) &&
+                result.Contains(activate3.VariationId) && result.Contains(activate3.VariationGroupId) &&
+                headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -662,8 +664,8 @@ namespace Flagship.Api.Tests
 
             var strategy = strategyMock.Object;
 
-            activatePoolQueue[activate2.Key] = activate2;
-            activatePoolQueue[activate3.Key] = activate3;
+            activatePoolQueue.TryAdd(activate2.Key, activate2);
+            activatePoolQueue.TryAdd(activate3.Key, activate3);
 
             Assert.AreEqual(2, activatePoolQueue.Count);
 

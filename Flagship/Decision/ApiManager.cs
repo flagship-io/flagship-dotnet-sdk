@@ -82,7 +82,7 @@ namespace Flagship.Decision
 
                 var troubleshooting = new Troubleshooting()
                 {
-                    Label = DiagnosticLabel.SEND_ACTIVATE_HIT_ROUTE_ERROR,
+                    Label = DiagnosticLabel.GET_CAMPAIGNS_ROUTE_RESPONSE_ERROR,
                     LogLevel = LogLevel.ERROR,
                     VisitorId = visitor.VisitorId,
                     FlagshipInstanceId = visitor.SdkInitialData?.InstanceId,

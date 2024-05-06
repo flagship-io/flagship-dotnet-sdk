@@ -3,6 +3,7 @@ using Flagship.Enums;
 using Flagship.Hit;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -17,10 +18,10 @@ namespace Flagship.Api
     internal class NoBatchingContinuousCachingStrategy : BatchingCachingStrategyAbstract
     {
 
-        readonly Dictionary<string, string> _cacheHitKeys;
-        public NoBatchingContinuousCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref Dictionary<string, HitAbstract> hitsPoolQueue, ref Dictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
+        readonly ConcurrentDictionary<string, string> _cacheHitKeys;
+        public NoBatchingContinuousCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue, ref ConcurrentDictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
         {
-            _cacheHitKeys = new Dictionary<string, string>();
+            _cacheHitKeys = new ConcurrentDictionary<string, string>();
         }
 
         public override async Task Add(HitAbstract hit)
@@ -80,10 +81,11 @@ namespace Flagship.Api
             {
                 if (!(hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT))
                 {
-                    _cacheHitKeys[hit.Key] = hit.VisitorId;
+                    _cacheHitKeys.TryAdd(hit.Key, hit.VisitorId);
                 }
-
-                await CacheHitAsync(new Dictionary<string, HitAbstract>() { { hit.Key, hit } });
+                var hitDictionary = new ConcurrentDictionary<string, HitAbstract>();
+                hitDictionary.TryAdd(hit.Key, hit);
+                await CacheHitAsync(hitDictionary);
 
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
                 {
@@ -92,42 +94,74 @@ namespace Flagship.Api
                     duration = (DateTime.Now - now).TotalMilliseconds,
                     batchTriggeredBy = $"{CacheTriggeredBy.DirectHit}"
                 }), SEND_HIT);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SEND_HIT_ROUTE_ERROR,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpRequestUrl = Constants.HIT_EVENT_URL,
+                    HttpsRequestBody = requestBody,
+                    HttpResponseBody = ex.Message,
+                    HttpResponseMethod = "POST",
+                    HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
+                    BatchTriggeredBy = CacheTriggeredBy.DirectHit
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
             }
         }
 
         public async override Task NotConsent(string visitorId)
         {
-            var keysHit = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-            (x.Value.VisitorId==visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
+            string[] hitKeysToRemove;
+            string[] activateKeysToRemove;
 
-            var keysActivate = ActivatePoolQueue.Where(x => (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
-
-            var visitorCacheKeys = _cacheHitKeys.Where(x=> x.Value ==  visitorId).Select(x => x.Key).ToArray();
-
-            foreach (var item in keysHit)
+            lock (HitsPoolQueue)
             {
-                HitsPoolQueue.Remove(item);
+                hitKeysToRemove = HitsPoolQueue.Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
+                (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
+
+                foreach (var item in hitKeysToRemove)
+                {
+                    HitsPoolQueue.TryRemove(item, out _);
+                }
             }
 
-            foreach (var item in keysActivate)
+
+            lock (ActivatePoolQueue)
             {
-                ActivatePoolQueue.Remove(item);
+                activateKeysToRemove = ActivatePoolQueue.Where(x => (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)).Select(x => x.Key).ToArray();
+
+
+                foreach (var item in activateKeysToRemove)
+                {
+                    ActivatePoolQueue.TryRemove(item, out _);
+                }
             }
 
-            foreach (var item in visitorCacheKeys)
+            string[] visitorCacheKeys;
+            lock (_cacheHitKeys)
             {
-                _cacheHitKeys.Remove(item);
+                visitorCacheKeys = _cacheHitKeys.Where(x => x.Value == visitorId).Select(x => x.Key).ToArray();
+                foreach (var item in visitorCacheKeys)
+                {
+                    _cacheHitKeys.TryRemove(item, out _);
+                }
             }
 
-            var mergedKeys = new List<string>(keysHit);
+            var mergedKeys = new List<string>(hitKeysToRemove);
             mergedKeys.AddRange(visitorCacheKeys);
-            mergedKeys.AddRange(keysActivate);
+            mergedKeys.AddRange(activateKeysToRemove);
 
             if (!mergedKeys.Any())
             {
                 return;
             }
-            
+
             await FlushHitsAsync(mergedKeys.ToArray());
         }
 
@@ -137,7 +171,7 @@ namespace Flagship.Api
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
             var activateHitPool = new List<Activate>();
-          
+
             await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength);
         }
 
@@ -215,12 +249,14 @@ namespace Flagship.Api
             {
                 foreach (var item in activateBatch.Hits)
                 {
-                    _cacheHitKeys[item.Key] = item.Key;
+                    _cacheHitKeys.TryAdd(item.Key, item.Key);
                 }
 
                 if (currentActivate != null)
                 {
-                    await CacheHitAsync(new Dictionary<string, HitAbstract>() { { currentActivate.Key, currentActivate } });
+                    var hitDictionary = new ConcurrentDictionary<string, Activate>();
+                    hitDictionary.TryAdd(currentActivate.Key, currentActivate);
+                    await CacheHitAsync(hitDictionary);
                 }
 
                 Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
@@ -236,6 +272,25 @@ namespace Flagship.Api
                     duration = (DateTime.Now - now).TotalMilliseconds,
                     batchTriggeredBy = $"{batchTriggeredBy}"
                 }), SEND_ACTIVATE);
+
+                var troubleshooting = new Troubleshooting()
+                {
+                    Label = DiagnosticLabel.SEND_ACTIVATE_HIT_ROUTE_ERROR,
+                    LogLevel = LogLevel.ERROR,
+                    VisitorId = FlagshipInstanceId,
+                    FlagshipInstanceId = FlagshipInstanceId,
+                    Traffic = 0,
+                    Config = Config,
+                    HttpRequestUrl = url,
+                    HttpsRequestBody = requestBody,
+                    HttpResponseBody = ex.Message,
+                    HttpResponseMethod = "POST",
+                    HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
+                    BatchTriggeredBy = batchTriggeredBy
+                };
+
+                _ = SendTroubleshootingHit(troubleshooting);
+
             }
         }
     }

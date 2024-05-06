@@ -34,10 +34,19 @@ namespace Flagship.FsVisitor.Tests
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
+                DisableDeveloperUsageTracking = true,
+                TrackingManagerConfig = new TrackingManagerConfig()
             };
+
             trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var trackingManager = trackingManagerMock.Object;
+
             decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>(new object[] { null, null });
-            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+            
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManager, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>()
             {
@@ -225,6 +234,7 @@ namespace Flagship.FsVisitor.Tests
         async public Task FetchFlagsWithCacheV2Test()
         {
             ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+
             decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
                 .Returns(Task.FromResult(campaigns));
 
@@ -269,22 +279,23 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
-        public async Task UserExposedTest()
+        public async Task VisitorExposedTest()
         {
-            const string functionName = "UserExposed";
+            const string functionName = "VisitorExposed";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             var key = "key1";
-            await defaultStrategy.UserExposed(key, "defaultValue", null).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(key, "defaultValue", null).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_FLAG_ERROR, key), functionName), Times.Once());
 
             var flagDto = CampaignsData.GetFlag()[0];
-            await defaultStrategy.UserExposed(flagDto.Key, 1, flagDto).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDto.Key, 1, flagDto).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.USER_EXPOSED_CAST_ERROR, flagDto.Key), functionName), Times.Once());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Exactly(2));
 
-            await defaultStrategy.UserExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
 
             var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
 
@@ -293,7 +304,7 @@ namespace Flagship.FsVisitor.Tests
 
             var flagDtoValueNull = CampaignsData.GetFlag()[1];
 
-            await defaultStrategy.UserExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
+            await defaultStrategy.VisitorExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
 
             trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
                 y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)
@@ -311,6 +322,7 @@ namespace Flagship.FsVisitor.Tests
             var value = defaultStrategy.GetFlagValue(key, defaultValueString, null);
             Assert.AreEqual(defaultValueString, value);
             fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName), Times.Once());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Once());
         }
 
         [TestMethod()]
@@ -341,6 +353,7 @@ namespace Flagship.FsVisitor.Tests
             fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDto.Key), functionName), Times.Once());
             var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
             trackingManagerMock.Verify(x => x.Add(activate), Times.Never());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Once());
         }
 
         [TestMethod()]
@@ -380,6 +393,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultatMetadata));
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_CAST_ERROR, "key"), functionName), Times.Once());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y=> y.Type == HitType.TROUBLESHOOTING)), Times.Once());
         }
 
         [TestMethod()]
@@ -433,9 +447,10 @@ namespace Flagship.FsVisitor.Tests
         public async Task SendHitTest()
         {
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
-            var hit = new Flagship.Hit.Screen("HomeView");
+            var hit = new Screen("HomeView");
             await defaultStrategy.SendHit(hit).ConfigureAwait(false);
             trackingManagerMock.Verify(x => x.Add(hit), Times.Once());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)));
         }
 
         [TestMethod()]
@@ -478,6 +493,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
             Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
             Assert.AreEqual(FlagSyncStatus.AUTHENTICATED, visitorDelegate.FlagSyncStatus);
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)));
 
             defaultStrategy.Authenticate(null);
 
@@ -512,6 +528,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
             Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)));
 
             methodName = "Unauthenticate";
 

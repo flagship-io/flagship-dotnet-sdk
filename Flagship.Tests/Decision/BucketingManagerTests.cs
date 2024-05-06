@@ -741,15 +741,19 @@ namespace Flagship.Decision.Tests
 
             decisionManager.StatusChange += DecisionManager_StatusChange;
 
+            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+
+            var trackingManager = trackingManagerMock.Object;
+
+            decisionManager.TrackingManager = trackingManager;
+
             await Task.WhenAll(new Task[]
             {
                 decisionManager.StartPolling(),
                 decisionManager.StartPolling()
             }).ConfigureAwait(false);
 
-            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
-            var decisionManagerMock2 = new Mock<Flagship.Decision.IDecisionManager>();
-            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock2.Object, trackingManagerMock.Object);
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManager, trackingManager);
 
             var context = new Dictionary<string, object>()
             {
@@ -833,7 +837,7 @@ namespace Flagship.Decision.Tests
         }
 
         [TestMethod()]
-        public void SendContextTest()
+        public async Task SendContextTest()
         {
             var fsLogManagerMock = new Mock<IFsLogManager>();
 
@@ -850,30 +854,39 @@ namespace Flagship.Decision.Tests
             var decisionManagerMock = new BucketingManager(config, httpClient, null);
 
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
-            var decisionManagerMock2 = new Mock<IDecisionManager>();
-            var configManager = new Config.ConfigManager(config, decisionManagerMock2.Object, trackingManagerMock.Object);
+            var trackingManager = trackingManagerMock.Object;
+
+            decisionManagerMock.TrackingManager = trackingManager;
+
+            var configManager = new Config.ConfigManager(config, decisionManagerMock, trackingManager);
 
             var context = new Dictionary<string, object>()
             {
                 ["age"] = 20
             };
 
-            var visitorDelegate = new Mock<FsVisitor.VisitorDelegate>("visitor_1", false, context, false, configManager)
+            var visitorDelegateMock = new Mock<FsVisitor.VisitorDelegate>("visitor_1", false, context, false, configManager, null)
             {
                 CallBase = true
             };
 
-            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])));
+            visitorDelegateMock.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])));
 
-            decisionManagerMock.SendContextAsync(visitorDelegate.Object);
+            var visitorDelegate = visitorDelegateMock.Object;
 
-            visitorDelegate.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
+            await decisionManagerMock.SendContextAsync(visitorDelegate);
+
+            visitorDelegate.SetConsent(true);
+
+            await decisionManagerMock.SendContextAsync(visitorDelegate);
+
+            visitorDelegateMock.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
 
             var exception = new Exception("sendHit error");
 
-            visitorDelegate.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);
+            visitorDelegateMock.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);
 
-            decisionManagerMock.SendContextAsync(visitorDelegate.Object);
+            await decisionManagerMock.SendContextAsync(visitorDelegateMock.Object);
 
             fsLogManagerMock.Verify(x => x.Error(exception.Message, "SendContext"), Times.Once());
 

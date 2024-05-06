@@ -6,6 +6,7 @@ using Flagship.FsFlag;
 using Flagship.FsVisitor;
 using Flagship.Hit;
 using Flagship.Model;
+using Murmur;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -31,10 +32,14 @@ namespace Flagship.FsVisitor
 
         protected IDecisionManager DecisionManager => Visitor.ConfigManager.DecisionManager;
 
+        public Murmur32 Murmur32 { get; set; }
+
         public VisitorStrategyAbstract(VisitorDelegateAbstract visitor)
         {
             Visitor = visitor;
         }
+
+        internal virtual DateTime CurrentDateTime { get => DateTime.Now; }
 
         virtual public async Task SendConsentHitAsync(bool hasConsented)
         {
@@ -54,6 +59,26 @@ namespace Flagship.FsVisitor
 
             await TrackingManager.Add(hitEvent);
 
+
+            var troubleshootingHit = new Troubleshooting()
+            {
+                Label = DiagnosticLabel.VISITOR_SEND_HIT,
+                LogLevel = LogLevel.INFO,
+                Traffic = Visitor.Traffic,
+                VisitorSessionId = Visitor.SessionId,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
+                AnonymousId = Visitor.AnonymousId,
+                VisitorId = Visitor.VisitorId,
+                Config = Config,
+                HitContent = hitEvent.ToApiKeys()
+            };
+
+            if (DecisionManager.TroubleshootingData != null && Visitor.Traffic>0)
+            {
+                _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
+                return;
+            }
+            Visitor.ConsentHitTroubleshooting = troubleshootingHit;
         }
 
         protected virtual void MigrateVisitorCacheData(JObject visitorData)
@@ -64,7 +89,7 @@ namespace Flagship.FsVisitor
                 {
                     return;
                 }
-                
+
                 if (!visitorData.ContainsKey("Version"))
                 {
                     throw new Exception(LOOKUP_VISITOR_JSON_OBJECT_ERROR);
@@ -157,7 +182,7 @@ namespace Flagship.FsVisitor
                         Activated = false,
                         Flags = item.Variation.Modifications.Value,
                         Slug = item.Slug
-                       
+
                     });
                 }
 
@@ -208,13 +233,166 @@ namespace Flagship.FsVisitor
             }
         }
 
+        public virtual async Task SendTroubleshootingHit(Troubleshooting hit)
+        {
+            await TrackingManager.SendTroubleshootingHit(hit);
+        }
+
+        public virtual void AddTroubleshootingHit(Troubleshooting hit)
+        {
+            TrackingManager.AddTroubleshootingHit(hit);
+        }
+
+        public virtual TroubleshootingData GetTroubleshootingData()
+        {
+
+            TrackingManager.TroubleshootingData = DecisionManager?.TroubleshootingData;
+            return DecisionManager?.TroubleshootingData;
+        }
+
+        public async Task SendFetchFlagsTroubleshootingHit(ICollection<Campaign> campaigns, DateTime now)
+        {
+            var troubleshootingData = GetTroubleshootingData();
+            if (troubleshootingData==null)
+            {
+                return;
+            }
+
+            var uniqueId = Visitor.VisitorId + troubleshootingData.EndDate.ToString("u");
+            var hashBytes = Murmur32.ComputeHash(Encoding.UTF8.GetBytes(uniqueId));
+            var hash = BitConverter.ToUInt32(hashBytes, 0);
+            var traffic = hash % 100;
+
+
+            Visitor.Traffic = traffic;
+
+            var assignmentHistory = new Dictionary<string, object>();
+
+            foreach (var item in Visitor.Flags)
+            {
+                assignmentHistory[item.VariationGroupId] = item.VariationId;
+            }
+
+            var fetchFlagTroubleshootingHit = new Troubleshooting()
+            {
+                Label = DiagnosticLabel.VISITOR_FETCH_CAMPAIGNS,
+                LogLevel = LogLevel.INFO,
+                VisitorId = Visitor.VisitorId,
+                AnonymousId = Visitor.AnonymousId,
+                VisitorSessionId = Visitor.SessionId,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
+                Traffic = traffic,
+                Config = Config,
+                SdkStatus = Visitor.GetSdkStatus(),
+                VisitorContext = Visitor.Context,
+                VisitorCampaigns = campaigns,
+                VisitorConsent = Visitor.HasConsented,
+                VisitorIsAuthenticated = string.IsNullOrEmpty(Visitor.AnonymousId),
+                VisitorFlags = Visitor.Flags,
+                VisitorAssignmentHistory = assignmentHistory,
+                LastBucketingTimestamp = DecisionManager.LastBucketingTimestamp,
+                LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
+                HttpResponseTime = (DateTime.Now - now).Milliseconds,
+
+                SdkConfigLogLevel = Config.LogLevel,
+                SdkConfigMode = Config.DecisionMode,
+                SdkConfigTimeout = Config.Timeout,
+                SdkConfigTrackingManagerConfigStrategy = Config.TrackingManagerConfig.CacheStrategy,
+                SdkConfigTrackingManagerConfigBatchIntervals = Config.TrackingManagerConfig.BatchIntervals,
+                SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,
+                SdkConfigUsingCustomHitCache = Config.HitCacheImplementation != null,
+                SdkConfigUsingCustomVisitorCache = Config.VisitorCacheImplementation != null,
+                SdkConfigUsingCustomLogManagere = Config.LogManager is Logger.FsLogManager, 
+                SdkConfigUsingOnVisitorExposed = Config.HasOnVisitorExposed(),
+                SdkConfigDisableCache = Config.DisableCache
+            };
+
+            if (Config is BucketingConfig bucketingConfig)
+            {
+                fetchFlagTroubleshootingHit.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
+            }
+
+            await SendTroubleshootingHit(fetchFlagTroubleshootingHit);
+            await SendConsentHitTroubleshooting();
+            await SendSegmentHitTroubleshooting();
+        }
+        public async virtual Task SendUsageHitSdkConfig()
+        {
+            if (Config.DisableDeveloperUsageTracking)
+            {
+                return;
+            }
+            var uniqueId = Visitor.VisitorId + CurrentDateTime.ToShortDateString();
+            var hashBytes = Murmur32.ComputeHash(Encoding.UTF8.GetBytes(uniqueId));
+            var hash = BitConverter.ToUInt32(hashBytes, 0);
+            var traffic = hash % 1000;
+
+            if (traffic > Constants.USAGE_HIT_ALLOCATION)
+            {
+                return;
+            }
+
+            var analyticData = new UsageHit()
+            {
+                VisitorId= Visitor.SdkInitialData?.InstanceId,
+                Label = DiagnosticLabel.SDK_CONFIG,
+                LogLevel= LogLevel.INFO,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
+                Config= Config,
+                SdkStatus = Visitor.GetSdkStatus(),
+                LastBucketingTimestamp  = DecisionManager.LastBucketingTimestamp,
+                LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
+                SdkConfigMode = Config.DecisionMode,
+                SdkConfigTimeout = Config.Timeout,
+                SdkConfigLogLevel = Config.LogLevel,
+                SdkConfigTrackingManagerConfigStrategy = Config.TrackingManagerConfig.CacheStrategy,
+                SdkConfigTrackingManagerConfigBatchIntervals = Config.TrackingManagerConfig.BatchIntervals,
+                SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,
+                SdkConfigUsingCustomLogManagere = !(Config.LogManager is Logger.FsLogManager),
+                SdkConfigUsingCustomHitCache = Config.HitCacheImplementation != null,
+                SdkConfigUsingCustomVisitorCache = Config.VisitorCacheImplementation != null,
+                SdkConfigUsingOnVisitorExposed = Config.HasOnVisitorExposed(),
+                SdkConfigDisableCache = Config.DisableCache
+            };
+
+            if (Config is BucketingConfig bucketingConfig)
+            {
+                analyticData.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
+            }
+
+            await TrackingManager.SendUsageHit(analyticData);
+        }
+
+        public async Task SendConsentHitTroubleshooting()
+        {
+            var consentHitTroubleshooting = Visitor.ConsentHitTroubleshooting;
+            if (consentHitTroubleshooting == null)
+            {
+                return;
+            }
+            consentHitTroubleshooting.Traffic = Visitor.Traffic;
+            await SendTroubleshootingHit(consentHitTroubleshooting);
+            Visitor.ConsentHitTroubleshooting = null;
+        }
+
+        public async Task SendSegmentHitTroubleshooting()
+        {
+            var segmentHitTroubleshooting = Visitor.SegmentHitTroubleshooting;
+            if (segmentHitTroubleshooting == null)
+            {
+                return;
+            }
+            segmentHitTroubleshooting.Traffic = Visitor.Traffic;
+            await SendTroubleshootingHit(segmentHitTroubleshooting);
+            Visitor.SegmentHitTroubleshooting = null;
+        }
         abstract public void ClearContext();
 
         abstract public Task FetchFlags();
 
         abstract protected Task SendActivate(FlagDTO flag, object defaultValue = null);
 
-        abstract public Task UserExposed<T>(string key, T defaultValue, FlagDTO flag);
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
 

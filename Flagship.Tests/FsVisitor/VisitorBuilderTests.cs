@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using Flagship.Api;
+using Flagship.Config;
+using Flagship.Decision;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -19,14 +21,10 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void BuildTest()
         {
-            var configManagerMock = new Mock<Flagship.Config.IConfigManager>()
-            {
-                CallBase = true
-            };
-            var configManager = configManagerMock.Object;
+            var config = new DecisionApiConfig();
+            var decisionManager = new Mock<IDecisionManager>().Object;
             var trackingManager = new Mock<ITrackingManager>().Object;
-
-            configManager.TrackingManager = trackingManager;
+            var configManager = new ConfigManager(config, decisionManager, trackingManager);
             
             Builder = VisitorBuilder.Builder(configManager, visitorId, Enums.InstanceType.NEW_INSTANCE);
 

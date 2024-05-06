@@ -5,6 +5,7 @@ using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
 using Flagship.Logger;
+using Flagship.Model;
 using Flagship.Utils;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,7 @@ namespace Flagship.Main
 
         private IConfigManager _configManager;
         private Visitor _visitor;
+        private readonly SdkInitialData _sdkInitialData;
 
         protected static Fs GetInstance()
         {
@@ -43,7 +45,10 @@ namespace Flagship.Main
 
         private Fs()
         {
-
+            _sdkInitialData = new SdkInitialData()
+            {
+                InstanceId = Guid.NewGuid().ToString()
+            };
         }
 
         /// <summary>
@@ -73,6 +78,7 @@ namespace Flagship.Main
             }
             _status = status;
             _config.SetStatus(status);
+            VisitorDelegateAbstract.SDKStatus = Status;
         }
 
         private static bool IsReady()
@@ -83,7 +89,7 @@ namespace Flagship.Main
         /// <summary>
         /// Will return any previous created visitor instance initialized with the SINGLE_INSTANCE
         /// </summary>
-        public static FsVisitor.Visitor Visitor
+        public static Visitor Visitor
         {
             get { return GetInstance()._visitor; }
             internal set { GetInstance()._visitor = value; }
@@ -153,7 +159,12 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                 decisionManager = new ApiManager(config, httpClient);
             }
 
-            var trackingManager = new TrackingManager(config, httpClient);
+            var trackingManager = new TrackingManager(config, httpClient, instance._sdkInitialData.InstanceId);
+
+
+            decisionManager.FlagshipInstanceId = instance._sdkInitialData.InstanceId;
+
+            decisionManager.TrackingManager = trackingManager;
 
             decisionManager.StatusChange += DecisionManager_StatusChange;
 
@@ -166,6 +177,8 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                 fsInstance._configManager.DecisionManager = decisionManager;
                 fsInstance._configManager.TrackingManager = trackingManager;
             }
+
+            instance._sdkInitialData.LastInitializationTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
 
             fsInstance.SetStatus(FlagshipStatus.READY);
             Log.LogInfo(config, string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION),
@@ -216,7 +229,8 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             {
                 return null;
             }
-            return VisitorBuilder.Builder(GetInstance()._configManager, visitorId, instanceType);
+            var instance = GetInstance();
+            return VisitorBuilder.Builder(instance._configManager, visitorId, instanceType, instance._sdkInitialData);
         }
 
         /// <summary>

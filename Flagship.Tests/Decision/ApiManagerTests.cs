@@ -19,6 +19,10 @@ namespace Flagship.Decision.Tests
     [TestClass()]
     public class ApiManagerTests
     {
+        public string GetCampaignUrl (string envId) 
+        {
+            return $"{Constants.BASE_API_URL}{envId}/campaigns?exposeAllKeys=true&extras[]=accountSettings";
+        }
         private string GetCampaigns()
         {
             return @"{'visitorId':'anonymeId','campaigns':[{'id':'c3ev1afkprbg5u3burag','variation':{'id':'c3mrlpveoqt1lkm7tc00','modifications':{'type':'JSON','value':{'array':[3,3,3],'complex':{'carray':[{'cobject':3}]},'object':{'value':8552}}},'reference':false},'variationGroupId':'c3ev1afkprbg5u3burbg'},{'id':'c2nrh1hjg50l9thhu8bg','variation':{'id':'c2nrh1hjg50l9thhu8dg','modifications':{'type':'JSON','value':{'key':'value'}},'reference':false},'variationGroupId':'c2nrh1hjg50l9thhu8cg'},{'id':'c20j8bk3fk9hdphqtd1g','variation':{'id':'c20j8bk3fk9hdphqtd30','modifications':{'type':'HTML','value':{'my_html':'\u003cdiv\u003e\n \u003cp\u003eoriginal\u003c/ p\u003e\n\u003c/ div\u003e','my_text':null}},'reference':true},'variationGroupId':'c20j8bk3fk9hdphqtd2g'}]}";
@@ -36,7 +40,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent(GetCampaigns(), Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
+            var url = GetCampaignUrl(config.EnvId);
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
@@ -93,7 +97,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent("{'visitorId':'anonymeId','campaigns':[],'panic':true}", Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
+            var url = GetCampaignUrl(config.EnvId);
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
@@ -144,7 +148,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent("{'visitorId':'anonymeId','campaigns':[],'panic':true}", Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
+            var url = GetCampaignUrl(config.EnvId);
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
@@ -196,7 +200,7 @@ namespace Flagship.Decision.Tests
                 Content = new StringContent(responseContent, Encoding.UTF8, "application/json")
             };
 
-            var url = $"{Constants.BASE_API_URL}{config.EnvId}/campaigns?exposeAllKeys=true";
+            var url = GetCampaignUrl(config.EnvId);
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 

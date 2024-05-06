@@ -1,4 +1,5 @@
-﻿using Flagship.Config;
+﻿using Flagship.Api;
+using Flagship.Config;
 using Flagship.Delegate;
 using Flagship.Enums;
 using Flagship.FsVisitor;
@@ -17,8 +18,12 @@ namespace Flagship.Decision
     {
         public event StatusChangeDelegate StatusChange;
         protected bool _isPanic = false;
+        public TroubleshootingData TroubleshootingData { get; set; }
 
         public FlagshipConfig Config { get; set; }
+
+        public string LastBucketingTimestamp { get ; set; }
+
         public bool IsPanic
         {
             get => _isPanic;
@@ -31,6 +36,9 @@ namespace Flagship.Decision
 
         public HttpClient HttpClient { get; set; }
 
+        public string FlagshipInstanceId { get; set; }
+
+
         public DecisionManager(FlagshipConfig config, HttpClient httpClient)
         {
             Config = config;
@@ -38,6 +46,8 @@ namespace Flagship.Decision
         }
 
         abstract public Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
+
+        public ITrackingManager TrackingManager { get; set; }  
 
         public Task<ICollection<FlagDTO>> GetFlags(ICollection<Campaign> campaigns)
         {

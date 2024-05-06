@@ -10,6 +10,7 @@ using Flagship.Enums;
 using Flagship.Logger;
 using Newtonsoft.Json.Linq;
 using Flagship.Model;
+using Flagship.Hit;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -72,8 +73,8 @@ namespace Flagship.FsVisitor.Tests
         {
             var noConsentStategy = new NoConsentStrategy(visitorDelegate);
             var defaultValue = "default";
-            await noConsentStategy.UserExposed("key", defaultValue, null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "UserExposed", visitorDelegate.VisitorId), "UserExposed"), Times.Once());
+            await noConsentStategy.VisitorExposed("key", defaultValue, null).ConfigureAwait(false);
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "VisitorExposed", visitorDelegate.VisitorId), "VisitorExposed"), Times.Once());
         }
 
         [TestMethod()]
@@ -93,7 +94,7 @@ namespace Flagship.FsVisitor.Tests
             {
                 ["key0"] = 1,
             };
-            var visitorDelegateMock = new Mock<VisitorDelegate>("visitorId", false, context, false, configManager) { CallBase = true };
+            var visitorDelegateMock = new Mock<VisitorDelegate>("visitorId", false, context, false, configManager, null) { CallBase = true };
 
             visitorDelegateMock.Setup(x => x.SetConsent(false));
             var visitorDelegate = visitorDelegateMock.Object;
@@ -103,7 +104,52 @@ namespace Flagship.FsVisitor.Tests
 
             await noConsentStategy.SendHit(new Flagship.Hit.Screen("Home")).ConfigureAwait(false);
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "SendHit", visitorDelegate.VisitorId), "SendHit"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "SendHit", visitorDelegate.VisitorId), "SendHit"), Times.Once());
+        }
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                DisableDeveloperUsageTracking = true,
+            };
+
+            var trackingManagerMock = new Mock<Api.ITrackingManager>();
+            var trackingManager = trackingManagerMock.Object;
+
+            var decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
+
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var configManager = new Config.ConfigManager(config, decisionManager, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key"] = 1,
+            };
+
+            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var strategy = new NoConsentStrategy(visitorDelegate);
+
+            var troubleshootingHit = new Troubleshooting();
+
+            //Test SendTroubleshootingHit
+
+            await strategy.SendTroubleshootingHit(troubleshootingHit);
+
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
+
+            //Test AddTroubleshootingHitTest
+
+            strategy.AddTroubleshootingHit(troubleshootingHit);
+
+            trackingManagerMock.Verify(x => x.AddTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Flagship.FsVisitor.Tests
         public VisitorTests()
         {
             var configManager = new Mock<Flagship.Config.IConfigManager>();
-            visitorDelegateMock = new Mock<VisitorDelegateAbstract>(new object[] { "visitor_id", false, new Dictionary<string, object>(), false, configManager.Object });
+            visitorDelegateMock = new Mock<VisitorDelegateAbstract>(new object[] { "visitor_id", false, new Dictionary<string, object>(), false, configManager.Object, null });
 
             visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
             Visitor = new Visitor(visitorDelegateMock.Object);

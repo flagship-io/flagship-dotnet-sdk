@@ -21,6 +21,7 @@ using Newtonsoft.Json.Serialization;
 using Flagship.FsFlag;
 using Flagship.FsVisitor;
 using Microsoft.QualityTools.Testing.Fakes;
+using System.Collections.Concurrent;
 
 namespace Flagship.Api.Tests
 {
@@ -43,8 +44,8 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue })
             {
@@ -63,9 +64,9 @@ namespace Flagship.Api.Tests
             await strategy.Add(page).ConfigureAwait(false);
 
             Assert.AreEqual(1, hitsPoolQueue.Count);
-            Assert.AreSame(page, hitsPoolQueue.Values.First());
+            Assert.IsTrue(hitsPoolQueue.Values.Any(v => v == page));
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(page))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Any(v => v == page))), Times.Once());
 
             var hitEvent = new Event(EventCategory.USER_ENGAGEMENT, Constants.FS_CONSENT)
             {
@@ -79,9 +80,9 @@ namespace Flagship.Api.Tests
             await strategy.Add(hitEvent).ConfigureAwait(false);
             Assert.AreEqual(2, hitsPoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Exactly(2));
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(hitEvent))), Times.Once());
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(page))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Exactly(2));
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Any(v => v == hitEvent))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Any(v => v == page))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
             //fsLogManagerMock.Verify(x => x.Debug(string.Format(BatchingCachingStrategyAbstract.HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(page.ToApiKeys())), 
             //    BatchingCachingStrategyAbstract.ADD_HIT), Times.Once());
@@ -99,8 +100,8 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue })
             {
@@ -168,7 +169,7 @@ namespace Flagship.Api.Tests
 
             Assert.AreEqual(2, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(hitEvent))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Contains(hitEvent))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length==4)), Times.Once());
         }
 
@@ -184,8 +185,8 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue })
             {
@@ -209,7 +210,7 @@ namespace Flagship.Api.Tests
             await strategy.Add(hitEvent).ConfigureAwait(false);
             Assert.AreEqual(1, hitsPoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y => y.ContainsValue(hitEvent))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Contains(hitEvent))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
         }
 
@@ -262,8 +263,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -293,7 +294,7 @@ namespace Flagship.Api.Tests
 
             Assert.AreEqual(0, hitsPoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 20)), Times.Once());
 
             httpResponse.Dispose();
@@ -349,8 +350,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -384,7 +385,7 @@ namespace Flagship.Api.Tests
 
             Assert.AreEqual(1, hitsPoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 124)), Times.Once());
 
             httpResponse.Dispose();
@@ -438,8 +439,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -475,7 +476,7 @@ namespace Flagship.Api.Tests
 
             Assert.AreEqual(0, hitsPoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 2)), Times.Once());
 
             httpResponse.Dispose();
@@ -508,8 +509,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -578,8 +579,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -617,8 +618,9 @@ namespace Flagship.Api.Tests
 
             Assert.AreEqual(21, hitsPoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item=> item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
             shimeContext.Dispose();
@@ -688,8 +690,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -703,7 +705,7 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
@@ -747,8 +749,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -842,7 +844,10 @@ namespace Flagship.Api.Tests
                 var f = headers.ToString();
 
                 var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                return result.Contains(activate.VariationId) && result.Contains(activate.VariationGroupId) &&
+                result.Contains(activate2.VariationId) && result.Contains(activate2.VariationGroupId) &&
+                result.Contains(activate3.VariationId) && result.Contains(activate3.VariationGroupId) &&
+                headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
                 && x.RequestUri.ToString() == url;
             };
 
@@ -854,8 +859,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -874,7 +879,7 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(0, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y=>y.Contains(activate2.Key)
             && y.Contains(activate3.Key) 
             && y.Length==2)), Times.Once());
@@ -949,7 +954,10 @@ namespace Flagship.Api.Tests
                 var url = Constants.BASE_API_URL + BatchingCachingStrategyAbstract.URL_ACTIVATE;
 
                 var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                return result.Contains(activate.VariationId) && result.Contains(activate.VariationGroupId) &&
+                result.Contains(activate2.VariationId) && result.Contains(activate2.VariationGroupId) &&
+                result.Contains(activate3.VariationId) && result.Contains(activate3.VariationGroupId) && 
+                headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
                 && x.RequestUri.ToString() == url;
             };
 
@@ -961,8 +969,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -971,18 +979,18 @@ namespace Flagship.Api.Tests
 
             var strategy = strategyMock.Object;
 
-            activatePoolQueue[activate.Key] = activate;
-            activatePoolQueue[activate2.Key] = activate2;
-            activatePoolQueue[activate3.Key] = activate3;
+            activatePoolQueue.TryAdd(activate.Key, activate);
+            activatePoolQueue.TryAdd(activate2.Key, activate2);
+            activatePoolQueue.TryAdd(activate3.Key, activate3);
 
-            Assert.AreEqual(3, activatePoolQueue.Count);
+            Assert.AreEqual(3, strategy.ActivatePoolQueue.Count);
 
             await strategy.SendBatch().ConfigureAwait(false);
 
-            Assert.AreEqual(0, hitsPoolQueue.Count);
-            Assert.AreEqual(0, activatePoolQueue.Count);
+            Assert.AreEqual(0, strategy.HitsPoolQueue.Count);
+            Assert.AreEqual(0, strategy.ActivatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<Dictionary<string, HitAbstract>>()), Times.Never());
+            strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Contains(activate2.Key)
             && y.Contains(activate3.Key) && y.Contains(activate.Key)
             && y.Length == 3)), Times.Once());
@@ -1051,8 +1059,8 @@ namespace Flagship.Api.Tests
 
             var httpClient = new HttpClient(mockHandler.Object);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
             {
@@ -1066,8 +1074,9 @@ namespace Flagship.Api.Tests
             Assert.AreEqual(0, hitsPoolQueue.Count);
             Assert.AreEqual(1, activatePoolQueue.Count);
 
-            strategyMock.Verify(x => x.CacheHitAsync(It.Is<Dictionary<string, HitAbstract>>(y=> y.ContainsValue(activate))), Times.Once());
+            strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Contains(activate))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
+            strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
         }
@@ -1086,8 +1095,8 @@ namespace Flagship.Api.Tests
                 HitCacheImplementation = hitCacheImplementation.Object
             };
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue })
             {
@@ -1101,8 +1110,8 @@ namespace Flagship.Api.Tests
             var shimeContext = ShimsContext.Create();
             System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
-            var hits = new Dictionary<string, HitAbstract>() {
-                {$"{visitorId}:{Guid.NewGuid()}", new Page("http://localhost") }
+            var hits = new ConcurrentDictionary<string, HitAbstract>() {
+                [$"{visitorId}:{Guid.NewGuid()}"]= new Page("http://localhost") 
             };
 
             hitCacheImplementation.Setup(x => x.CacheHit(It.IsAny<JObject>())).Returns(Task.CompletedTask);
@@ -1164,8 +1173,8 @@ namespace Flagship.Api.Tests
                 HitCacheImplementation = hitCacheImplementation.Object
             };
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClientMock.Object, hitsPoolQueue, activatePoolQueue })
             {
@@ -1179,9 +1188,8 @@ namespace Flagship.Api.Tests
             var shimeContext = ShimsContext.Create();
             System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
-            var hits = new Dictionary<string, Activate>() {
-                {$"{visitorId}:{Guid.NewGuid()}", new Activate("variationGroupId", "variationId") }
-            };
+            var hits = new ConcurrentDictionary<string, Activate>();
+            hits.TryAdd($"{visitorId}:{Guid.NewGuid()}", new Activate("variationGroupId", "variationId"));
 
             hitCacheImplementation.Setup(x => x.CacheHit(It.IsAny<JObject>())).Returns(Task.CompletedTask);
 
@@ -1229,8 +1237,8 @@ namespace Flagship.Api.Tests
                 HitCacheImplementation = hitCacheImplementation.Object
             };
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategy = new BatchingContinuousCachingStrategy(config, httpClientMock.Object, ref hitsPoolQueue, ref activatePoolQueue);
 
@@ -1239,8 +1247,8 @@ namespace Flagship.Api.Tests
             var shimeContext = ShimsContext.Create();
             System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
-            var hits = new Dictionary<string, HitAbstract>() {
-                {$"{visitorId}:{Guid.NewGuid()}", new Page("http://localhost") }
+            var hits = new ConcurrentDictionary<string, HitAbstract>() {
+                [$"{visitorId}:{Guid.NewGuid()}"] = new Page("http://localhost")
             };
 
             var exception = new Exception("Error");
@@ -1299,8 +1307,8 @@ namespace Flagship.Api.Tests
 
             hitCacheImplementation.Setup(x => x.FlushHits(hitKeys)).Returns(Task.CompletedTask);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategy = new BatchingContinuousCachingStrategy(config, httpClientMock.Object, ref hitsPoolQueue, ref activatePoolQueue);
             
@@ -1345,8 +1353,8 @@ namespace Flagship.Api.Tests
 
             hitCacheImplementation.Setup(x => x.FlushHits(hitKeys)).ThrowsAsync(exception);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategy = new BatchingContinuousCachingStrategy(config, httpClientMock.Object, ref hitsPoolQueue, ref activatePoolQueue);
 
@@ -1377,8 +1385,8 @@ namespace Flagship.Api.Tests
 
             hitCacheImplementation.Setup(x => x.FlushAllHits()).Returns(Task.CompletedTask);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategy = new BatchingContinuousCachingStrategy(config, httpClientMock.Object, ref hitsPoolQueue, ref activatePoolQueue);
 
@@ -1419,8 +1427,8 @@ namespace Flagship.Api.Tests
 
             hitCacheImplementation.Setup(x => x.FlushAllHits()).ThrowsAsync(exception);
 
-            var hitsPoolQueue = new Dictionary<string, HitAbstract>();
-            var activatePoolQueue = new Dictionary<string, Activate>();
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
             var strategy = new BatchingContinuousCachingStrategy(config, httpClientMock.Object, ref hitsPoolQueue, ref activatePoolQueue);
 
@@ -1432,6 +1440,664 @@ namespace Flagship.Api.Tests
             fsLogManagerMock.Verify(x => x.Error(exception.Message, BatchingCachingStrategyAbstract.PROCESS_FLUSH_HIT), Times.Once());
 
 
+        }
+
+        [TestMethod()]
+        public void AddTroubleshootingHitTest() 
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            var troubleshooting = new Troubleshooting();
+
+            strategy.AddTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitTest() 
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var troubleshooting = new Troubleshooting()
+            {
+                Key = hitKey,
+                Config= config,
+                Traffic = 50
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(troubleshooting.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.TROUBLESHOOTING_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            var strategy = strategyMock.Object;
+
+            strategy.TroubleshootingQueue.TryAdd(hitKey, troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            strategy.TroubleshootingData = new TroubleshootingData()
+            {
+                Traffic = 40
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(false);
+
+            await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            strategy.TroubleshootingData.Traffic = 100;
+
+           await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(0, strategy.TroubleshootingQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once() , new object[] { 
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            } );
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitFailedTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig() 
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.BadRequest,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var troubleshooting = new Troubleshooting()
+            {
+                Config = config,
+                Traffic = 100
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(troubleshooting.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.TROUBLESHOOTING_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            var strategy = strategyMock.Object;
+
+            strategy.TroubleshootingData = new TroubleshootingData()
+            {
+                Traffic = 100
+            };
+
+            await strategy.SendTroubleshootingHit(troubleshooting);
+
+            Assert.AreEqual(1, strategy.TroubleshootingQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            httpResponse.Dispose();
+        }
+
+
+        [TestMethod()]
+        public async Task SendTroubleshootingHitQueueTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var troubleshooting = new Troubleshooting()
+            {
+                Key = hitKey,
+                Config = config,
+                Traffic = 50
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(false);
+
+            strategyMock.Setup(x => x.SendTroubleshootingHit(troubleshooting)).Returns(Task.CompletedTask);
+
+            var strategy = strategyMock.Object;
+
+            await strategy.SendTroubleshootingQueue();
+
+            strategyMock.Setup(x => x.IsTroubleshootingActivated()).Returns(true);
+
+            strategy.TroubleshootingQueue.TryAdd(hitKey, troubleshooting);
+
+            await strategy.SendTroubleshootingQueue();
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Never(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            strategyMock.Verify(x => x.SendTroubleshootingHit(troubleshooting), Times.Once());
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public void AddUsageHitTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            var usageHit = new UsageHit();
+
+            strategy.AddUsageHit(usageHit);
+
+            Assert.AreEqual(1, strategy.UsageHitQueue.Count);
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendUsageHitTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var usageHit = new UsageHit()
+            {
+                Key = hitKey,
+                Config = config
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(usageHit.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.USAGE_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+
+            var strategy = strategyMock.Object;
+
+            strategy.UsageHitQueue.TryAdd(hitKey, usageHit);
+
+            Assert.AreEqual(1, strategy.UsageHitQueue.Count);
+
+            strategy.TroubleshootingData = new TroubleshootingData()
+            {
+                Traffic = 40
+            };
+
+            await strategy.SendUsageHit(usageHit);
+
+            Assert.AreEqual(0, strategy.UsageHitQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendUsageHitFailedTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.BadRequest,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var usageHit = new UsageHit()
+            {
+                Config = config
+            };
+
+            Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
+            {
+                var postDataString = JsonConvert.SerializeObject(usageHit.ToApiKeys());
+
+                var headers = new HttpRequestMessage().Headers;
+                headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+
+                var url = Constants.USAGE_HIT_URL;
+
+                var result = x.Content.ReadAsStringAsync().Result;
+                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri.ToString() == url;
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => actionBatch1(req)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            await strategy.SendUsageHit(usageHit);
+
+            Assert.AreEqual(1, strategy.UsageHitQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Once(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public async Task SendUsageHitQueueTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            var shimeContext = ShimsContext.Create();
+            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var usageHit = new UsageHit()
+            {
+                Key = hitKey,
+                Config = config
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+
+            strategyMock.Setup(x => x.SendUsageHit(usageHit)).Returns(Task.CompletedTask);
+
+            var strategy = strategyMock.Object;
+
+            await strategy.SendUsageHitQueue();
+
+            strategy.UsageHitQueue.TryAdd(hitKey, usageHit);
+
+            await strategy.SendUsageHitQueue();
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+            "SendAsync", Times.Never(), new object[] {
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            });
+
+            strategyMock.Verify(x => x.SendUsageHit(usageHit), Times.Once());
+
+            httpResponse.Dispose();
+        }
+
+        [TestMethod()]
+        public void IsTroubleshootingActivatedTest()
+        { 
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var hitKey = "hitKey";
+
+            var usageHit = new UsageHit()
+            {
+                Key = hitKey,
+                Config = config
+            };
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            var check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsFalse(check);
+
+            strategy.TroubleshootingData = new TroubleshootingData
+            {
+                StartDate = DateTime.Now.ToUniversalTime().AddMinutes(5),
+            };
+
+            check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsFalse(check);
+
+            strategy.TroubleshootingData = new TroubleshootingData
+            {
+                StartDate = DateTime.Now.ToUniversalTime().AddMinutes(-2),
+                EndDate = DateTime.Now.ToUniversalTime().AddSeconds(-10),
+            };
+
+            check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsFalse(check);
+
+            strategy.TroubleshootingData = new TroubleshootingData
+            {
+                StartDate = DateTime.Now.ToUniversalTime().AddMinutes(-2),
+                EndDate = DateTime.Now.ToUniversalTime().AddMinutes(10),
+            };
+
+            check = strategy.IsTroubleshootingActivated();
+
+            Assert.IsTrue(check);
+
+            httpResponse.Dispose();
         }
 
     }

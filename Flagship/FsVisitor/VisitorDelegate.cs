@@ -3,6 +3,7 @@ using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Logger;
+using Flagship.Model;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace Flagship.FsVisitor
 {
     internal class VisitorDelegate : VisitorDelegateAbstract
     {
-        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager) : base(visitorID, isAuthenticated, context, hasConsented, configManager)
+        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null) : base(visitorID, isAuthenticated, context, hasConsented, configManager, sdkInitialData)
         {
         }
 
@@ -26,7 +27,6 @@ namespace Flagship.FsVisitor
 
         public override Task FetchFlags()
         {
-
             return this.GetStrategy().FetchFlags();
         }
 
@@ -77,7 +77,7 @@ namespace Flagship.FsVisitor
 
         public override Task VisitorExposed<T>(string key, T defaultValue, Model.FlagDTO flag)
         {
-            return GetStrategy().UserExposed(key, defaultValue, flag);  
+            return GetStrategy().VisitorExposed(key, defaultValue, flag);  
         }
 
         public override Task SendHit(HitAbstract hit)

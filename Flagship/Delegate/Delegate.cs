@@ -1,6 +1,7 @@
 ﻿using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.FsVisitor;
+using Flagship.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,4 +17,12 @@ namespace Flagship.Delegate
     /// <param name="exposedVisitor">An interface to get information about the visitor to whom the flag has been exposed</param>
     /// <param name="exposedFlag">An interface to get information about the flag that has been exposed.</param>
     public delegate void OnVisitorExposedDelegate(IExposedVisitor exposedVisitor, IExposedFlag exposedFlag);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fetchFlagsStatus"></param>
+    public delegate void onFetchFlagsStatusChangedDelegate(IFetchFlagsStatus fetchFlagsStatus);
+
+
 }

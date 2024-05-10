@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Flagship.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,5 +32,7 @@ namespace Flagship.FsFlag
         /// Return the campaign information metadata or an empty object if the Flag doesn't exist or if the default value type does not correspond to the Flag type in Flagship.
         /// </summary>
         IFlagMetadata Metadata { get; }
+
+        FSFlagStatus Status { get; }
     }
 }

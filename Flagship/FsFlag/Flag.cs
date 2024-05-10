@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using Flagship.Enums;
 
 namespace Flagship.FsFlag
 {
@@ -50,6 +51,30 @@ namespace Flagship.FsFlag
             }
         }
 
+        public FSFlagStatus Status
+        {
+            get
+            {
+                var fetchFlagsStatus = _visitorDelegateAbstract.FetchFlagsStatus;
+                if (fetchFlagsStatus.Status == FSFetchStatus.PANIC)
+                {
+                    return FSFlagStatus.PANIC;
+                }
+
+                if (!Exists)
+                {
+                    return FSFlagStatus.NOT_FOUND;
+                }
+
+                if (fetchFlagsStatus.Status == FSFetchStatus.FETCH_REQUIRED || fetchFlagsStatus.Status == FSFetchStatus.FETCHING)
+                {
+                    return FSFlagStatus.FETCH_REQUIRED;
+                }
+
+                return FSFlagStatus.FETCHED;
+            }
+        }
+
         public Task VisitorExposed()
         {
             var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
@@ -61,6 +86,8 @@ namespace Flagship.FsFlag
             var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
             return _visitorDelegateAbstract.GetFlagValue(_key, (T)_defaultValue, flagDTO, userExposed);
         }
+
+
 
 
     }

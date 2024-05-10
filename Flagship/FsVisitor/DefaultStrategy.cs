@@ -49,7 +49,15 @@ namespace Flagship.FsVisitor
             }
 
             Visitor.Context[key] = value;
-            this.Visitor.FlagSyncStatus = FlagSyncStatus.CONTEXT_UPDATED;
+        }
+
+        protected void UpdateContextFetchFlagsStatus()
+        {
+            Visitor.FetchFlagsStatus = new FetchFlagsStatus
+            {
+                Reason = FSFetchReasons.UPDATE_CONTEXT,
+                Status = FSFetchStatus.FETCH_REQUIRED
+            };
         }
 
         public override void UpdateContext(IDictionary<string, object> context)
@@ -62,26 +70,31 @@ namespace Flagship.FsVisitor
             {
                 UpdateContexKeyValue(item.Key, item.Value);
             }
+            UpdateContextFetchFlagsStatus();
         }
 
         public override void UpdateContext(string key, string value)
         {
             UpdateContexKeyValue(key, value);
+            UpdateContextFetchFlagsStatus();
         }
 
         public override void UpdateContext(string key, double value)
         {
             UpdateContexKeyValue(key, value);
+            UpdateContextFetchFlagsStatus();
         }
 
         public override void UpdateContext(string key, bool value)
         {
             UpdateContexKeyValue(key, value);
+            UpdateContextFetchFlagsStatus();
         }
 
         public override void ClearContext()
         {
             Visitor.Context.Clear();
+            UpdateContextFetchFlagsStatus();
         }
 
         protected virtual ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
@@ -120,27 +133,55 @@ namespace Flagship.FsVisitor
             return campaigns;
         }
 
+       async protected Task<ICollection<Campaign>> GetCampaignsFromDecisionManager(string functionName, DateTime now)
+        {
+            try
+            {
+                Visitor.FetchFlagsStatus = new FetchFlagsStatus
+                {
+                    Reason = FSFetchReasons.NONE,
+                    Status = FSFetchStatus.FETCHING
+                };
+
+                var campaigns = await DecisionManager.GetCampaigns(Visitor);
+                if (DecisionManager.IsPanic)
+                {
+                    Visitor.FetchFlagsStatus = new FetchFlagsStatus
+                    {
+                        Reason = FSFetchReasons.NONE,
+                        Status = FSFetchStatus.PANIC
+                    };
+                }
+
+                Log.LogDebug(Config, string.Format(FETCH_CAMPAIGNS_SUCCESS,
+                    Visitor.VisitorId, Visitor.AnonymousId,
+                    JsonConvert.SerializeObject(Visitor.Context),
+                    JsonConvert.SerializeObject(campaigns), (DateTime.Now - now).Milliseconds), functionName);
+
+                return campaigns;
+            }
+            catch (Exception ex)
+            {
+                Visitor.FetchFlagsStatus = new FetchFlagsStatus
+                {
+                    Reason = FSFetchReasons.FETCH_ERROR,
+                    Status = FSFetchStatus.FETCH_REQUIRED
+                };
+                Log.LogError(Config, ex.Message, functionName);
+            }
+            return null;
+        }
+
         async public override Task FetchFlags()
         {
             const string FUNCTION_NAME = "FetchFlags";
             Log.LogDebug(Config, string.Format(FETCH_FLAGS_STARTED, Visitor.VisitorId), FUNCTION_NAME);
             ICollection<Campaign> campaigns = new List<Campaign>();
             var now = DateTime.Now;
+           
             try
             {
-                campaigns = await DecisionManager.GetCampaigns(Visitor);
-
-                Log.LogDebug(Config, string.Format(FETCH_CAMPAIGNS_SUCCESS,
-                    Visitor.VisitorId, Visitor.AnonymousId,
-                    JsonConvert.SerializeObject(Visitor.Context),
-                    JsonConvert.SerializeObject(campaigns), (DateTime.Now - now).Milliseconds), FUNCTION_NAME);
-            }
-            catch (Exception ex)
-            {
-                Log.LogError(Config, ex.Message, FUNCTION_NAME);
-            }
-            try
-            {
+                campaigns = await GetCampaignsFromDecisionManager(FUNCTION_NAME, now);
                 if (campaigns.Count == 0)
                 {
                     campaigns = FetchVisitorCacheCampaigns(Visitor);
@@ -150,6 +191,11 @@ namespace Flagship.FsVisitor
                     Visitor.VisitorId, Visitor.AnonymousId,
                     JsonConvert.SerializeObject(Visitor.Context),
                     JsonConvert.SerializeObject(campaigns), (DateTime.Now - now).Milliseconds), FUNCTION_NAME);
+                        Visitor.FetchFlagsStatus = new FetchFlagsStatus
+                        {
+                            Reason = FSFetchReasons.READ_FROM_CACHE,
+                            Status = FSFetchStatus.FETCH_REQUIRED
+                        };
                     }
                 }
 
@@ -157,7 +203,14 @@ namespace Flagship.FsVisitor
                 Visitor.Flags = await DecisionManager.GetFlags(campaigns);
                 Visitor.GetStrategy().CacheVisitorAsync();
 
-                Visitor.FlagSyncStatus = FlagSyncStatus.FLAGS_FETCHED;
+                if (Visitor.FetchFlagsStatus.Status == FSFetchStatus.FETCHING )
+                {
+                    Visitor.FetchFlagsStatus = new FetchFlagsStatus
+                    {
+                        Reason = FSFetchReasons.NONE,
+                        Status = FSFetchStatus.FETCHED
+                    };
+                }
 
                 Log.LogDebug(Config, string.Format(FETCH_FLAGS_FROM_CAMPAIGNS,
                     Visitor.VisitorId, Visitor.AnonymousId,
@@ -479,7 +532,13 @@ namespace Flagship.FsVisitor
 
             Visitor.AnonymousId = Visitor.VisitorId;
             Visitor.VisitorId = visitorId;
-            Visitor.FlagSyncStatus = FlagSyncStatus.AUTHENTICATED;
+
+            Visitor.FetchFlagsStatus = new FetchFlagsStatus
+            {
+                Reason = FSFetchReasons.AUTHENTICATE,
+                Status = FSFetchStatus.FETCH_REQUIRED
+            };
+
 
             var troubleshootingHit = new Troubleshooting()
             {
@@ -514,7 +573,12 @@ namespace Flagship.FsVisitor
 
             Visitor.VisitorId = Visitor.AnonymousId;
             Visitor.AnonymousId = null;
-            Visitor.FlagSyncStatus = FlagSyncStatus.UNAUTHENTICATED;
+
+            Visitor.FetchFlagsStatus = new FetchFlagsStatus
+            {
+                Reason = FSFetchReasons.UNAUTHENTICATE,
+                Status = FSFetchStatus.FETCH_REQUIRED 
+            };
 
             var troubleshootingHit = new Troubleshooting()
             {

@@ -1,4 +1,5 @@
 ﻿using Flagship.Config;
+using Flagship.Delegate;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
@@ -25,7 +26,11 @@ namespace Flagship.FsVisitor
 
         public IDictionary<string, object> Context => _visitorDelegate.Context;
 
+        public IFetchFlagsStatus FetchFlagsStatus => _visitorDelegate.FetchFlagsStatus;
+
         private readonly VisitorDelegateAbstract _visitorDelegate;
+
+        public event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged;
 
         internal Visitor(VisitorDelegateAbstract visitorDelegate)
         {

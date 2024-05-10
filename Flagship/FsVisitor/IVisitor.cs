@@ -1,4 +1,5 @@
 ﻿using Flagship.Config;
+using Flagship.Delegate;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
@@ -72,5 +73,17 @@ namespace Flagship.FsVisitor
         /// <param name="defaultValue">flag default value.</param>
         /// <returns></returns>
         IFlag<JArray> GetFlag(string key, JArray defaultValue);
+
+        /// <summary>
+        /// The fetch status of the flags.
+        /// </summary>
+        IFetchFlagsStatus FetchFlagsStatus { get; }
+
+        /// <summary>
+        /// This event is triggered when the fetch flags status changes.
+        /// </summary>
+        event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged;
+
+
     }
 }

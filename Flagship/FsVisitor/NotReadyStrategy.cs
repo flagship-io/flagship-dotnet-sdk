@@ -56,7 +56,7 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FlagshipStatus.NOT_INITIALIZED), methodName);
+            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FSSdkStatus.SDK_NOT_INITIALIZED), methodName);
         }
 
         public override void AddTroubleshootingHit(Troubleshooting hit)

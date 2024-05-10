@@ -31,7 +31,7 @@ namespace Flagship.FsVisitor
         virtual public string SessionId { get; set; }
         virtual public SdkInitialData SdkInitialData { get; set; }
         public FlagSyncStatus FlagSyncStatus { get; set; }
-        public static FlagshipStatus SDKStatus { get; set; }
+        public static FSSdkStatus SDKStatus { get; set; }
 
         public Troubleshooting ConsentHitTroubleshooting { get; set; }
 
@@ -63,7 +63,7 @@ namespace Flagship.FsVisitor
             return Guid.NewGuid().ToString();
         }
 
-        public FlagshipStatus GetSdkStatus()
+        public FSSdkStatus GetSdkStatus()
         {
             return SDKStatus;
         }
@@ -78,11 +78,11 @@ namespace Flagship.FsVisitor
         virtual public VisitorStrategyAbstract GetStrategy()
         {
             VisitorStrategyAbstract strategy;
-            if (Fs.Status == FlagshipStatus.NOT_INITIALIZED)
+            if (Fs.Status == FSSdkStatus.SDK_NOT_INITIALIZED)
             {
                 strategy = new NotReadyStrategy(this);
             }
-            else if (Fs.Status == FlagshipStatus.READY_PANIC_ON)
+            else if (Fs.Status == FSSdkStatus.SDK_PANIC)
             {
                 strategy =  new PanicStrategy(this);
             }

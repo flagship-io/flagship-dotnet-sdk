@@ -65,7 +65,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
             await notReadyStategy.FetchFlags().ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "FetchFlags", FlagshipStatus.NOT_INITIALIZED), "FetchFlags"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "FetchFlags", FSSdkStatus.SDK_NOT_INITIALIZED), "FetchFlags"), Times.Once());
         }
 
         [TestMethod()]
@@ -73,7 +73,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
             await notReadyStategy.SendHit(new Hit.Screen("Home")).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FlagshipStatus.NOT_INITIALIZED), "SendHit"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FSSdkStatus.SDK_NOT_INITIALIZED), "SendHit"), Times.Once());
         }
 
         [TestMethod()]
@@ -85,7 +85,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(defaultValue, value);
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FlagshipStatus.NOT_INITIALIZED), "Flag.value"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FSSdkStatus.SDK_NOT_INITIALIZED), "Flag.value"), Times.Once());
         }
 
         [TestMethod()]
@@ -93,7 +93,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
             await notReadyStategy.VisitorExposed("key","defaultValue", null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FlagshipStatus.NOT_INITIALIZED), "VisitorExposed"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FSSdkStatus.SDK_NOT_INITIALIZED), "VisitorExposed"), Times.Once());
         }
 
         [TestMethod()]
@@ -104,7 +104,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(value));
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "flag.metadata", FlagshipStatus.NOT_INITIALIZED), "flag.metadata"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "flag.metadata", FSSdkStatus.SDK_NOT_INITIALIZED), "flag.metadata"), Times.Once());
         }
 
         [TestMethod()]

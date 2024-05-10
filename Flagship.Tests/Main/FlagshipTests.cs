@@ -27,7 +27,7 @@ namespace Flagship.Main.Tests
             Assert.IsNull(Fs.Config.EnvId);
             Assert.IsNull(Fs.Config.ApiKey);
 
-            Assert.AreEqual(FlagshipStatus.NOT_INITIALIZED, Fs.Status);
+            Assert.AreEqual(FSSdkStatus.SDK_NOT_INITIALIZED, Fs.Status);
 
             Assert.IsTrue(stringWriter.ToString().Contains(Constants.INITIALIZATION_PARAM_ERROR));
             stringWriter.Dispose();
@@ -51,7 +51,7 @@ namespace Flagship.Main.Tests
             Assert.AreEqual(envId, Fs.Config.EnvId);
             Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
-            Assert.AreEqual(FlagshipStatus.READY, Fs.Status);
+            Assert.AreEqual(FSSdkStatus.SDK_INITIALIZED, Fs.Status);
 
             envId = "new envId";
             apiKey = "new apiKey";

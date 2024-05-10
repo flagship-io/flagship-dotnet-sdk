@@ -39,7 +39,7 @@ namespace Flagship.Config
         /// </summary>
         public event StatusChangeDelegate StatusChanged;
 
-        internal void SetStatus(FlagshipStatus status)
+        internal void SetStatus(FSSdkStatus status)
         {
             StatusChanged?.Invoke(status);
         }

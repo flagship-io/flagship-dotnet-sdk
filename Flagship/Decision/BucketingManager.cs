@@ -84,7 +84,7 @@ namespace Flagship.Decision
 
                 if (_isFirstPooling)
                 {
-                    StatusChange?.Invoke(FlagshipStatus.POLLING);
+                    StatusChange?.Invoke(FSSdkStatus.SDK_INITIALIZING);
                 }
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
@@ -140,7 +140,7 @@ namespace Flagship.Decision
                 if (_isFirstPooling)
                 {
                     _isFirstPooling = false;
-                    StatusChange?.Invoke(FlagshipStatus.READY);
+                    StatusChange?.Invoke(FSSdkStatus.SDK_INITIALIZED);
                 }
 
                 _isPolling = false;
@@ -151,7 +151,7 @@ namespace Flagship.Decision
 
                 if (_isFirstPooling)
                 {
-                    StatusChange?.Invoke(FlagshipStatus.NOT_INITIALIZED);
+                    StatusChange?.Invoke(FSSdkStatus.SDK_NOT_INITIALIZED);
                 }
                 Log.LogError(Config, ex.Message, "Polling");
 

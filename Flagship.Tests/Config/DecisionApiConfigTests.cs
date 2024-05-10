@@ -20,7 +20,7 @@ namespace Flagship.Config.Tests
                 EnvId = "envId"
             };
 
-            config.SetStatus(Enums.FlagshipStatus.NOT_INITIALIZED);
+            config.SetStatus(Enums.FSSdkStatus.SDK_NOT_INITIALIZED);
 
             config.StatusChanged += Config_StatusChange;
 
@@ -31,16 +31,16 @@ namespace Flagship.Config.Tests
             Assert.AreEqual(config.LogLevel, Enums.LogLevel.ALL);
             Assert.AreEqual(config.DisableCache, false);
 
-            config.SetStatus(Enums.FlagshipStatus.READY);
+            config.SetStatus(Enums.FSSdkStatus.SDK_INITIALIZED);
 
             config.DisableCache = true;
             Assert.AreEqual(config.DisableCache, true);
 
         }
 
-        private void Config_StatusChange(Enums.FlagshipStatus status)
+        private void Config_StatusChange(Enums.FSSdkStatus status)
         {
-            Assert.AreEqual(status, Enums.FlagshipStatus.READY);
+            Assert.AreEqual(status, Enums.FSSdkStatus.SDK_INITIALIZED);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Flagship.Main
     {
         private static Fs instance;
 
-        private FlagshipStatus _status = FlagshipStatus.NOT_INITIALIZED;
+        private FSSdkStatus _status = FSSdkStatus.SDK_NOT_INITIALIZED;
 
         private FlagshipConfig _config;
 
@@ -54,21 +54,21 @@ namespace Flagship.Main
         /// <summary>
         /// Return current status of Flagship SDK.
         /// </summary>
-        public static FlagshipStatus Status => GetInstance()._status;
+        public static FSSdkStatus Status => GetInstance()._status;
 
         /// <summary>
         /// Return the current config used by the SDK.
         /// </summary>
         public static FlagshipConfig Config => GetInstance()._config;
 
-        private void SetStatus(FlagshipStatus status)
+        private void SetStatus(FSSdkStatus status)
         {
             if (_status == status)
             {
                 return;
             }
 
-            if (status == FlagshipStatus.READY)
+            if (status == FSSdkStatus.SDK_INITIALIZED)
             {
                 _configManager?.TrackingManager?.StartBatchingLoop();
             }
@@ -83,7 +83,7 @@ namespace Flagship.Main
 
         private static bool IsReady()
         {
-            return GetInstance()._status == FlagshipStatus.READY;
+            return GetInstance()._status == FSSdkStatus.SDK_INITIALIZED;
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
 
             if (string.IsNullOrWhiteSpace(envId) || string.IsNullOrWhiteSpace(apiKey))
             {
-                fsInstance.SetStatus(FlagshipStatus.NOT_INITIALIZED);
+                fsInstance.SetStatus(FSSdkStatus.SDK_NOT_INITIALIZED);
                 Log.LogError(config, Constants.INITIALIZATION_PARAM_ERROR, Constants.PROCESS_INITIALIZATION);
                 return;
             }
@@ -136,7 +136,7 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             config.EnvId = envId;
             config.ApiKey = apiKey;
 
-            fsInstance.SetStatus(FlagshipStatus.STARTING);
+            fsInstance.SetStatus(FSSdkStatus.SDK_INITIALIZING);
             var httpClient = new HttpClient()
             {
                 Timeout = config.Timeout ?? TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT)
@@ -180,7 +180,7 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
 
             instance._sdkInitialData.LastInitializationTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
 
-            fsInstance.SetStatus(FlagshipStatus.READY);
+            fsInstance.SetStatus(FSSdkStatus.SDK_INITIALIZED);
             Log.LogInfo(config, string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION),
                 Constants.PROCESS_INITIALIZATION);
         }
@@ -193,7 +193,7 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
         {
             await instance?._configManager?.TrackingManager?.SendBatch(CacheTriggeredBy.Flush);
         }
-        private static void DecisionManager_StatusChange(FlagshipStatus status)
+        private static void DecisionManager_StatusChange(FSSdkStatus status)
         {
             GetInstance().SetStatus(status);
         }

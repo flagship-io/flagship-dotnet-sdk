@@ -726,16 +726,16 @@ namespace Flagship.Decision.Tests
 
             var countStatus = 0;
 
-            void DecisionManager_StatusChange(FlagshipStatus status)
+            void DecisionManager_StatusChange(FSSdkStatus status)
             {
                 if (countStatus == 0)
                 {
                     countStatus++;
-                    Assert.AreEqual(FlagshipStatus.POLLING, status);
+                    Assert.AreEqual(FSSdkStatus.POLLING, status);
                 }
                 else
                 {
-                    Assert.AreEqual(FlagshipStatus.READY, status);
+                    Assert.AreEqual(FSSdkStatus.SDK_INITIALIZED, status);
                 }
             }
 

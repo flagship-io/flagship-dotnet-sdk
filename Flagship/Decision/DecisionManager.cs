@@ -30,7 +30,7 @@ namespace Flagship.Decision
             protected set
             {
                 _isPanic = value;
-                StatusChange?.Invoke(_isPanic ? FlagshipStatus.READY_PANIC_ON : FlagshipStatus.READY);
+                StatusChange?.Invoke(_isPanic ? FSSdkStatus.SDK_PANIC : FSSdkStatus.SDK_INITIALIZED);
             }
         }
 

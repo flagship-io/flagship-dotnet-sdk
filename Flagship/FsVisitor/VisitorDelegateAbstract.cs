@@ -10,17 +10,22 @@ using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
 using Flagship.Main;
+using Flagship.Delegate;
 
 namespace Flagship.FsVisitor
-{ 
+{
     internal abstract class VisitorDelegateAbstract : IVisitor
     {
         private readonly IDictionary<string, object> _context;
         private bool _hasConsented;
         protected string _anonymousId;
+        private IFetchFlagsStatus fetchFlagsStatus;
+
+        public event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged;
+
         virtual public string VisitorId { get; set; }
         virtual public ICollection<FlagDTO> Flags { get; set; }
-        virtual public ICollection<Campaign> Campaigns { get; set; } 
+        virtual public ICollection<Campaign> Campaigns { get; set; }
         virtual public bool HasConsented => _hasConsented;
         virtual public FlagshipConfig Config => ConfigManager.Config;
         virtual public IConfigManager ConfigManager { get; set; }
@@ -30,8 +35,16 @@ namespace Flagship.FsVisitor
         virtual public uint Traffic { get; set; }
         virtual public string SessionId { get; set; }
         virtual public SdkInitialData SdkInitialData { get; set; }
-        public FlagSyncStatus FlagSyncStatus { get; set; }
         public static FSSdkStatus SDKStatus { get; set; }
+        public IFetchFlagsStatus FetchFlagsStatus
+        {
+            get => fetchFlagsStatus; 
+            internal set
+            {
+                OnFetchFlagsStatusChanged?.Invoke(value);
+                fetchFlagsStatus = value;
+            }
+        }
 
         public Troubleshooting ConsentHitTroubleshooting { get; set; }
 
@@ -55,9 +68,14 @@ namespace Flagship.FsVisitor
             LoadPredefinedContext();
 
             GetStrategy().LookupVisitor();
-            this.FlagSyncStatus = FlagSyncStatus.CREATED;
+
+            FetchFlagsStatus = new FetchFlagsStatus
+            {
+                Reason = FSFetchReasons.VISITOR_CREATED,
+                Status = FSFetchStatus.FETCH_REQUIRED
+            };
         }
-       
+
         protected string CreateVisitorId()
         {
             return Guid.NewGuid().ToString();
@@ -72,7 +90,7 @@ namespace Flagship.FsVisitor
         {
             _context[PredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
             _context[PredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
-            _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;  
+            _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;
         }
 
         virtual public VisitorStrategyAbstract GetStrategy()
@@ -84,15 +102,15 @@ namespace Flagship.FsVisitor
             }
             else if (Fs.Status == FSSdkStatus.SDK_PANIC)
             {
-                strategy =  new PanicStrategy(this);
+                strategy = new PanicStrategy(this);
             }
             else if (!HasConsented)
             {
-                strategy =  new NoConsentStrategy(this);
+                strategy = new NoConsentStrategy(this);
             }
             else
             {
-                strategy =  new DefaultStrategy(this);
+                strategy = new DefaultStrategy(this);
             }
             strategy.Murmur32 = Murmur.MurmurHash.Create32();
             return strategy;
@@ -117,9 +135,9 @@ namespace Flagship.FsVisitor
         abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
         abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
-        abstract public Task SendHit(HitAbstract hit); 
+        abstract public Task SendHit(HitAbstract hit);
 
-        abstract public void UpdateContext(IDictionary<string, object> context); 
+        abstract public void UpdateContext(IDictionary<string, object> context);
         abstract public void UpdateContext(string key, string value);
 
         abstract public void UpdateContext(string key, double value);

@@ -25,7 +25,6 @@ namespace Flagship.Decision
 {
     internal class BucketingManager : DecisionManager
     {
-        new public event StatusChangeDelegate StatusChange;
 
         protected Murmur32 _murmur32;
         protected bool _isPolling;
@@ -84,7 +83,7 @@ namespace Flagship.Decision
 
                 if (_isFirstPooling)
                 {
-                    StatusChange?.Invoke(FSSdkStatus.SDK_INITIALIZING);
+                    UpdateStatus(FSSdkStatus.SDK_INITIALIZING);
                 }
 
                 var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
@@ -140,7 +139,7 @@ namespace Flagship.Decision
                 if (_isFirstPooling)
                 {
                     _isFirstPooling = false;
-                    StatusChange?.Invoke(FSSdkStatus.SDK_INITIALIZED);
+                    UpdateStatus(FSSdkStatus.SDK_INITIALIZED);
                 }
 
                 _isPolling = false;
@@ -151,7 +150,7 @@ namespace Flagship.Decision
 
                 if (_isFirstPooling)
                 {
-                    StatusChange?.Invoke(FSSdkStatus.SDK_NOT_INITIALIZED);
+                    UpdateStatus(FSSdkStatus.SDK_NOT_INITIALIZED);
                 }
                 Log.LogError(Config, ex.Message, "Polling");
 

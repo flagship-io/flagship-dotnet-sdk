@@ -34,6 +34,11 @@ namespace Flagship.Decision
             }
         }
 
+        protected void UpdateStatus(FSSdkStatus sdkStatus)
+        {
+            StatusChange?.Invoke(sdkStatus); 
+        }
+
         public HttpClient HttpClient { get; set; }
 
         public string FlagshipInstanceId { get; set; }

@@ -84,8 +84,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Any(v => v == hitEvent))), Times.Once());
             strategyMock.Verify(x => x.CacheHitAsync(It.Is<ConcurrentDictionary<string, HitAbstract>>(y => y.Values.Any(v => v == page))), Times.Once());
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
-            //fsLogManagerMock.Verify(x => x.Debug(string.Format(BatchingCachingStrategyAbstract.HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(page.ToApiKeys())), 
-            //    BatchingCachingStrategyAbstract.ADD_HIT), Times.Once());
         }
 
         [TestMethod()]

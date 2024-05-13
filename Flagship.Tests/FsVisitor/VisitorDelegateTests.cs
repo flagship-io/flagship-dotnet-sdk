@@ -15,6 +15,7 @@ using Flagship.Api;
 using Flagship.Config;
 using Flagship.Decision;
 using Flagship.Hit;
+using Flagship.Model;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -48,7 +49,7 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.Setup(x=> x.GetStrategy()).Returns(defaultStrategy.Object);
             visitorDelegateMock.CallBase = true;
             visitorDelegateMock.SetupGet(x => x.Config).Returns(config);
-            visitorDelegateMock.Object.FlagSyncStatus = Enums.FlagSyncStatus.FLAGS_FETCHED;
+
         }
 
 
@@ -81,7 +82,8 @@ namespace Flagship.FsVisitor.Tests
             Assert.IsNotNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.AreEqual(36,visitor.AnonymousId.Length);
-            Assert.AreEqual(Enums.FlagSyncStatus.CREATED, visitor.FlagSyncStatus);
+            Assert.AreEqual(Enums.FSFetchStatus.FETCH_REQUIRED , visitor.FetchFlagsStatus.Status);
+            Assert.AreEqual(Enums.FSFetchReasons.VISITOR_CREATED, visitor.FetchFlagsStatus.Reason);
         }
 
         [TestMethod()]
@@ -171,7 +173,11 @@ namespace Flagship.FsVisitor.Tests
             Mock<IFsLogManager> fsLogManagerMock = new Mock<IFsLogManager>();
             visitorDelegateMock.Object.Config.LogManager = fsLogManagerMock.Object;
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.Object.FlagSyncStatus = Enums.FlagSyncStatus.UNAUTHENTICATED;
+            visitorDelegateMock.Object.FetchFlagsStatus = new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.AUTHENTICATE
+            };
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JArray());
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);

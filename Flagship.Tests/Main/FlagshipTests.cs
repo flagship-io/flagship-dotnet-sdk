@@ -76,7 +76,7 @@ namespace Flagship.Main.Tests
             Assert.AreEqual(envId, Fs.Config.EnvId);
             Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
-            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION)));
+            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION, FSSdkStatus.SDK_INITIALIZED)));
             stringWriter.Dispose();
         }
 
@@ -100,7 +100,7 @@ namespace Flagship.Main.Tests
             Assert.AreEqual(envId, Fs.Config.EnvId);
             Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
-            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION)));
+            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION, FSSdkStatus.SDK_INITIALIZING)));
             Assert.IsTrue(stringWriter.ToString().Contains("Bucketing polling starts"));
 
             stringWriter.Dispose();

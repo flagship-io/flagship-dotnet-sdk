@@ -22,7 +22,7 @@ namespace Flagship.Config.Tests
 
             config.SetStatus(Enums.FSSdkStatus.SDK_NOT_INITIALIZED);
 
-            config.StatusChanged += Config_StatusChange;
+            config.OnSdkStatusChanged += Config_StatusChange;
 
             Assert.AreEqual(config.ApiKey, "apiKey");
             Assert.AreEqual(config.EnvId, "envId");

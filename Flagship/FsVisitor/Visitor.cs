@@ -30,7 +30,11 @@ namespace Flagship.FsVisitor
 
         private readonly VisitorDelegateAbstract _visitorDelegate;
 
-        public event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged;
+        public event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged
+        {
+            add => _visitorDelegate.OnFetchFlagsStatusChanged += value;
+            remove => _visitorDelegate.OnFetchFlagsStatusChanged -= value;
+        }
 
         internal Visitor(VisitorDelegateAbstract visitorDelegate)
         {

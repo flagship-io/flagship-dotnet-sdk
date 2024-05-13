@@ -728,15 +728,21 @@ namespace Flagship.Decision.Tests
 
             void DecisionManager_StatusChange(FSSdkStatus status)
             {
-                if (countStatus == 0)
+                switch (countStatus)
                 {
-                    countStatus++;
-                    Assert.AreEqual(FSSdkStatus.POLLING, status);
+                    case 0:
+                        Assert.AreEqual(FSSdkStatus.SDK_INITIALIZING, status);
+                        break;
+                    case 1: 
+                        Assert.AreEqual(FSSdkStatus.SDK_INITIALIZED, status);
+                        break;
+                    case 2:
+                        Assert.AreEqual(FSSdkStatus.SDK_PANIC, status);
+                        break;
+                    default:
+                        throw new Exception("default");
                 }
-                else
-                {
-                    Assert.AreEqual(FSSdkStatus.SDK_INITIALIZED, status);
-                }
+                countStatus++;
             }
 
             decisionManager.StatusChange += DecisionManager_StatusChange;

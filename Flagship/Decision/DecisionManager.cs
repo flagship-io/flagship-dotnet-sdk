@@ -24,7 +24,7 @@ namespace Flagship.Decision
 
         public string LastBucketingTimestamp { get ; set; }
 
-        public bool IsPanic
+        virtual public bool IsPanic
         {
             get => _isPanic;
             protected set

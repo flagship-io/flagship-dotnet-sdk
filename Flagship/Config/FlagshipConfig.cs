@@ -37,11 +37,11 @@ namespace Flagship.Config
         /// <summary>
         /// Define a callable in order to get callback when the SDK status has changed.
         /// </summary>
-        public event StatusChangeDelegate StatusChanged;
+        public event StatusChangeDelegate OnSdkStatusChanged;
 
         internal void SetStatus(FSSdkStatus status)
         {
-            StatusChanged?.Invoke(status);
+            OnSdkStatusChanged?.Invoke(status);
         }
 
         /// <summary>

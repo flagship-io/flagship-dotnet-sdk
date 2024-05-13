@@ -10,6 +10,7 @@ using Moq.Protected;
 using Flagship.Config;
 using Flagship.Model;
 using Newtonsoft.Json;
+using Flagship.Enums;
 
 namespace Flagship.FsFlag.Tests
 {
@@ -65,6 +66,11 @@ namespace Flagship.FsFlag.Tests
             visitorMock.Setup(x => x.GetFlagValue(flagDTO.Key, defaultValue, flagDTO, true)).Returns((string)flagDTO.Value);
             visitorMock.Setup(x => x.VisitorExposed(flagDTO.Key, defaultValue, flagDTO)).Returns(Task.CompletedTask);
             visitorMock.Setup(x=> x.GetFlagMetadata(It.IsAny<IFlagMetadata>(), flagDTO.Key, true)).Returns(metadata);
+            visitorMock.Object.FetchFlagsStatus = new FetchFlagsStatus()
+            {
+                Status = FSFetchStatus.FETCHED,
+                Reason = FSFetchReasons.NONE
+            };
 
             var value = flag.GetValue();
 
@@ -74,6 +80,16 @@ namespace Flagship.FsFlag.Tests
             Assert.AreEqual(flagDTO.Value, value);
             Assert.IsTrue(flag.Exists);
             Assert.AreEqual(metadata, resultMeta);
+            Assert.AreEqual(FSFlagStatus.FETCHED, flag.Status);
+
+
+            visitorMock.Object.FetchFlagsStatus = new FetchFlagsStatus()
+            {
+                Status = FSFetchStatus.FETCH_REQUIRED,
+                Reason = FSFetchReasons.UPDATE_CONTEXT
+            };
+
+            Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flag.Status);
 
             visitorMock.Verify(x => x.VisitorExposed<object>(flagDTO.Key, defaultValue, flagDTO), Times.Once());
             visitorMock.Verify(x => x.GetFlagValue(flagDTO.Key, defaultValue, flagDTO, true), Times.Once());
@@ -108,6 +124,8 @@ namespace Flagship.FsFlag.Tests
             visitorMock.Verify(x => x.VisitorExposed<object>(keyNotExists, defaultValue, null), Times.Once());
             visitorMock.Verify(x => x.GetFlagValue(keyNotExists, defaultValue, null, true), Times.Once());
             visitorMock.Verify(x => x.GetFlagMetadata(It.IsAny<IFlagMetadata>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once());
+
+            Assert.AreEqual(FSFlagStatus.NOT_FOUND, flag.Status);
         }
 
         [TestMethod()]

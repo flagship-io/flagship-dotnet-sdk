@@ -68,7 +68,7 @@ namespace Flagship.Enums
 
         public const string FLAGSHIP_VISITOR_NOT_AUTHENTICATE = "Visitor is not authenticated yet";
 
-        public const string SDK_STARTED_INFO = "Flagship SDK (version: {0}) READY";
+        public const string SDK_STARTED_INFO = "Flagship SDK (version: {0}) {1}";
 
         public const string METHOD_DEACTIVATED_ERROR = "Method {0} is deactivated while SDK status is: {1}.";
 

@@ -79,8 +79,8 @@ namespace Flagship.FsVisitor
         /// <summary>
         /// Complete the Visitor Creation process 
         /// </summary>
-        /// <returns>Return an instance of \Flagship\Visitor\Visitor</returns>
-        public Visitor Build()
+        /// <returns></returns>
+        public IVisitor Build()
         {
             var visitorDelegate = new VisitorDelegate(_visitorId, _isAuthenticated, _context, _hasConsented, _configManager, _sdkInitialData);
             var visitor = new Visitor(visitorDelegate);

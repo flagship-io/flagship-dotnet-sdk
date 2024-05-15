@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
-    internal interface IVisitor : IVisitorCore
+    public interface IVisitor : IVisitorCore
     {
         string VisitorId { get; set; }
 

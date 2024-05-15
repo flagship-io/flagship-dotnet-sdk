@@ -41,18 +41,21 @@ namespace Flagship.FsVisitor
         /// </summary>
         /// <param name="isAuthenticated">True for an authenticated visitor, false for an anonymous visitor.</param>
         /// <returns></returns>
-        public VisitorBuilder IsAuthenticated(bool isAuthenticated)
+        public VisitorBuilder SetIsAuthenticated(bool isAuthenticated)
         {
             _isAuthenticated=isAuthenticated;   
             return this;
         }
 
         /// <summary>
-        /// If true, the newly created visitor instance will be returned and saved into Flagship. Otherwise,  the newly created visitor instance won't be saved and will simply be returned.
+        /// Specifies whether the newly created visitor instance should be saved into Flagship.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">
+        /// If set to true, the newly created visitor instance will be saved into Flagship. 
+        /// If set to false, the newly created visitor instance will not be saved, but simply returned.
+        /// </param>
         /// <returns></returns>
-        public VisitorBuilder ShouldSaveInstance(bool value)
+        public VisitorBuilder SetShouldSaveInstance(bool value)
         {
             _shouldSaveInstance = value;
             return this;
@@ -63,7 +66,7 @@ namespace Flagship.FsVisitor
         /// </summary>
         /// <param name="context">visitor initial context.</param>
         /// <returns></returns>
-        public VisitorBuilder WithContext(IDictionary<string, object> context)
+        public VisitorBuilder SetContext(IDictionary<string, object> context)
         {
             if (context!=null)
             {

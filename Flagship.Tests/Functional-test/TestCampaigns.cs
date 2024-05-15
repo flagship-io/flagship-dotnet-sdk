@@ -24,7 +24,7 @@ namespace Flagship.Tests.Functional_test
                 ["test-ab"] = true
             };
 
-            var visitor = Fs.NewVisitor("visitor-1", true).WithContext(context).Build();
+            var visitor = Fs.NewVisitor("visitor-1", true).SetContext(context).Build();
 
             await visitor.FetchFlags();
 
@@ -35,7 +35,7 @@ namespace Flagship.Tests.Functional_test
             Assert.AreEqual("Test-campaign ab", flag.Metadata.CampaignName);
 
 
-            visitor = Fs.NewVisitor("visitor-3", true).WithContext(context).Build();
+            visitor = Fs.NewVisitor("visitor-3", true).SetContext(context).Build();
             await visitor.FetchFlags();
 
             flag = visitor.GetFlag("ci_flag_1", defaultValue);
@@ -66,7 +66,7 @@ namespace Flagship.Tests.Functional_test
                 ["test-ab"] = true
             };
 
-            var visitor = Fs.NewVisitor("visitor-1", true).WithContext(context).Build();
+            var visitor = Fs.NewVisitor("visitor-1", true).SetContext(context).Build();
 
             await visitor.FetchFlags();
 
@@ -77,7 +77,7 @@ namespace Flagship.Tests.Functional_test
             Assert.AreEqual("Test-campaign ab", flag.Metadata.CampaignName);
 
 
-            visitor = Fs.NewVisitor("visitor-3", true).WithContext(context).Build();
+            visitor = Fs.NewVisitor("visitor-3", true).SetContext(context).Build();
             await visitor.FetchFlags();
 
             flag = visitor.GetFlag("ci_flag_1", defaultValue);

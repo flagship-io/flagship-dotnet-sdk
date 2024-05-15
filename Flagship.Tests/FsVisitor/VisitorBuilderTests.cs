@@ -46,7 +46,7 @@ namespace Flagship.FsVisitor.Tests
                 ["key3"] = new object()
             };
 
-            Builder.WithContext(context2);
+            Builder.SetContext(context2);
             visitor = Builder.Build();
             Assert.AreEqual(4, visitor.Context.Count);
 
@@ -55,13 +55,13 @@ namespace Flagship.FsVisitor.Tests
                 ["key1"] = 1,
             };
 
-            Builder.WithContext(context3);
+            Builder.SetContext(context3);
             visitor = Builder.Build();
             Assert.AreEqual(4, visitor.Context.Count);
 
 
             Builder = VisitorBuilder.Builder(configManager, visitorId, true);
-            Builder.ShouldSaveInstance(true);
+            Builder.SetShouldSaveInstance(true);
             visitor = Builder.Build();
             Assert.AreEqual(visitor, Flagship.Main.Fs.Visitor);
         }

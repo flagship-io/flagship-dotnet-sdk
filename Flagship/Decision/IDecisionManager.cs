@@ -14,7 +14,7 @@ namespace Flagship.Decision
 {
     internal interface IDecisionManager
     {
-        event StatusChangeDelegate StatusChange;
+        event StatusChangedDelegate StatusChange;
 
         HttpClient HttpClient { get; set; }
 

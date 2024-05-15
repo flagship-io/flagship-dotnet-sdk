@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Delegate
 {
-    public delegate void StatusChangeDelegate(FSSdkStatus status);
+    public delegate void StatusChangedDelegate(FSSdkStatus status);
     /// <summary>
     /// Define an event to get callback each time a Flag has been exposed to a visitor (When a flag has been seen by your visitor) and succeeded.
     /// </summary>

@@ -16,7 +16,7 @@ namespace Flagship.Decision
 {
     internal abstract class DecisionManager : IDecisionManager
     {
-        public event StatusChangeDelegate StatusChange;
+        public event StatusChangedDelegate StatusChange;
         protected bool _isPanic = false;
         public TroubleshootingData TroubleshootingData { get; set; }
 

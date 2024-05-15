@@ -16,7 +16,7 @@ namespace Flagship.FsVisitor
         private IDictionary<string, object> _context;
         private readonly string _visitorId;
         private readonly IConfigManager _configManager;
-        private  InstanceType _instanceType;
+        private  bool _shouldSaveInstance;
         private readonly SdkInitialData _sdkInitialData;
 
 
@@ -28,7 +28,7 @@ namespace Flagship.FsVisitor
             _configManager = configManager;
             _hasConsented = hasConsented;
             _sdkInitialData = sdkInitialData;
-            _instanceType = InstanceType.NEW_INSTANCE;
+            _shouldSaveInstance = false;
         }
 
         internal static VisitorBuilder Builder(IConfigManager configManager, string visitorId, bool hasConsented, SdkInitialData sdkInitialData = null)
@@ -48,13 +48,13 @@ namespace Flagship.FsVisitor
         }
 
         /// <summary>
-        /// If NEW_INSTANCE, the newly created visitor instance won't be saved and will simply be returned. Otherwise, the newly created visitor instance will be returned and saved into the Flagship.
+        /// If true, the newly created visitor instance will be returned and saved into Flagship. Otherwise,  the newly created visitor instance won't be saved and will simply be returned.
         /// </summary>
-        /// <param name="instanceType"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        public VisitorBuilder WithInstanceType(InstanceType instanceType)
+        public VisitorBuilder ShouldSaveInstance(bool value)
         {
-            _instanceType = instanceType;
+            _shouldSaveInstance = value;
             return this;
         }
 
@@ -82,7 +82,7 @@ namespace Flagship.FsVisitor
             var visitorDelegate = new VisitorDelegate(_visitorId, _isAuthenticated, _context, _hasConsented, _configManager, _sdkInitialData);
             var visitor = new Visitor(visitorDelegate);
             Main.Fs.Visitor = null;
-            if (_instanceType == InstanceType.SINGLE_INSTANCE)
+            if (_shouldSaveInstance)
             {
                 Main.Fs.Visitor = visitor;
             }

@@ -61,7 +61,7 @@ namespace Flagship.FsVisitor.Tests
 
 
             Builder = VisitorBuilder.Builder(configManager, visitorId, true);
-            Builder.WithInstanceType(Enums.InstanceType.SINGLE_INSTANCE);
+            Builder.ShouldSaveInstance(true);
             visitor = Builder.Build();
             Assert.AreEqual(visitor, Flagship.Main.Fs.Visitor);
         }

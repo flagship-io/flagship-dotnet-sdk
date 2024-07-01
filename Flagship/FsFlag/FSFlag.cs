@@ -8,7 +8,7 @@ using Flagship.Enums;
 
 namespace Flagship.FsFlag
 {
-    public class FSFlag : IFSFlag
+    public class FSFlag : IFlag
     {
         private readonly string _key;
         private readonly VisitorDelegateAbstract _visitorDelegateAbstract;

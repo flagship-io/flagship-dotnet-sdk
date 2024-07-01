@@ -30,7 +30,7 @@ namespace Flagship.FsVisitor
             return this.GetStrategy().FetchFlags();
         }
 
-        private IFSFlag<T> CreateFlag<T>(string key, T defaultValue)
+        private IFlag<T> CreateFlag<T>(string key, T defaultValue)
         {
             if (FetchFlagsStatus.Status != FSFetchStatus.FETCHED && FetchFlagsStatus.Status != FSFetchStatus.PANIC )
             {
@@ -39,27 +39,27 @@ namespace Flagship.FsVisitor
             return new Flag<T>(key, this, defaultValue);
         }
 
-        public override IFSFlag<string> GetFlag(string key, string defaultValue)
+        public override IFlag<string> GetFlag(string key, string defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFSFlag<long> GetFlag(string key, long defaultValue)
+        public override IFlag<long> GetFlag(string key, long defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFSFlag<bool> GetFlag(string key, bool defaultValue)
+        public override IFlag<bool> GetFlag(string key, bool defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFSFlag<JObject> GetFlag(string key, JObject defaultValue)
+        public override IFlag<JObject> GetFlag(string key, JObject defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFSFlag<JArray> GetFlag(string key, JArray defaultValue)
+        public override IFlag<JArray> GetFlag(string key, JArray defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }

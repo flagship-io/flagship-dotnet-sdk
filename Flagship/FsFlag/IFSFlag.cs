@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsFlag
 {
-    public interface IFSFlag 
+    public interface IFlag 
     {
         /// <summary>
         /// Return the Flag value or the default value if the Flag doesn't exist or if the default value type do not correspond to the Flag type in Flagship.

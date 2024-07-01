@@ -278,7 +278,7 @@ namespace Flagship.FsVisitor
                 FlagValue = flag.Value,
                 FlagDefaultValue = defaultValue,
                 VisitorContext = Visitor.Context,
-                FlagMetadata = new FSFlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
+                FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
             };
 
             await TrackingManager.ActivateFlag(activate);
@@ -408,10 +408,10 @@ namespace Flagship.FsVisitor
 
                 SendFlagMetadataTroubleshooting(key);
 
-                return FSFlagMetadata.EmptyMetadata();
+                return FlagMetadata.EmptyMetadata();
             }
 
-            return new FSFlagMetadata(
+            return new FlagMetadata(
                 flag.CampaignId,
                 flag.VariationGroupId, 
                 flag.VariationId,

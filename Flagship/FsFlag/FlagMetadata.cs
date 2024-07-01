@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsFlag
 {
-    public class FSFlagMetadata : IFlagMetadata
+    public class FlagMetadata : IFlagMetadata
     {
         [JsonProperty("campaignId")]
         public string CampaignId { get; set; }
@@ -36,7 +36,7 @@ namespace Flagship.FsFlag
         [JsonProperty("variationName")]
         public string VariationName { get; set; }
 
-        internal FSFlagMetadata(string campaignId, string variationGroupId, string variationId, bool isReference, string campaignType, string slug, string campaignName, string variationGroupName, string variationName)
+        internal FlagMetadata(string campaignId, string variationGroupId, string variationId, bool isReference, string campaignType, string slug, string campaignName, string variationGroupName, string variationName)
         {
             CampaignId = campaignId;
             VariationGroupId = variationGroupId;
@@ -56,7 +56,7 @@ namespace Flagship.FsFlag
 
         internal static IFlagMetadata EmptyMetadata()
         {
-            return new FSFlagMetadata("", "", "", false, "", null, "", "", "");
+            return new FlagMetadata("", "", "", false, "", null, "", "", "");
         }
 
     }

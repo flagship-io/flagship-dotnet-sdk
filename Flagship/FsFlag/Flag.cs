@@ -44,7 +44,7 @@ namespace Flagship.FsFlag
             {
                 if (_visitorDelegateAbstract == null || _visitorDelegateAbstract.Flags == null)
                 {
-                    return  FSFlagMetadata.EmptyMetadata();
+                    return  FlagMetadata.EmptyMetadata();
                 }
 
                 var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);

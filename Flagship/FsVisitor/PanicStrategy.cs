@@ -80,7 +80,7 @@ namespace Flagship.FsVisitor
         public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
         {
             Log("Flag.metadata");
-            return FSFlagMetadata.EmptyMetadata();
+            return FlagMetadata.EmptyMetadata();
         }
 
         private void Log(string methodName)

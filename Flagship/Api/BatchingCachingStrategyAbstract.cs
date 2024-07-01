@@ -108,7 +108,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     fromFlag,
                     exposedVisitor
@@ -134,7 +134,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                     batchTriggeredBy = $"{batchTriggeredBy}"
@@ -199,7 +199,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace, 
                     batchTriggeredBy = $"{batchTriggeredBy}"
@@ -273,7 +273,7 @@ namespace Flagship.Api
                     HitsPoolQueue.TryAdd(item.Key, item);
                 }
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url = Constants.HIT_EVENT_URL,
                     body = requestBody,
@@ -527,7 +527,7 @@ namespace Flagship.Api
                     AddTroubleshootingHit(hit); ;
                 }
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url,
                     headers = new Dictionary<string, string>(),
@@ -549,7 +549,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                 }), SEND_TROUBLESHOOTING_QUEUE);
@@ -647,7 +647,7 @@ namespace Flagship.Api
             {
                 AddUsageHit(hit);
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url,
                     headers = new Dictionary<string, string>(),
@@ -670,7 +670,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                 }), SEND_USAGE_HIT_QUEUE); 

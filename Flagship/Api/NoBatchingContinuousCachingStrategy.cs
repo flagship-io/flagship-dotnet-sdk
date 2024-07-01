@@ -87,7 +87,7 @@ namespace Flagship.Api
                 hitDictionary.TryAdd(hit.Key, hit);
                 await CacheHitAsync(hitDictionary);
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url = Constants.HIT_EVENT_URL,
                     body = requestBody,
@@ -259,7 +259,7 @@ namespace Flagship.Api
                     await CacheHitAsync(hitDictionary);
                 }
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url,
                     headers = new Dictionary<string, string>

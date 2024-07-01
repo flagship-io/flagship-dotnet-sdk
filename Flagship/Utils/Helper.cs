@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.Utils
 {
-    internal static class Utils
+    internal static class Helper
     {
         public static string TwoDigit(int value)
         {
@@ -34,6 +34,13 @@ namespace Flagship.Utils
                 ErrorMessage = errorMessage,
                 ErrorData = errorData
             });
+        }
+
+        public static Task VoidTask()
+        {
+            var tcs = new TaskCompletionSource<object>();
+            tcs.SetResult(null);
+            return tcs.Task;
         }
     }
 }

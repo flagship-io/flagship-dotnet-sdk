@@ -133,7 +133,7 @@ namespace Flagship.FsVisitor
             return campaigns;
         }
 
-       async protected Task<ICollection<Campaign>> GetCampaignsFromDecisionManager(string functionName, DateTime now)
+        async protected Task<ICollection<Campaign>> GetCampaignsFromDecisionManager(string functionName, DateTime now)
         {
             try
             {
@@ -178,7 +178,7 @@ namespace Flagship.FsVisitor
             Log.LogDebug(Config, string.Format(FETCH_FLAGS_STARTED, Visitor.VisitorId), FUNCTION_NAME);
             ICollection<Campaign> campaigns = new List<Campaign>();
             var now = DateTime.Now;
-           
+
             try
             {
                 campaigns = await GetCampaignsFromDecisionManager(FUNCTION_NAME, now);
@@ -203,7 +203,7 @@ namespace Flagship.FsVisitor
                 Visitor.Flags = await DecisionManager.GetFlags(campaigns);
                 Visitor.GetStrategy().CacheVisitorAsync();
 
-                if (Visitor.FetchFlagsStatus.Status == FSFetchStatus.FETCHING )
+                if (Visitor.FetchFlagsStatus.Status == FSFetchStatus.FETCHING)
                 {
                     Visitor.FetchFlagsStatus = new FetchFlagsStatus
                     {
@@ -278,7 +278,7 @@ namespace Flagship.FsVisitor
                 FlagValue = flag.Value,
                 FlagDefaultValue = defaultValue,
                 VisitorContext = Visitor.Context,
-                FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
+                FlagMetadata = new FSFlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
             };
 
             await TrackingManager.ActivateFlag(activate);
@@ -296,166 +296,131 @@ namespace Flagship.FsVisitor
                 HitContent = activate.ToApiKeys()
             };
 
-            _= TrackingManager.SendTroubleshootingHit(activateTroubleshooting);
+            _ = TrackingManager.SendTroubleshootingHit(activateTroubleshooting);
         }
-        public override async Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
+
+        private void sendFlagTroubleshooting(DiagnosticLabel label, string key, object defaultValue, bool? visitorExposed)
+        {
+            var troubleshootingHit = new Troubleshooting()
+            {
+                Label = label,
+                LogLevel = LogLevel.INFO,
+                Traffic = Visitor.Traffic,
+                VisitorSessionId = Visitor.SessionId,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
+                AnonymousId = Visitor.AnonymousId,
+                VisitorId = Visitor.VisitorId,
+                VisitorContext = Visitor.Context,
+                Config = Config,
+                FlagKey = key,
+                FlagDefaultValue = defaultValue,
+                VisitorExposed = visitorExposed
+            };
+
+            _ = SendTroubleshootingHit(troubleshootingHit);
+        }
+        public override async Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
         {
             const string functionName = "VisitorExposed";
             if (flag == null)
             {
-                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key), functionName);
-
-                var troubleshootingHit = new Troubleshooting()
-                {
-                    Label = DiagnosticLabel.VISITOR_EXPOSED_FLAG_NOT_FOUND,
-                    LogLevel = LogLevel.INFO,
-                    Traffic = Visitor.Traffic,
-                    VisitorSessionId = Visitor.SessionId,
-                    FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
-                    AnonymousId = Visitor.AnonymousId,
-                    VisitorId = Visitor.VisitorId,
-                    VisitorContext = Visitor.Context,
-                    Config = Config,
-                    FlagKey = key,
-                    FlagDefaultValue = defaultValue,
-                };
-
-                _ = SendTroubleshootingHit(troubleshootingHit);
-
+                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key, Visitor.VisitorId), functionName);
+                sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_FLAG_NOT_FOUND, key, defaultValue, null);
                 return;
             }
-            if (flag.Value != null && defaultValue != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
+
+            if (!hasGetValueBeenCalled)
             {
-                Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key), functionName);
-                var troubleshootingHit = new Troubleshooting()
-                {
-                    Label = DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING,
-                    LogLevel = LogLevel.INFO,
-                    Traffic = Visitor.Traffic,
-                    VisitorSessionId = Visitor.SessionId,
-                    FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
-                    AnonymousId = Visitor.AnonymousId,
-                    VisitorId = Visitor.VisitorId,
-                    VisitorContext = Visitor.Context,
-                    Config = Config,
-                    FlagKey = key,
-                    FlagDefaultValue = defaultValue,
-                };
+                Log.LogWarning(Config, string.Format(Constants.VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED, Visitor.VisitorId, key), functionName);
+                sendFlagTroubleshooting(DiagnosticLabel.FLAG_VALUE_NOT_CALLED, key, defaultValue, null);
+            }
 
-                _ = SendTroubleshootingHit(troubleshootingHit);
 
-                return;
+            if (flag.Value != null && defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
+            {
+                Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key, Visitor.VisitorId), functionName);
+                sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING, key, defaultValue, null);
             }
 
             await SendActivate(flag, defaultValue);
         }
 
-        public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
+        public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed = true)
         {
             const string functionName = "getFlag.value";
 
             if (flag == null)
             {
-                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName);
-
-                var troubleshootingHit = new Troubleshooting()
-                {
-                    Label = DiagnosticLabel.GET_FLAG_VALUE_FLAG_NOT_FOUND,
-                    LogLevel = LogLevel.INFO,
-                    Traffic = Visitor.Traffic,
-                    VisitorSessionId = Visitor.SessionId,
-                    FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
-                    AnonymousId = Visitor.AnonymousId,
-                    VisitorId = Visitor.VisitorId,
-                    VisitorContext = Visitor.Context,
-                    Config = Config,
-                    FlagKey = key,
-                    FlagDefaultValue = defaultValue,
-                    VisitorExposed = userExposed
-                };
-
-                _ = SendTroubleshootingHit(troubleshootingHit);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key, Visitor.VisitorId, defaultValue), functionName);
+                sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_FLAG_NOT_FOUND, key, defaultValue, visitorExposed);
 
                 return defaultValue;
+            }
+
+            if (visitorExposed)
+            {
+                _ = SendActivate(flag, defaultValue);
             }
 
             if (flag.Value == null)
             {
-                if (userExposed)
-                {
-                    _ = VisitorExposed(key, defaultValue, flag);
-                }
                 return defaultValue;
             }
 
-            if (defaultValue != null && !Utils.Utils.HasSameType(flag.Value, defaultValue))
+            if (defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogInfo(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key), functionName);
-
-                var troubleshootingHit = new Troubleshooting()
-                {
-                    Label = DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING,
-                    LogLevel = LogLevel.INFO,
-                    Traffic = Visitor.Traffic,
-                    VisitorSessionId = Visitor.SessionId,
-                    FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
-                    AnonymousId = Visitor.AnonymousId,
-                    VisitorId = Visitor.VisitorId,
-                    VisitorContext = Visitor.Context,
-                    Config = Config,
-                    FlagKey = key,
-                    FlagDefaultValue = defaultValue,
-                    VisitorExposed = userExposed
-                };
-
-                _ = SendTroubleshootingHit(troubleshootingHit);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key, Visitor.VisitorId, defaultValue), functionName);
+                sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING, key, defaultValue, visitorExposed);
 
                 return defaultValue;
             }
 
-            if (userExposed)
-            {
-                _ = VisitorExposed(key, defaultValue, flag);
-            }
+            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, key, Visitor.VisitorId, flag.Value), functionName);
 
             return (T)flag.Value;
         }
 
-        public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
+        protected void SendFlagMetadataTroubleshooting(string key)
+        {
+            var troubleshootingHit = new Troubleshooting()
+            {
+                Label = DiagnosticLabel.GET_FLAG_METADATA_FLAG_NOT_FOUND,
+                LogLevel = LogLevel.INFO,
+                Traffic = Visitor.Traffic,
+                VisitorSessionId = Visitor.SessionId,
+                FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
+                AnonymousId = Visitor.AnonymousId,
+                VisitorId = Visitor.VisitorId,
+                VisitorContext = Visitor.Context,
+                FlagKey = key,
+                Config = Config,
+            };
+
+            _ = SendTroubleshootingHit(troubleshootingHit);
+        }
+
+        public override IFSFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
         {
             const string functionName = "flag.metadata";
-            if (!hasSameType && !string.IsNullOrWhiteSpace(metadata.CampaignId))
+            if (flag == null)
             {
-                Log.LogError(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), functionName);
 
-                var troubleshootingHit = new Troubleshooting()
-                {
-                    Label = DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING,
-                    LogLevel = LogLevel.INFO,
-                    Traffic = Visitor.Traffic,
-                    VisitorSessionId = Visitor.SessionId,
-                    FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
-                    AnonymousId = Visitor.AnonymousId,
-                    VisitorId = Visitor.VisitorId,
-                    VisitorContext = Visitor.Context,
-                    FlagKey = key,
-                    Config = Config,
-                    FlagMetadataCampaignId = metadata.CampaignId,
-                    FlagMetadataCampaignName = metadata.CampaignName,
-                    FlagMetadataCampaignIsReference = metadata.IsReference,
-                    FlagMetadataCampaignSlug = metadata.Slug,
-                    FlagMetadataCampaignType = metadata.CampaignType,
-                    FlagMetadataVariationGroupId = metadata.VariationGroupId,
-                    FlagMetadataVariationGroupName = metadata.VariationGroupName,
-                    FlagMetadataVariationId = metadata.VariationId,
-                    FlagMetadataVariationName = metadata.VariationName
-                };
+                SendFlagMetadataTroubleshooting(key);
 
-                _ = SendTroubleshootingHit(troubleshootingHit);
-
-                return FlagMetadata.EmptyMetadata();
+                return FSFlagMetadata.EmptyMetadata();
             }
-            return metadata;
+
+            return new FSFlagMetadata(
+                flag.CampaignId,
+                flag.VariationGroupId, 
+                flag.VariationId,
+                flag.IsReference, 
+                flag.CampaignType,
+                flag.Slug, 
+                flag.CampaignName,
+                flag.VariationGroupName,
+                flag.VariationName);
         }
 
         public override async Task SendHit(IEnumerable<HitAbstract> hits)
@@ -577,7 +542,7 @@ namespace Flagship.FsVisitor
             Visitor.FetchFlagsStatus = new FetchFlagsStatus
             {
                 Reason = FSFetchReasons.UNAUTHENTICATE,
-                Status = FSFetchStatus.FETCH_REQUIRED 
+                Status = FSFetchStatus.FETCH_REQUIRED
             };
 
             var troubleshootingHit = new Troubleshooting()

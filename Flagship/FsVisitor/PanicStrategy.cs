@@ -77,10 +77,10 @@ namespace Flagship.FsVisitor
             });
         }
 
-        public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
+        public override IFSFlagMetadata GetFlagMetadata(IFSFlagMetadata metadata, string key, bool hasSameType)
         {
             Log("Flag.metadata");
-            return FlagMetadata.EmptyMetadata();
+            return FSFlagMetadata.EmptyMetadata();
         }
 
         private void Log(string methodName)

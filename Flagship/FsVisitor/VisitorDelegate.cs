@@ -30,7 +30,7 @@ namespace Flagship.FsVisitor
             return this.GetStrategy().FetchFlags();
         }
 
-        private IFlag<T> CreateFlag<T>(string key, T defaultValue)
+        private IFSFlag<T> CreateFlag<T>(string key, T defaultValue)
         {
             if (FetchFlagsStatus.Status != FSFetchStatus.FETCHED && FetchFlagsStatus.Status != FSFetchStatus.PANIC )
             {
@@ -39,45 +39,45 @@ namespace Flagship.FsVisitor
             return new Flag<T>(key, this, defaultValue);
         }
 
-        public override IFlag<string> GetFlag(string key, string defaultValue)
+        public override IFSFlag<string> GetFlag(string key, string defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFlag<long> GetFlag(string key, long defaultValue)
+        public override IFSFlag<long> GetFlag(string key, long defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFlag<bool> GetFlag(string key, bool defaultValue)
+        public override IFSFlag<bool> GetFlag(string key, bool defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFlag<JObject> GetFlag(string key, JObject defaultValue)
+        public override IFSFlag<JObject> GetFlag(string key, JObject defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
-        public override IFlag<JArray> GetFlag(string key, JArray defaultValue)
+        public override IFSFlag<JArray> GetFlag(string key, JArray defaultValue)
         {
             return CreateFlag(key, defaultValue);
         }
 
 
-        public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
+        public override IFSFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
         {
-            return GetStrategy().GetFlagMetadata(metadata, key, hasSameType);
+            return GetStrategy().GetFlagMetadata(key, flag);
         }
 
-        public override T GetFlagValue<T>(string key, T defaultValue, Model.FlagDTO flag, bool userExposed)
+        public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed)
         {
-            return GetStrategy().GetFlagValue(key, defaultValue, flag, userExposed);
+            return GetStrategy().GetFlagValue(key, defaultValue, flag, visitorExposed);
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, Model.FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
         {
-            return GetStrategy().VisitorExposed(key, defaultValue, flag);  
+            return GetStrategy().VisitorExposed(key, defaultValue, flag, hasGetValueBeenCalled);  
         }
 
         public override Task SendHit(HitAbstract hit)

@@ -126,15 +126,15 @@ namespace Flagship.FsVisitor
 
         abstract public Task FetchFlags();
 
-        abstract public IFlag<string> GetFlag(string key, string defaultValue);
-        abstract public IFlag<long> GetFlag(string key, long defaultValue);
-        abstract public IFlag<bool> GetFlag(string key, bool defaultValue);
-        abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
-        abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);
+        abstract public IFSFlag<string> GetFlag(string key, string defaultValue);
+        abstract public IFSFlag<long> GetFlag(string key, long defaultValue);
+        abstract public IFSFlag<bool> GetFlag(string key, bool defaultValue);
+        abstract public IFSFlag<JObject> GetFlag(string key, JObject defaultValue);
+        abstract public IFSFlag<JArray> GetFlag(string key, JArray defaultValue);
 
-        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
-        abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
-        abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false);
+        abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed);
+        abstract public IFSFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
         abstract public Task SendHit(HitAbstract hit);
 
         abstract public void UpdateContext(IDictionary<string, object> context);

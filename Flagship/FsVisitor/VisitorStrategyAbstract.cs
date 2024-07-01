@@ -392,9 +392,9 @@ namespace Flagship.FsVisitor
 
         abstract protected Task SendActivate(FlagDTO flag, object defaultValue = null);
 
-        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
-        abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
+        abstract public IFSFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
 
         abstract public Task SendHit(HitAbstract hit);
 

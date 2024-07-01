@@ -40,7 +40,7 @@ namespace Flagship.FsVisitor
         /// <param name="key">key associated to the flag.</param>
         /// <param name="defaultValue">flag default value.</param>
         /// <returns></returns>
-        IFlag<string> GetFlag(string key, string defaultValue);
+        IFSFlag<string> GetFlag(string key, string defaultValue);
 
         /// <summary>
         /// Return a Flag object by its key. If no flag match the given key an empty flag will be returned. Call Exists to check if the flag has been found.
@@ -48,7 +48,7 @@ namespace Flagship.FsVisitor
         /// <param name="key">key associated to the flag.</param>
         /// <param name="defaultValue">flag default value.</param>
         /// <returns></returns>
-        IFlag<long> GetFlag(string key, long defaultValue);
+        IFSFlag<long> GetFlag(string key, long defaultValue);
 
         /// <summary>
         /// Return a Flag object by its key. If no flag match the given key an empty flag will be returned. Call Exists to check if the flag has been found.
@@ -56,7 +56,7 @@ namespace Flagship.FsVisitor
         /// <param name="key">key associated to the flag.</param>
         /// <param name="defaultValue">flag default value.</param>
         /// <returns></returns>
-        IFlag<bool> GetFlag(string key, bool defaultValue);
+        IFSFlag<bool> GetFlag(string key, bool defaultValue);
 
         /// <summary>
         /// Return a Flag object by its key. If no flag match the given key an empty flag will be returned. Call Exists to check if the flag has been found.
@@ -64,7 +64,7 @@ namespace Flagship.FsVisitor
         /// <param name="key">key associated to the flag.</param>
         /// <param name="defaultValue">flag default value.</param>
         /// <returns></returns>
-        IFlag<JObject> GetFlag(string key, JObject defaultValue);
+        IFSFlag<JObject> GetFlag(string key, JObject defaultValue);
 
         /// <summary>
         /// Return a Flag object by its key. If no flag match the given key an empty flag will be returned. Call Exists to check if the flag has been found.
@@ -72,7 +72,7 @@ namespace Flagship.FsVisitor
         /// <param name="key">key associated to the flag.</param>
         /// <param name="defaultValue">flag default value.</param>
         /// <returns></returns>
-        IFlag<JArray> GetFlag(string key, JArray defaultValue);
+        IFSFlag<JArray> GetFlag(string key, JArray defaultValue);
 
         /// <summary>
         /// The fetch status of the flags.

@@ -56,27 +56,27 @@ namespace Flagship.FsVisitor
              _visitorDelegate.SetConsent(hasConsented);   
         }
 
-        public IFlag<string> GetFlag(string key, string defaultValue)
+        public IFSFlag<string> GetFlag(string key, string defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
         }
 
-        public IFlag<long> GetFlag(string key, long defaultValue)
+        public IFSFlag<long> GetFlag(string key, long defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
         }
 
-        public IFlag<bool> GetFlag(string key, bool defaultValue)
+        public IFSFlag<bool> GetFlag(string key, bool defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
         }
 
-        public IFlag<JObject> GetFlag(string key, JObject defaultValue)
+        public IFSFlag<JObject> GetFlag(string key, JObject defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
         }
 
-        public IFlag<JArray> GetFlag(string key, JArray defaultValue)
+        public IFSFlag<JArray> GetFlag(string key, JArray defaultValue)
         {
             return _visitorDelegate.GetFlag(key, defaultValue);
         }

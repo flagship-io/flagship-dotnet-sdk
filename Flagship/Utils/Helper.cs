@@ -17,11 +17,11 @@ namespace Flagship.Utils
 
         public static bool HasSameType(object params1, object params2)
         {
-            if (params1==null && params2==null)
+            if (params1 == null && params2 == null)
             {
                 return true;
             }
-            if (params1==null || params2==null)
+            if (params1 == null || params2 == null)
             {
                 return false;
             }
@@ -29,8 +29,9 @@ namespace Flagship.Utils
         }
 
         public static string ErrorFormat(string errorMessage, object errorData)
-        { 
-            return JsonConvert.SerializeObject(new { 
+        {
+            return JsonConvert.SerializeObject(new
+            {
                 ErrorMessage = errorMessage,
                 ErrorData = errorData
             });
@@ -41,6 +42,17 @@ namespace Flagship.Utils
             var tcs = new TaskCompletionSource<object>();
             tcs.SetResult(null);
             return tcs.Task;
+        }
+
+        public static string ValueToHex<T>(T value)
+        {
+            var jsonString = JsonConvert.SerializeObject(value);
+            var sb = new StringBuilder();
+            foreach (char c in jsonString)
+            {
+                sb.AppendFormat("{0:x2}", Convert.ToInt32(c));
+            }
+            return sb.ToString();
         }
     }
 }

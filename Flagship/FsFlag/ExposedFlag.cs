@@ -14,9 +14,9 @@ namespace Flagship.FsFlag
 
         public object DefaultValue { get; set; }
 
-        public IFSFlagMetadata Metadata { get; set; }
+        public IFlagMetadata Metadata { get; set; }
 
-        public ExposedFlag(string key, object value, object defaultValue, IFSFlagMetadata metadata)
+        public ExposedFlag(string key, object value, object defaultValue, IFlagMetadata metadata)
         {
             Key = key;
             Value = value;

@@ -399,7 +399,7 @@ namespace Flagship.FsVisitor
             _ = SendTroubleshootingHit(troubleshootingHit);
         }
 
-        public override IFSFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
+        public override IFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
         {
             const string functionName = "flag.metadata";
             if (flag == null)

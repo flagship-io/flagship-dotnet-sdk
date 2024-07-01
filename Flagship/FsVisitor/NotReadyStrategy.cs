@@ -48,7 +48,7 @@ namespace Flagship.FsVisitor
             return Task.Factory.StartNew(() => { Log("VisitorExposed"); });
         }
 
-        public override IFSFlagMetadata GetFlagMetadata(IFSFlagMetadata metadata, string key, bool hasSameType)
+        public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
         {
             Log("flag.metadata");
             return FSFlagMetadata.EmptyMetadata();

@@ -65,7 +65,7 @@ namespace Flagship.FsVisitor
         }
 
 
-        public override IFSFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
+        public override IFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
         {
             return GetStrategy().GetFlagMetadata(key, flag);
         }

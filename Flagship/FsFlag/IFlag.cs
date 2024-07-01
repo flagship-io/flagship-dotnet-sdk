@@ -31,7 +31,7 @@ namespace Flagship.FsFlag
         /// <summary>
         /// Return the campaign information metadata or an empty object if the Flag doesn't exist or if the default value type does not correspond to the Flag type in Flagship.
         /// </summary>
-        IFSFlagMetadata Metadata { get; }
+        IFlagMetadata Metadata { get; }
 
         FSFlagStatus Status { get; }
     }

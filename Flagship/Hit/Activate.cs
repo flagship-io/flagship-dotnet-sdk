@@ -20,7 +20,7 @@ namespace Flagship.Hit
 
         public object FlagDefaultValue { get; set; }
 
-        public IFSFlagMetadata FlagMetadata { get; set; }
+        public IFlagMetadata FlagMetadata { get; set; }
 
         public IDictionary<string, object> VisitorContext { get; set; } 
 

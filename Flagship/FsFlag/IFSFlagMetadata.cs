@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsFlag
 {
-    public interface IFSFlagMetadata 
+    public interface IFlagMetadata 
     {
         string CampaignId { get; }
         string CampaignName { get; } 

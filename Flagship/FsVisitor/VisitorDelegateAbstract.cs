@@ -134,7 +134,7 @@ namespace Flagship.FsVisitor
 
         abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed);
-        abstract public IFSFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
+        abstract public IFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
         abstract public Task SendHit(HitAbstract hit);
 
         abstract public void UpdateContext(IDictionary<string, object> context);

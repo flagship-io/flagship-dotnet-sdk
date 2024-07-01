@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsFlag
 {
-    public class FSFlagMetadata : IFSFlagMetadata
+    public class FSFlagMetadata : IFlagMetadata
     {
         [JsonProperty("campaignId")]
         public string CampaignId { get; set; }
@@ -54,7 +54,7 @@ namespace Flagship.FsFlag
             return JsonConvert.SerializeObject(this);
         }
 
-        internal static IFSFlagMetadata EmptyMetadata()
+        internal static IFlagMetadata EmptyMetadata()
         {
             return new FSFlagMetadata("", "", "", false, "", null, "", "", "");
         }

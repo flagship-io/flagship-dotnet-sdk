@@ -38,7 +38,7 @@ namespace Flagship.FsFlag
             }
         }
 
-        public IFSFlagMetadata Metadata
+        public IFlagMetadata Metadata
         {
             get
             {

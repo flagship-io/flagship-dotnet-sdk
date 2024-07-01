@@ -72,13 +72,16 @@ namespace Flagship.Enums
 
         public const string METHOD_DEACTIVATED_ERROR = "Method {0} is deactivated while SDK status is: {1}.";
 
-        public const string GET_FLAG_MISSING_ERROR = "No Flag for key {0}. Default value is returned.";
+        public const string GET_FLAG_MISSING_ERROR = "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, the default value `{2}` has been returned.";
 
-        public const string GET_FLAG_CAST_ERROR = "Flag for key {0} has a different type. Default value is returned.";
+        public const string GET_FLAG_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has a different type compared to the default value. Therefore, the default value `{2}` has been returned.";
 
-        public const string GET_FLAG_ERROR = "No flag for key {0}, no activate will be sent";
+        public const string GET_FLAG_VALUE =  "For the visitor `{0}`, the flag with key `{1}` has returned the value `{2}`.";
+        public const string GET_FLAG_ERROR = "For the visitor `{0}`, no flags were found with the key `{1}`. As a result, user exposure will not be sent.";
 
-        public const string USER_EXPOSED_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, no activate will be sent";
+        public const string VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED = "Visitor `{0}`, the flag with the key `{1}` has been exposed without calling the `getValue` method first.";
+
+        public const string USER_EXPOSED_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has been exposed despite having a different type compared to the default value";
 
         public const string GET_METADATA_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, an empty metadata object is returned";
 

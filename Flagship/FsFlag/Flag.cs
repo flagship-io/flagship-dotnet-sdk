@@ -8,14 +8,14 @@ using Flagship.Enums;
 
 namespace Flagship.FsFlag
 {
-    public class FSFlag : IFlag
+    public class Flag : IFlag
     {
         private readonly string _key;
         private readonly VisitorDelegateAbstract _visitorDelegateAbstract;
         private object _defaultValue;
         private bool _hasGetValueBeenCalled;
  
-        internal FSFlag(string key, VisitorDelegateAbstract visitorDelegate)
+        internal Flag(string key, VisitorDelegateAbstract visitorDelegate)
         {
             _key = key;
             _visitorDelegateAbstract = visitorDelegate;

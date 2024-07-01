@@ -29,7 +29,7 @@ namespace Flagship.FsFlag
         /// <summary>
         /// Get the flag metadata
         /// </summary>
-        IFlagMetadata Metadata { get; }
+        IFSFlagMetadata Metadata { get; }
 
     }
 }

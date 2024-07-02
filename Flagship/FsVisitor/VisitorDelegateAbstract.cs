@@ -90,9 +90,9 @@ namespace Flagship.FsVisitor
             _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;
         }
 
-        virtual public VisitorStrategyAbstract GetStrategy()
+        virtual public StrategyAbstract GetStrategy()
         {
-            VisitorStrategyAbstract strategy;
+            StrategyAbstract strategy;
             if (Fs.Status == FSSdkStatus.SDK_NOT_INITIALIZED)
             {
                 strategy = new NotReadyStrategy(this);

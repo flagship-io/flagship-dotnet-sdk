@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
-    internal abstract class VisitorStrategyAbstract : IVisitorCore
+    internal abstract class StrategyAbstract : IVisitorCore
     {
         public const string LOOKUP_HITS_JSON_OBJECT_ERROR = "JSON DATA must fit the type HitCacheDTO";
         public const string LOOKUP_VISITOR_JSON_OBJECT_ERROR = "JSON DATA must fit the type VisitorCacheDTO, property version is required";
@@ -32,7 +32,7 @@ namespace Flagship.FsVisitor
 
         public Murmur32 Murmur32 { get; set; }
 
-        public VisitorStrategyAbstract(VisitorDelegateAbstract visitor)
+        public StrategyAbstract(VisitorDelegateAbstract visitor)
         {
             Visitor = visitor;
         }

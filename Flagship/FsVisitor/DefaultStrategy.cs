@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
-    internal class DefaultStrategy : VisitorStrategyAbstract
+    internal class DefaultStrategy : StrategyAbstract
     {
         public static string FETCH_FLAGS_STARTED = "visitor {0} fetchFlags process is started";
         public static string FETCH_CAMPAIGNS_SUCCESS = "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns {3} in {4} ms";

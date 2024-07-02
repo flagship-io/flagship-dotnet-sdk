@@ -32,7 +32,7 @@ namespace Flagship.FsVisitor
             return new Collection<Campaign>();
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
         {
 
             return Task.Factory.StartNew(() =>
@@ -62,9 +62,7 @@ namespace Flagship.FsVisitor
 
         public override Task SendTroubleshootingHit(Troubleshooting hit)
         {
-            var tcs = new TaskCompletionSource<object>();
-            tcs.SetResult(null);
-            return tcs.Task;
+            return Utils.Helper.VoidTask();
         }
 
         public override TroubleshootingData GetTroubleshootingData()

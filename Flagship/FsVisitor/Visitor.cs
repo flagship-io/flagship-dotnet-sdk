@@ -3,11 +3,7 @@ using Flagship.Delegate;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
@@ -56,29 +52,14 @@ namespace Flagship.FsVisitor
              _visitorDelegate.SetConsent(hasConsented);   
         }
 
-        public IFlag<string> GetFlag(string key, string defaultValue)
+        public IFlag GetFlag(string key)
         {
-            return _visitorDelegate.GetFlag(key, defaultValue);
+            return _visitorDelegate.GetFlag(key);
         }
 
-        public IFlag<long> GetFlag(string key, long defaultValue)
+        public IFlagCollection GetFlags()
         {
-            return _visitorDelegate.GetFlag(key, defaultValue);
-        }
-
-        public IFlag<bool> GetFlag(string key, bool defaultValue)
-        {
-            return _visitorDelegate.GetFlag(key, defaultValue);
-        }
-
-        public IFlag<JObject> GetFlag(string key, JObject defaultValue)
-        {
-            return _visitorDelegate.GetFlag(key, defaultValue);
-        }
-
-        public IFlag<JArray> GetFlag(string key, JArray defaultValue)
-        {
-            return _visitorDelegate.GetFlag(key, defaultValue);
+            return _visitorDelegate.GetFlags();
         }
 
         public Task SendHit(HitAbstract hit)

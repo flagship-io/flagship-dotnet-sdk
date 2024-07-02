@@ -2,12 +2,7 @@
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Flagship.Logger;
 
 namespace Flagship.FsVisitor
 {
@@ -43,12 +38,12 @@ namespace Flagship.FsVisitor
             return defaultValue;
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
         {
             return Task.Factory.StartNew(() => { Log("VisitorExposed"); });
         }
 
-        public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
+        public override IFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
         {
             Log("flag.metadata");
             return FlagMetadata.EmptyMetadata();
@@ -66,9 +61,7 @@ namespace Flagship.FsVisitor
 
         public override Task SendTroubleshootingHit(Troubleshooting hit)
         {
-            var tcs = new TaskCompletionSource<object>();
-            tcs.SetResult(null);
-            return tcs.Task;
+            return Utils.Helper.VoidTask();
         }
 
         public override TroubleshootingData GetTroubleshootingData()

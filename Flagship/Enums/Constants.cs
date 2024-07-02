@@ -93,6 +93,10 @@ namespace Flagship.Enums
 
         public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
 
+        public const string GET_FLAG = "GET_FLAG";
+
+        public const string GET_FLAG_NOT_FOUND = "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, an empty flag has been returned.";
+
         public const string BATCH = "batch";
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
         public const string CUSTOMER_UID = "cuid";

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Flagship.Enums;
 using Flagship.FsVisitor;
@@ -14,9 +13,9 @@ namespace Flagship.FsFlag
 {
     public class FlagCollection : IFlagCollection
     {
-        private VisitorDelegate _visitor;
-        private HashSet<string> _keys = new HashSet<string>();
-        private Dictionary<string, IFlag> _flags = new Dictionary<string, IFlag>();
+        private readonly VisitorDelegate _visitor;
+        private readonly HashSet<string> _keys = new HashSet<string>();
+        private readonly Dictionary<string, IFlag> _flags = new Dictionary<string, IFlag>();
 
         internal FlagCollection(VisitorDelegate visitor = null, Dictionary<string, IFlag> flags = null)
         {
@@ -43,9 +42,7 @@ namespace Flagship.FsFlag
         {
             if (!_flags.TryGetValue(key, out var flag))
             {
-                // Assuming logWarningSprintf is a method to log warnings, replace with actual logging method.
-                // LogWarningSprintf(_visitor?.Config, GET_FLAG, GET_FLAG_NOT_FOUND, _visitor?.VisitorId, key);
-                Log.LogWarning(_visitor?.Config, string.Format("Flag with key {0} not found", key), Constants.GET_FLAG);
+                Log.LogWarning(_visitor?.Config, string.Format(Constants.GET_FLAG_NOT_FOUND, key), Constants.GET_FLAG);
                 return new Flag(key, null);
             }
             return flag;
@@ -72,8 +69,10 @@ namespace Flagship.FsFlag
         public IFlagCollection Filter(Func<IFlag, string, IFlagCollection, bool> predicate)
         {
             var flags = new Dictionary<string, IFlag>();
-            foreach (var (key, flag) in _flags)
+            foreach (var kvp in _flags)
             {
+                var key = kvp.Key;
+                var flag = kvp.Value;
                 if (predicate(flag, key, this))
                 {
                     flags.Add(key, flag);
@@ -90,9 +89,9 @@ namespace Flagship.FsFlag
         public Dictionary<string, IFlagMetadata> GetMetadata()
         {
             var metadata = new Dictionary<string, IFlagMetadata>();
-            foreach (var (key, flag) in _flags)
+            foreach (var kvp in _flags)
             {
-                metadata.Add(key, flag.Metadata);
+                metadata.Add(kvp.Key, kvp.Value.Metadata);
             }
             return metadata;
         }
@@ -100,8 +99,10 @@ namespace Flagship.FsFlag
         public string ToJson()
         {
             var serializedData = new List<SerializedFlagMetadata>();
-            foreach (var (key, flag) in _flags)
+            foreach (var kvp in _flags)
             {
+                var key = kvp.Key;
+                var flag = kvp.Value;
                 var metadata = flag.Metadata;
                 serializedData.Add(new SerializedFlagMetadata
                 {

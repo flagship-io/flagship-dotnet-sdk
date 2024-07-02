@@ -2,11 +2,8 @@
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
@@ -45,7 +42,7 @@ namespace Flagship.FsVisitor
             Log("UpdateContex");    
         }
 
-        protected override void UpdateContexKeyValue(string key, object value)
+        protected override void UpdateContextKeyValue(string key, object value)
         {
             Log("UpdateContex");
         }
@@ -69,7 +66,7 @@ namespace Flagship.FsVisitor
             return defaultValue;
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag)
+        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
         {
             return Task.Factory.StartNew(() =>
             {
@@ -77,7 +74,7 @@ namespace Flagship.FsVisitor
             });
         }
 
-        public override IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType)
+        public override IFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
         {
             Log("Flag.metadata");
             return FlagMetadata.EmptyMetadata();
@@ -95,9 +92,7 @@ namespace Flagship.FsVisitor
 
         public override Task SendTroubleshootingHit(Troubleshooting hit)
         {
-            var tcs = new TaskCompletionSource<object>();
-            tcs.SetResult(null);
-            return tcs.Task;
+            return Utils.Helper.VoidTask();
         }
 
         public override TroubleshootingData GetTroubleshootingData()

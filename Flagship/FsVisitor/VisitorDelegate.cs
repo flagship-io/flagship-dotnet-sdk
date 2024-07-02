@@ -4,11 +4,7 @@ using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
-using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
@@ -30,40 +26,20 @@ namespace Flagship.FsVisitor
             return this.GetStrategy().FetchFlags();
         }
 
-        private IFlag<T> CreateFlag<T>(string key, T defaultValue)
+        public override IFlag GetFlag(string key)
         {
-            if (FetchFlagsStatus.Status != FSFetchStatus.FETCHED && FetchFlagsStatus.Status != FSFetchStatus.PANIC )
+            if (FetchFlagsStatus.Status != FSFetchStatus.FETCHED && FetchFlagsStatus.Status != FSFetchStatus.PANIC
+                && FetchFlagsStatus.Status != FSFetchStatus.FETCHING)
             {
                 Log.LogWarning(Config, string.Format(FlagSyncStatusMessage(FetchFlagsStatus.Reason), VisitorId, key), "GET_FLAG");
             }
-            return new Flag<T>(key, this, defaultValue);
+            return new Flag(key, this);
         }
 
-        public override IFlag<string> GetFlag(string key, string defaultValue)
+        public override IFlagCollection GetFlags()
         {
-            return CreateFlag(key, defaultValue);
+            return new FlagCollection(this);
         }
-
-        public override IFlag<long> GetFlag(string key, long defaultValue)
-        {
-            return CreateFlag(key, defaultValue);
-        }
-
-        public override IFlag<bool> GetFlag(string key, bool defaultValue)
-        {
-            return CreateFlag(key, defaultValue);
-        }
-
-        public override IFlag<JObject> GetFlag(string key, JObject defaultValue)
-        {
-            return CreateFlag(key, defaultValue);
-        }
-
-        public override IFlag<JArray> GetFlag(string key, JArray defaultValue)
-        {
-            return CreateFlag(key, defaultValue);
-        }
-
 
         public override IFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
         {

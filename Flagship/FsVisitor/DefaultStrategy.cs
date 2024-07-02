@@ -8,9 +8,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -26,7 +23,7 @@ namespace Flagship.FsVisitor
         {
         }
 
-        virtual protected void UpdateContexKeyValue(string key, object value)
+        virtual protected void UpdateContextKeyValue(string key, object value)
         {
             if (PredefinedContext.IsPredefinedContext(key) && !PredefinedContext.CheckType(key, value))
             {
@@ -68,26 +65,26 @@ namespace Flagship.FsVisitor
             }
             foreach (var item in context)
             {
-                UpdateContexKeyValue(item.Key, item.Value);
+                UpdateContextKeyValue(item.Key, item.Value);
             }
             UpdateContextFetchFlagsStatus();
         }
 
         public override void UpdateContext(string key, string value)
         {
-            UpdateContexKeyValue(key, value);
+            UpdateContextKeyValue(key, value);
             UpdateContextFetchFlagsStatus();
         }
 
         public override void UpdateContext(string key, double value)
         {
-            UpdateContexKeyValue(key, value);
+            UpdateContextKeyValue(key, value);
             UpdateContextFetchFlagsStatus();
         }
 
         public override void UpdateContext(string key, bool value)
         {
-            UpdateContexKeyValue(key, value);
+            UpdateContextKeyValue(key, value);
             UpdateContextFetchFlagsStatus();
         }
 

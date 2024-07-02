@@ -2,11 +2,8 @@
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
 using Flagship.Main;
@@ -126,11 +123,9 @@ namespace Flagship.FsVisitor
 
         abstract public Task FetchFlags();
 
-        abstract public IFlag<string> GetFlag(string key, string defaultValue);
-        abstract public IFlag<long> GetFlag(string key, long defaultValue);
-        abstract public IFlag<bool> GetFlag(string key, bool defaultValue);
-        abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
-        abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);
+        abstract public IFlag GetFlag(string key);
+
+        abstract public IFlagCollection GetFlags();
 
         abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed);

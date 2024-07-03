@@ -29,7 +29,7 @@ namespace Flagship.FsVisitor.Tests
             ["key"] = "value"
         };
         Mock<Flagship.Config.ConfigManager> configManager;
-        Mock<VisitorStrategyAbstract> defaultStrategy;
+        Mock<StrategyAbstract> defaultStrategy;
         Mock<ITrackingManager> trackingManagerMock = new Mock<ITrackingManager>();
 
         public VisitorDelegateTests()
@@ -44,7 +44,7 @@ namespace Flagship.FsVisitor.Tests
 
             visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object, null });
             visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
-            defaultStrategy = new Mock<VisitorStrategyAbstract>(visitorDelegateMock.Object);
+            defaultStrategy = new Mock<StrategyAbstract>(visitorDelegateMock.Object);
 
             visitorDelegateMock.Setup(x=> x.GetStrategy()).Returns(defaultStrategy.Object);
             visitorDelegateMock.CallBase = true;

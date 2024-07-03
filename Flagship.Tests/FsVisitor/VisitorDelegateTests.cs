@@ -16,6 +16,8 @@ using Flagship.Config;
 using Flagship.Decision;
 using Flagship.Hit;
 using Flagship.Model;
+using Flagship.Utils;
+using Flagship.Tests.Helpers;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -56,10 +58,10 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void TestStrategy()
         {
-            var flagship = new Mock<Flagship.Main.Fs>();
+            var flagship = new Mock<Main.Fs>();
             var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object, null);
-            var privateVisitor = new PrivateObject(visitorDelegate);
-            privateVisitor.Invoke("GetStrategy");
+            var getStrategy = TestHelpers.GetPrivateMethod(visitorDelegate, "GetStrategy");
+            getStrategy?.Invoke(visitorDelegate, null);
         }
 
         [TestMethod()]
@@ -126,7 +128,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            var flag = visitorDelegateMock.Object.GetFlag("key", "default");
+            var flag = visitorDelegateMock.Object.GetFlag("key");
             Assert.IsNotNull(flag);
             Assert.IsTrue(flag.Exists);
         }
@@ -135,7 +137,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest1()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", false);
+            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
         }
@@ -144,7 +146,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest2()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", 32);
+            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
         }
@@ -153,7 +155,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest3()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JObject());
+            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
         }
@@ -162,7 +164,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest4()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JArray());
+            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
         }
@@ -178,7 +180,7 @@ namespace Flagship.FsVisitor.Tests
                 Status = Enums.FSFetchStatus.FETCH_REQUIRED,
                 Reason = Enums.FSFetchReasons.AUTHENTICATE
             };
-            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist", new JArray());
+            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
             fsLogManagerMock.Verify(x=> x.Warning(It.IsAny<string>(), "GET_FLAG"), Times.Once()); 
@@ -187,10 +189,10 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagMetadataTest()
         {
-            defaultStrategy.Setup(x => x.GetFlagMetadata(null, "key", true))
+            defaultStrategy.Setup(x => x.GetFlagMetadata("key", null))
                 .Returns(Flagship.FsFlag.FlagMetadata.EmptyMetadata())
                 .Verifiable();
-            var metadata = visitorDelegateMock.Object.GetFlagMetadata(null, "key", true);
+            var metadata = visitorDelegateMock.Object.GetFlagMetadata("key", null);
             Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()));
             defaultStrategy.Verify();
         }
@@ -209,7 +211,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UserExposedTest()
         {
-            defaultStrategy.Setup(x => x.VisitorExposed("key", "default", null))
+            defaultStrategy.Setup(x => x.VisitorExposed("key", "default", null, true))
                 .Verifiable();
             visitorDelegateMock.Object.VisitorExposed("key", "default", null);
             defaultStrategy.Verify();

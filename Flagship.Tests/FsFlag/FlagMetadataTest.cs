@@ -17,7 +17,7 @@ namespace Flagship.Tests.FsFlag
         {
             var metadata = new FlagMetadata("CampaignId", "VariationGroupId", "VariationId", true, "", null, "CampaignName", "VariaitonGroupName", "VariationName");
 
-            var metadataJson = new Dictionary<string, object>()
+            var metadataJson = new Dictionary<string, object?>()
             {
                 ["campaignId"] = "CampaignId",
                 ["variationGroupId"] = "VariationGroupId",

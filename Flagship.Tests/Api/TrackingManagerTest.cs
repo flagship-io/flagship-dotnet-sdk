@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using Flagship.Model;
 using Newtonsoft.Json.Serialization;
 using System.Collections.Concurrent;
+using Flagship.Tests.Helpers;
 
 namespace Flagship.Tests.Api
 {
@@ -34,27 +35,29 @@ namespace Flagship.Tests.Api
 
             var trackingManager = new Flagship.Api.TrackingManager(config, httpClientMock.Object);
 
-            var trackingManagerPrivate = new PrivateObject(trackingManager);
+   
 
-            object strategy = trackingManagerPrivate.Invoke("InitStrategy");
+            var InitStrategy = TestHelpers.GetPrivateMethod(trackingManager, "InitStrategy");
+
+            object? strategy = InitStrategy?.Invoke(trackingManager, null);
 
             Assert.IsInstanceOfType(strategy, typeof(BatchingPeriodicCachingStrategy));
 
             config.TrackingManagerConfig = new Config.TrackingManagerConfig(CacheStrategy.PERIODIC_CACHING);
 
-            strategy = trackingManagerPrivate.Invoke("InitStrategy");
+            strategy = InitStrategy?.Invoke(trackingManager, null);
 
             Assert.IsInstanceOfType(strategy, typeof(BatchingPeriodicCachingStrategy));
 
             config.TrackingManagerConfig = new Config.TrackingManagerConfig(CacheStrategy.NO_BATCHING);
 
-            strategy = trackingManagerPrivate.Invoke("InitStrategy");
+            strategy = InitStrategy?.Invoke(trackingManager, null);
 
             Assert.IsInstanceOfType(strategy, typeof(NoBatchingContinuousCachingStrategy));
 
             config.TrackingManagerConfig = new Config.TrackingManagerConfig(CacheStrategy.CONTINUOUS_CACHING);
 
-            strategy = trackingManagerPrivate.Invoke("InitStrategy");
+            strategy = InitStrategy?.Invoke(trackingManager, null);
 
             Assert.IsInstanceOfType(strategy, typeof(BatchingContinuousCachingStrategy));
         }

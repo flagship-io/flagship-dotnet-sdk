@@ -20,6 +20,7 @@ using Newtonsoft.Json.Linq;
 using Flagship.Model;
 using Flagship.Logger;
 using Flagship.Hit;
+using Flagship.Tests.Helpers;
 
 namespace Flagship.Decision.Tests
 {
@@ -36,7 +37,7 @@ namespace Flagship.Decision.Tests
             return File.ReadAllText("bucketing_realloc.json");
         }
 
-        public string GetBucketingRemovedVariation2() 
+        public string GetBucketingRemovedVariation2()
         {
             return File.ReadAllText("Bucketing_removed_variation.json");
         }
@@ -53,13 +54,13 @@ namespace Flagship.Decision.Tests
             };
 
 
-            HttpResponseMessage httpResponse = new HttpResponseMessage
+            HttpResponseMessage httpResponse = new()
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(GetBucketing(), Encoding.UTF8, "application/json"),
             };
 
-            HttpResponseMessage httpResponsePanicMode = new HttpResponseMessage
+            HttpResponseMessage httpResponsePanicMode = new()
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent("{ \"panic\": true }", Encoding.UTF8, "application/json"),
@@ -69,7 +70,7 @@ namespace Flagship.Decision.Tests
 
             var url = string.Format(Constants.BUCKETING_API_URL, config.EnvId);
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            Mock<HttpMessageHandler> mockHandler = new();
 
             mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
                  "SendAsync",
@@ -80,8 +81,6 @@ namespace Flagship.Decision.Tests
             var httpClient = new HttpClient(mockHandler.Object);
 
             var decisionManager = new BucketingManager(config, httpClient, Murmur.MurmurHash.Create32());
-
-            var decisionManagerPrivate = new PrivateObject(decisionManager);
 
             var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
             var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
@@ -135,7 +134,7 @@ namespace Flagship.Decision.Tests
 
             var decisionManager = new BucketingManager(config, httpClient, Murmur.MurmurHash.Create32());
 
-            var decisionManagerPrivate = new PrivateObject(decisionManager);
+            var GetVariation = TestHelpers.GetPrivateMethod(decisionManager, "GetVariation");
 
             var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
             var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
@@ -153,8 +152,7 @@ namespace Flagship.Decision.Tests
             //test getVariation
             var variations = new Collection<Model.Bucketing.Variation>
             {
-                new Model.Bucketing.Variation
-                {
+                new() {
                     Id = "c20j8bk3fk9hdphqtd30",
                     Modifications = new Modifications{
                         Type= Model.ModificationType.HTML,
@@ -166,8 +164,7 @@ namespace Flagship.Decision.Tests
                     Allocation = 34,
                     Reference = true
                 },
-                new Model.Bucketing.Variation
-                {
+                new() {
                     Id = "c20j8bk3fk9hdphqtd3g",
                     Modifications = new Modifications{
                         Type= Model.ModificationType.HTML,
@@ -178,8 +175,7 @@ namespace Flagship.Decision.Tests
                     },
                     Allocation = 33,
                 },
-                new Model.Bucketing.Variation
-                {
+                new() {
                     Id = "c20j9lgbcahhf2mvhbf0",
                     Modifications = new Modifications{
                         Type= Model.ModificationType.HTML,
@@ -197,15 +193,14 @@ namespace Flagship.Decision.Tests
                 Id = "9273BKSDJtoto",
                 Variations = variations
             };
-            var variationResult = (Model.Variation)decisionManagerPrivate.Invoke("GetVariation", new object[] { VariationGroup, visitorDelegate });
+            var variationResult = (Model.Variation?)GetVariation?.Invoke(decisionManager, [VariationGroup, visitorDelegate]);
 
             Assert.IsNotNull(variationResult);
 
             Assert.AreEqual(variations[0].Id, variationResult.Id);
 
             // Test null variation
-
-            variationResult = (Model.Variation)decisionManagerPrivate.Invoke("GetVariation", new object[] { null, visitorDelegate });
+            variationResult = (Model.Variation?)GetVariation?.Invoke(decisionManager, [null, visitorDelegate]);
 
             Assert.IsNull(variationResult);
 
@@ -214,468 +209,417 @@ namespace Flagship.Decision.Tests
                 Id = "9273BKSDJtoto",
                 Variations = null
             };
-            variationResult = (Model.Variation)decisionManagerPrivate.Invoke("GetVariation", new object[] { VariationGroup, visitorDelegate });
+            variationResult = (Model.Variation?)GetVariation?.Invoke(decisionManager, [VariationGroup, visitorDelegate]);
 
             Assert.IsNull(variationResult);
 
 
             // test isMatchTargeting with empty VariationGroupDTO
 
-            var IsMatchedTargeting = (bool)decisionManagerPrivate.Invoke("IsMatchedTargeting", new object[] { new VariationGroup(), visitorDelegate });
+            var IsMatchedTargeting = TestHelpers.GetPrivateMethod(decisionManager, "IsMatchedTargeting");
+            var IsMatchedTargetingResult = (bool?)IsMatchedTargeting?.Invoke(decisionManager, [new VariationGroup(), visitorDelegate]);
 
-            Assert.IsFalse(IsMatchedTargeting);
+            Assert.IsFalse(IsMatchedTargetingResult);
 
             VariationGroup = new VariationGroup
             {
                 Targeting = new TargetingContainer
                 {
-                    TargetingGroups = new List<TargetingGroup>
-                    {
+                    TargetingGroups =
+                    [
                         new TargetingGroup
                         {
-                            Targetings = new Collection<Targeting>
-                            {
+                            Targetings =
+                            [
                                 new Targeting
                                 {
                                     Key = "age",
                                     Operator = TargetingOperator.EQUALS,
                                     Value = 21
                                 }
-                            }
+                            ]
                         }
-                    }
+                    ]
                 }
             };
 
-            IsMatchedTargeting = (bool)decisionManagerPrivate.Invoke("IsMatchedTargeting", new object[] { VariationGroup, visitorDelegate });
+            var IsMatchedTargetingResult2 = (bool?)IsMatchedTargeting?.Invoke(decisionManager, [VariationGroup, visitorDelegate]);
 
-            Assert.IsFalse(IsMatchedTargeting);
+            Assert.IsFalse(IsMatchedTargetingResult2);
 
             var TargetingGroups = VariationGroup.Targeting.TargetingGroups.Append(new TargetingGroup
             {
-                Targetings = new Collection<Targeting>
-                            {
+                Targetings = [
                                 new Targeting
                                 {
                                     Key = "fs_all_users",
                                     Operator = TargetingOperator.EQUALS,
                                     Value = ""
                                 }
-                            }
+                            ]
             }).Append(new TargetingGroup
             {
-                Targetings = new Collection<Targeting>
-                            {
+                Targetings =
+                            [
                                 new Targeting
                                 {
                                     Key = "fs_users",
                                     Operator = TargetingOperator.EQUALS,
                                     Value = visitorId
                                 }
-                            }
+                            ]
             });
 
             VariationGroup.Targeting.TargetingGroups = TargetingGroups;
 
 
-            IsMatchedTargeting = (bool)decisionManagerPrivate.Invoke("IsMatchedTargeting", new object[] { VariationGroup, visitorDelegate });
+            IsMatchedTargetingResult = (bool?)IsMatchedTargeting?.Invoke(decisionManager, [VariationGroup, visitorDelegate]);
 
-            Assert.IsTrue(IsMatchedTargeting);
+            Assert.IsTrue(IsMatchedTargetingResult);
 
             //test CheckAndTargeting
 
-            var CheckAndTargeting = (bool)decisionManagerPrivate.Invoke("CheckAndTargeting", new object[] { new Collection<Targeting>(), visitorDelegate });
+            var CheckAndTargeting = TestHelpers.GetPrivateMethod(decisionManager, "CheckAndTargeting");
+            var CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [new Collection<Targeting>(), visitorDelegate]);
 
-            Assert.IsFalse(CheckAndTargeting);
+            Assert.IsFalse(CheckAndTargetingResult);
 
             // test checkAndTargeting fs_all_users
 
             var targetings = new Collection<Targeting>
                             {
-                                new Targeting
-                                {
+                                new() {
                                     Key = "fs_all_users",
                                     Operator = TargetingOperator.EQUALS,
                                     Value = ""
                                 }
                             };
 
-            CheckAndTargeting = (bool)decisionManagerPrivate.Invoke("CheckAndTargeting", new object[] { targetings, visitorDelegate });
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
 
-            Assert.IsTrue(CheckAndTargeting);
+            Assert.IsTrue(CheckAndTargetingResult);
 
             // test checkAndTargeting fs_users
 
-            targetings = new Collection<Targeting>
-                            {
-                                new Targeting
-                                {
+            targetings = [
+                                new() {
                                     Key = "fs_users",
                                     Operator = TargetingOperator.STARTS_WITH,
                                     Value = "12"
                                 },
-                                new Targeting
-                                {
+                                new() {
                                     Key = "fs_users",
                                     Operator = TargetingOperator.ENDS_WITH,
                                     Value = "6"
                                 }
-                            };
+                            ];
 
-            CheckAndTargeting = (bool)decisionManagerPrivate.Invoke("CheckAndTargeting", new object[] { targetings, visitorDelegate });
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
 
-            Assert.IsTrue(CheckAndTargeting);
+            Assert.IsTrue(CheckAndTargetingResult);
 
             // test checkAndTargeting fs_users targeting and
 
-            targetings = new Collection<Targeting>
-                            {
-                                new Targeting
-                                {
+            targetings = [new() {
                                     Key = "fs_users",
                                     Operator = TargetingOperator.STARTS_WITH,
                                     Value = "2"
                                 },
-                                new Targeting
-                                {
+                                new() {
                                     Key = "fs_users",
                                     Operator = TargetingOperator.ENDS_WITH,
                                     Value = "6"
                                 }
-                            };
+                            ];
 
-            CheckAndTargeting = (bool)decisionManagerPrivate.Invoke("CheckAndTargeting", new object[] { targetings, visitorDelegate });
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
 
-            Assert.IsFalse(CheckAndTargeting);
+            Assert.IsFalse(CheckAndTargetingResult);
 
             // test checkAndTargeting key not match any context
 
-            targetings = new Collection<Targeting>
-                            {
-                                new Targeting
-                                {
+            targetings =
+                            [
+                                new() {
                                     Key = "anyKey",
                                     Operator = TargetingOperator.EQUALS,
                                     Value = "anyValue"
                                 }
-                            };
+                            ];
 
-            CheckAndTargeting = (bool)decisionManagerPrivate.Invoke("CheckAndTargeting", new object[] { targetings, visitorDelegate });
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
 
-            Assert.IsFalse(CheckAndTargeting);
+            Assert.IsFalse(CheckAndTargetingResult);
 
             // test checkAndTargeting key match context
 
-            targetings = new Collection<Targeting>
-                            {
-                                new Targeting
-                                {
+            targetings =
+                            [
+                                new() {
                                     Key = "age",
                                     Operator = TargetingOperator.EQUALS,
                                     Value = 20
                                 }
-                            };
+                            ];
 
-            CheckAndTargeting = (bool)decisionManagerPrivate.Invoke("CheckAndTargeting", new object[] { targetings, visitorDelegate });
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
 
-            Assert.IsTrue(CheckAndTargeting);
+            Assert.IsTrue(CheckAndTargetingResult);
 
             // test testOperator EQUALS Test different values
+            var testOperator = TestHelpers.GetPrivateMethod(decisionManager, "TestOperator");
+            var testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, 5, 6]);
 
-            var testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, 5, 6 });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator EQUALS Test different type
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, 5, "5" });
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, 5, '5']);
 
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
+            
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, true, "5"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, true, "5" });
+            Assert.IsFalse(testOperatorResult);
 
-            Assert.IsFalse(testOperator);
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, true, false]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, true, false });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator EQUALS Test same type and value
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, true, true]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, true, true });
+            Assert.IsTrue(testOperatorResult);
 
-            Assert.IsTrue(testOperator);
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, "abc", "abc"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, "abc", "abc" });
+            Assert.IsTrue(testOperatorResult);
 
-            Assert.IsTrue(testOperator);
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, 1, 1]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, 1, 1 });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator EQUALS Test contextValue EQUALS targetingValue list
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, "a", new JArray { "a", "b", "c" }]);;
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, "a", new JArray { "a","b","c" } });
+            Assert.IsTrue(testOperatorResult);
 
-            Assert.IsTrue(testOperator);
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, 2d, new JArray { 2d, 1d, 3d }]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, 2d, new JArray { 2d, 1d, 3d } });
+            Assert.IsTrue(testOperatorResult);
+            
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, "a", new JArray { "b", "c" }]);
 
-            Assert.IsTrue(testOperator);
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.EQUALS, "a", new JArray { "b", "c" } });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator NOT_EQUALS Test different values
 
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_EQUALS, 5, 6]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_EQUALS, 5, 6 });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator NOT_EQUALS Test different type
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_EQUALS, 5, '5' });
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_EQUALS, 5, '5']);
 
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator NOT_EQUALS Test same type and value
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_EQUALS, 5, 5]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_EQUALS, 5, 5 });
-
-            Assert.IsFalse(testOperator);
-
-            // test testOperator NOT_EQUALS Test contextValue NOT_EQUALS targetingValue list
-
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_EQUALS, "a", new JArray { "b", "c", "d" } });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator NOT_EQUALS Test contextValue NOT_EQUALS targetingValue list
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_EQUALS, "a", new JArray { "a", "b", "c" } });
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_EQUALS, "a", new JArray { "b", "c", "d" }]);
 
-            Assert.IsFalse(testOperator);
+            Assert.IsTrue(testOperatorResult);
+
+            // test testOperator NOT_EQUALS Test contextValue NOT_EQUALS targetingValue list
+
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_EQUALS, "a", new JArray { "a", "b", "c" }]);
+
+            Assert.IsFalse(testOperatorResult);
 
 
             // test testOperator CONTAINS Test contextValue not contains targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.CONTAINS, "a", "b"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, "a", "b" });
-
-            Assert.IsFalse(testOperator);
-
-            // test testOperator CONTAINS Test contextValue contains targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, "abc", "b" });
-
-            Assert.IsTrue(testOperator);
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, 123, 2 });
-
-            Assert.IsTrue(testOperator);
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, 123, "2" });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator CONTAINS Test contextValue contains targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.CONTAINS, "abc", "b"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, "nopq_hij", new JArray() { "abc", "dfg", "hij", "klm" } });
+            Assert.IsTrue(testOperatorResult);
 
-            Assert.IsTrue(testOperator);
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.CONTAINS, 123, 2]);
+
+            Assert.IsTrue(testOperatorResult);
+
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.CONTAINS, 123, "2"]);
+
+            Assert.IsTrue(testOperatorResult);
+
+            // test testOperator CONTAINS Test contextValue contains targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.CONTAINS, "nopq_hij", new JArray() { "abc", "dfg", "hij", "klm" }]);
+
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator CONTAINS Test contextValue CONTAINS targetingValue list
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.CONTAINS, "abcd", new JArray() { "a", "b", "c" }]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, "abcd", new JArray() { "a", "b", "c" } });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator CONTAINS Test contextValue not CONTAINS targetingValue list
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.CONTAINS, "abcd", new JArray() { "e", "f" }]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.CONTAINS, "abcd", new JArray { "e", "f" } });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator NOT_CONTAINS Test contextValue not contains targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_CONTAINS, "abc", "d"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_CONTAINS, "abc", "d" });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator NOT_CONTAINS Test contextValue contains targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_CONTAINS, "abc", "b"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_CONTAINS, "abc", "b" });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator NOT_CONTAINS Test contextValue NOT_CONTAINS targetingValue list
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_CONTAINS, "abcd", new JArray() { "e", "f" }]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_CONTAINS, "abcd", new JArray { "e", "f" } });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator NOT_CONTAINS Test contextValue not NOT_CONTAINS targetingValue list
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.NOT_CONTAINS, "abcd", new JArray() { "a", "e" }]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.NOT_CONTAINS, "abcd", new JArray { "a", "e" } });
-
-            Assert.IsFalse(testOperator);
-
-            // test testOperator GREATER_THAN Test contextValue not GREATER_THAN targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN, 5, 6 });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator GREATER_THAN Test contextValue not GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN, 5, 6]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN, 5, 5 });
-
-            Assert.IsFalse(testOperator);
-
-            // test testOperator GREATER_THAN Test contextValue not GREATER_THAN targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN, "a", "b" });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator GREATER_THAN Test contextValue not GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN, 5, 5]);
 
+            Assert.IsFalse(testOperatorResult);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN, "abz", "bcg" });
+            // test testOperator GREATER_THAN Test contextValue not GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN, "a", "b"]);
 
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
+
+            // test testOperator GREATER_THAN Test contextValue not GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN, "abz", "bcg"]);
+
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator GREATER_THAN Test contextValue GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN, 8, 5]);
 
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN, 8, 5 });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
 
             // test testOperator GREATER_THAN Test contextValue GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN, "9dlk", "8"]);
 
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN, "9dlk", "8" });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator LOWER_THAN Test contextValue LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN, 5, 6]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN, 5, 6 });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator LOWER_THAN Test contextValue not GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN, 5, 5]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN, 5, 5 });
-
-            Assert.IsFalse(testOperator);
-
-            // test testOperator LOWER_THAN Test contextValue LOWER_THAN targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN, "a", "b" });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator LOWER_THAN Test contextValue LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN, "a", "b"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN, "abz", "bcg" });
+            Assert.IsTrue(testOperatorResult);
 
-            Assert.IsTrue(testOperator);
+            // test testOperator LOWER_THAN Test contextValue LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN, "abz", "bcg"]);
+
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator LOWER_THAN Test contextValue not LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN, 8, 2]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN, 8, 2 });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator GREATER_THAN_OR_EQUALS Test contextValue GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN_OR_EQUALS, 8, 2]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN_OR_EQUALS, 8, 2 });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator GREATER_THAN_OR_EQUALS Test contextValue EQUALS targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN_OR_EQUALS, 8, 8]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN_OR_EQUALS, 8, 8 });
-
-            Assert.IsTrue(testOperator);
-
-            // test testOperator GREATER_THAN_OR_EQUALS Test contextValue LOWER_THAN targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN_OR_EQUALS, 7, 8 });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator GREATER_THAN_OR_EQUALS Test contextValue LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN_OR_EQUALS, 7, 8]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.GREATER_THAN_OR_EQUALS, "a", "b" });
+            Assert.IsFalse(testOperatorResult);
 
-            Assert.IsFalse(testOperator);
+            // test testOperator GREATER_THAN_OR_EQUALS Test contextValue LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.GREATER_THAN_OR_EQUALS, "a", "b"]);
+
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator LOWER_THAN_OR_EQUALS Test contextValue GREATER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN_OR_EQUALS, 8, 6]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN_OR_EQUALS, 8, 6 });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator LOWER_THAN_OR_EQUALS Test contextValue EQUALS targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN_OR_EQUALS, 8, 8]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN_OR_EQUALS, 8, 8 });
-
-            Assert.IsTrue(testOperator);
-
-            // test testOperator LOWER_THAN_OR_EQUALS Test contextValue LOWER_THAN targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN_OR_EQUALS, 7, 8 });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator LOWER_THAN_OR_EQUALS Test contextValue LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN_OR_EQUALS, 7, 8]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.LOWER_THAN_OR_EQUALS, "a", "b" });
+            Assert.IsTrue(testOperatorResult);
 
-            Assert.IsTrue(testOperator);
+            // test testOperator LOWER_THAN_OR_EQUALS Test contextValue LOWER_THAN targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.LOWER_THAN_OR_EQUALS, "a", "b"]);
+
+            Assert.IsTrue(testOperatorResult);
 
             //test testOperator STARTS_WITH Test contextValue STARTS_WITH targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.STARTS_WITH, "abcd", "ab"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.STARTS_WITH, "abcd", "ab" });
-
-            Assert.IsTrue(testOperator);
-
-            // test testOperator STARTS_WITH Test contextValue STARTS_WITH targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.STARTS_WITH, "abcd", "AB" });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator STARTS_WITH Test contextValue STARTS_WITH targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.STARTS_WITH, "abcd", "AB"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.STARTS_WITH, "abcd", "ac" });
+            Assert.IsFalse(testOperatorResult);
 
-            Assert.IsFalse(testOperator);
+            // test testOperator STARTS_WITH Test contextValue STARTS_WITH targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.STARTS_WITH, "abcd", "ac"]);
 
-            // test testOperator ENDS_WITH Test contextValue ENDS_WITH targetingValue
-
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.ENDS_WITH, "abcd", "cd" });
-
-            Assert.IsTrue(testOperator);
+            Assert.IsFalse(testOperatorResult);
 
             // test testOperator ENDS_WITH Test contextValue ENDS_WITH targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.ENDS_WITH, "abcd", "cd"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.ENDS_WITH, "abcd", "CD" });
-
-            Assert.IsFalse(testOperator);
+            Assert.IsTrue(testOperatorResult);
 
             // test testOperator ENDS_WITH Test contextValue ENDS_WITH targetingValue
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.ENDS_WITH, "abcd", "CD"]);
 
-            testOperator = (bool)decisionManagerPrivate.Invoke("TestOperator", new object[] { TargetingOperator.ENDS_WITH, "abcd", "bd" });
+            Assert.IsFalse(testOperatorResult);
 
-            Assert.IsFalse(testOperator);
+            // test testOperator ENDS_WITH Test contextValue ENDS_WITH targetingValue'
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.ENDS_WITH, "abcd", "bd"]);
+
+            Assert.IsFalse(testOperatorResult);
 
             httpClient.Dispose();
         }
@@ -693,7 +637,7 @@ namespace Flagship.Decision.Tests
                 LogManager = fsLogManagerMock.Object,
             };
 
-            HttpResponseMessage httpResponsePanicMode = new HttpResponseMessage
+            HttpResponseMessage httpResponsePanicMode = new()
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent("{ \"panic\": true }", Encoding.UTF8, "application/json"),
@@ -703,7 +647,7 @@ namespace Flagship.Decision.Tests
 
             var url = string.Format(Constants.BUCKETING_API_URL, config.EnvId);
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            Mock<HttpMessageHandler> mockHandler = new();
 
             var exception = new Exception("Test");
 
@@ -720,7 +664,7 @@ namespace Flagship.Decision.Tests
                 CallBase = true
             };
 
-            decisionManagerMock.Setup(x => x.SendContextAsync(It.IsAny<FsVisitor.VisitorDelegateAbstract>())) ;
+            decisionManagerMock.Setup(x => x.SendContextAsync(It.IsAny<FsVisitor.VisitorDelegateAbstract>()));
 
             var decisionManager = decisionManagerMock.Object;
 
@@ -733,7 +677,7 @@ namespace Flagship.Decision.Tests
                     case 0:
                         Assert.AreEqual(FSSdkStatus.SDK_INITIALIZING, status);
                         break;
-                    case 1: 
+                    case 1:
                         Assert.AreEqual(FSSdkStatus.SDK_INITIALIZED, status);
                         break;
                     case 2:
@@ -794,7 +738,7 @@ namespace Flagship.Decision.Tests
                 LogManager = fsLogManagerMock.Object,
             };
 
-            HttpResponseMessage httpResponsePanicMode = new HttpResponseMessage
+            HttpResponseMessage httpResponsePanicMode = new()
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent("{ \"panic\": true }", Encoding.UTF8, "application/json"),
@@ -804,7 +748,7 @@ namespace Flagship.Decision.Tests
 
             var url = string.Format(Constants.BUCKETING_API_URL, config.EnvId);
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            Mock<HttpMessageHandler> mockHandler = new();
 
 
             mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
@@ -909,13 +853,13 @@ namespace Flagship.Decision.Tests
                 PollingInterval = TimeSpan.FromSeconds(0),
             };
 
-            HttpResponseMessage httpResponse = new HttpResponseMessage
+            HttpResponseMessage httpResponse = new()
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(GetBucketingRealloc(), Encoding.UTF8, "application/json"),
             };
 
-            HttpResponseMessage httpResponse2 = new HttpResponseMessage
+            HttpResponseMessage httpResponse2 = new()
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(GetBucketingRemovedVariation2(), Encoding.UTF8, "application/json"),
@@ -925,7 +869,7 @@ namespace Flagship.Decision.Tests
 
             var url = string.Format(Constants.BUCKETING_API_URL, config.EnvId);
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            Mock<HttpMessageHandler> mockHandler = new();
 
             mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
                  "SendAsync",
@@ -937,8 +881,6 @@ namespace Flagship.Decision.Tests
 
             var murmurHash = Murmur.MurmurHash.Create32();
             var decisionManager = new BucketingManager(config, httpClient, murmurHash);
-
-            var decisionManagerPrivate = new PrivateObject(decisionManager);
 
             var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
             var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();

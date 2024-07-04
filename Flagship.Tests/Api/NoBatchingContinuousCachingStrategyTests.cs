@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using Flagship.Config;
 using System.Collections.Concurrent;
+using Flagship.Model;
 
 namespace Flagship.Api.Tests
 {
@@ -39,31 +40,29 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var eventHitMock = new Mock<Event>([EventCategory.ACTION_TRACKING, "click"])
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
+
+            var eventHit = new Event(EventCategory.ACTION_TRACKING, "click")
             {
-                CallBase = true,
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
-            
-            eventHitMock.SetupProperty(x=> x.CurrentDateTime, new DateTime(2022, 1, 1));
-
-            var eventHit = eventHitMock.Object;
-            eventHit.CreatedAt = new DateTime(2022, 1, 1);
-            eventHit.VisitorId = visitorId;
-            eventHit.Config = config;
-
-
-            
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
-
+                
                 var postDataString = JsonConvert.SerializeObject(eventHit.ToApiKeys());
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == Constants.HIT_EVENT_URL;
+                && x.RequestUri?.ToString() == Constants.HIT_EVENT_URL;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -117,20 +116,18 @@ namespace Flagship.Api.Tests
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
             var visitorId = "visitorId";
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
-            var pageMock = new Mock<Page>("http://localhost")
+            var page = new Page("http://localhost")
             {
-                CallBase = true,
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                CreatedAt = now,
+                Config = config,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
-            
-            pageMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
-
-            var page = pageMock.Object;
-            page.CreatedAt = new DateTime(2022, 1, 1);
-            page.VisitorId = visitorId;
-            page.Config = config;
-
-
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
@@ -139,9 +136,9 @@ namespace Flagship.Api.Tests
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == Constants.HIT_EVENT_URL;
+                && x.RequestUri?.ToString() == Constants.HIT_EVENT_URL;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -402,17 +399,18 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var activateMock = new Mock<Activate>("variationGroupId", "variationId")
-            {
-                CallBase = true,
-            };
-            
-            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
-            var activate = activateMock.Object;
-            activate.CreatedAt = new DateTime(2022, 1, 1);
-            activate.VisitorId = visitorId;
-            activate.Config = config;
+            var activate = new Activate("variationGroupId", "variationId")
+            {
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
+            };
 
             var activateBatch = new ActivateBatch([activate], config);
 
@@ -428,10 +426,10 @@ namespace Flagship.Api.Tests
                 headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
 
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                && x.RequestUri?.ToString() == url;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -445,7 +443,7 @@ namespace Flagship.Api.Tests
             var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
             var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
-            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>([config, httpClient, hitsPoolQueue, activatePoolQueue])
             {
                 CallBase = true,
             };
@@ -485,19 +483,20 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var activateMock = new Mock<Activate>("variationGroupId", "variationId")
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
+
+            var activate = new Activate("variationGroupId", "variationId")
             {
-                CallBase = true,
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
-            
-            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
 
-            var activate = activateMock.Object;
-            activate.CreatedAt = new DateTime(2022, 1, 1);
-            activate.VisitorId = visitorId;
-            activate.Config = config;
-
-            var activateBatch = new ActivateBatch(new List<Activate>() { activate }, config);
+            var activateBatch = new ActivateBatch([activate], config);
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
@@ -511,10 +510,10 @@ namespace Flagship.Api.Tests
                 headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
 
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                && x.RequestUri?.ToString() == url;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -569,46 +568,34 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var activateMock = new Mock<Activate>("variationGroupId", "variationId")
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
+
+            var activate = new Activate("variationGroupId", "variationId")
             {
-                CallBase = true,
+                VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
-            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
-
-            var activate = activateMock.Object;
-            activate.CreatedAt = new DateTime(2022, 1, 1);
-            activate.VisitorId = visitorId;
-            activate.Config = config;
-            activate.Key = $"{visitorId}:{Guid.NewGuid()}";
-
-            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
-
-            var activate2Mock = new Mock<Activate>("variationGroupId-2", "variationId-2")
+            var activate2 = new Activate("variationGroupId-2", "variationId-2")
             {
-                CallBase = true,
-            };
-            
-            activate2Mock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
-
-            var activate2 = activate2Mock.Object;
-            activate2.CreatedAt = new DateTime(2022, 1, 1);
-            activate2.VisitorId = visitorId;
-            activate2.Config = config;
-            activate2.Key = $"{visitorId}:{Guid.NewGuid()}";
-
-            var activate3Mock = new Mock<Activate>("variationGroupId-3", "variationId-3")
-            {
-                CallBase = true,
+                CreatedAt = now,
+                VisitorId = visitorId,
+                Config = config,
+                Key = $"{visitorId}:{Guid.NewGuid()}"
             };
 
-            activate3Mock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
-
-            var activate3 = activate3Mock.Object;
-            activate3.CreatedAt = new DateTime(2022, 1, 1);
-            activate3.VisitorId = visitorId;
-            activate3.Config = config;
-            activate3.Key = $"{visitorId}:{Guid.NewGuid()}";
+            var activate3 = new Activate("variationGroupId-3", "variationId-3")
+            {
+                CreatedAt = now,
+                VisitorId = visitorId,
+                Config = config,
+                Key = $"{visitorId}:{Guid.NewGuid()}"
+            };
 
             var activateList = new List<Activate>()
             {
@@ -631,14 +618,14 @@ namespace Flagship.Api.Tests
 
                 var url = Constants.BASE_API_URL + BatchingCachingStrategyAbstract.URL_ACTIVATE;
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
                 return result.Contains(activate.VariationId) && 
                 result.Contains(activate.VariationGroupId) && 
                 result.Contains(activate2.VariationId) && 
                 result.Contains(activate2.VariationGroupId) && 
                 result.Contains(activate3.VariationId) && 
                 result.Contains(activate3.VariationGroupId) && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                && x.RequestUri?.ToString() == url;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(

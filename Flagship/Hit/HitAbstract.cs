@@ -1,5 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.Enums;
+using Flagship.Model;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -54,11 +55,14 @@ namespace Flagship.Hit
         public HitAbstract(HitType type)
         {
             Type = type;
+            DateTimeProvider = new DateTimeProvider();
             CreatedAt = CurrentDateTime;
             DS = Constants.SDK_APP;
         }
 
-        internal virtual DateTime CurrentDateTime { get => DateTime.Now; }
+        internal IDateTimeProvider DateTimeProvider { get; set; }
+
+        internal virtual DateTime CurrentDateTime { get => DateTimeProvider.Now; }
 
         internal virtual IDictionary<string, object> ToApiKeys()
         {

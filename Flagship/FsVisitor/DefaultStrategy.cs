@@ -321,7 +321,7 @@ namespace Flagship.FsVisitor
             const string functionName = "VisitorExposed";
             if (flag == null)
             {
-                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, key, Visitor.VisitorId), functionName);
+                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, Visitor.VisitorId, key), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_FLAG_NOT_FOUND, key, defaultValue, null);
                 return;
             }
@@ -335,7 +335,7 @@ namespace Flagship.FsVisitor
 
             if (flag.Value != null && defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogError(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, key, Visitor.VisitorId), functionName);
+                Log.LogWarning(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, Visitor.VisitorId, key), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING, key, defaultValue, null);
             }
 
@@ -348,7 +348,7 @@ namespace Flagship.FsVisitor
 
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, key, Visitor.VisitorId, defaultValue), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_FLAG_NOT_FOUND, key, defaultValue, visitorExposed);
 
                 return defaultValue;
@@ -366,18 +366,18 @@ namespace Flagship.FsVisitor
 
             if (defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, key, Visitor.VisitorId, defaultValue), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING, key, defaultValue, visitorExposed);
 
                 return defaultValue;
             }
 
-            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, key, Visitor.VisitorId, flag.Value), functionName);
+            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, Visitor.VisitorId, key,  flag.Value), functionName);
 
             return (T)flag.Value;
         }
 
-        protected void SendFlagMetadataTroubleshooting(string key)
+        virtual protected void SendFlagMetadataTroubleshooting(string key)
         {
             var troubleshootingHit = new Troubleshooting()
             {
@@ -401,7 +401,7 @@ namespace Flagship.FsVisitor
             const string functionName = "flag.metadata";
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_CAST_ERROR, key), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, Visitor.VisitorId,  key), functionName);
 
                 SendFlagMetadataTroubleshooting(key);
 

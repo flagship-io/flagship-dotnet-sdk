@@ -12,6 +12,7 @@ using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json.Linq;
 using Flagship.Hit;
+using Flagship.Tests.Helpers;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -60,11 +61,13 @@ namespace Flagship.FsVisitor.Tests
 
             VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
 
-            var privateNoConsentStrategy = new PrivateObject(panicStrategy);
 
-            ICollection<Campaign> compaigns = (ICollection<Campaign>)privateNoConsentStrategy.Invoke("FetchVisitorCacheCampaigns", visitorDelegate);
 
-            Assert.AreEqual(compaigns.Count, 0);
+            var FetchVisitorCacheCampaigns = TestHelpers.GetPrivateMethod(panicStrategy, "FetchVisitorCacheCampaigns");
+
+            var campaigns = (ICollection<Campaign>?)FetchVisitorCacheCampaigns?.Invoke(panicStrategy, []);
+
+            Assert.AreEqual(campaigns?.Count, 0);
         }
 
         [TestMethod()]
@@ -128,7 +131,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagMetadataTest()
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
-            var value = panicStrategy.GetFlagMetadata(null, "key", false);
+            var value = panicStrategy.GetFlagMetadata( "key", null);
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(value));
             fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.metadata", FSSdkStatus.SDK_PANIC), "Flag.metadata"), Times.Once());
         }
@@ -147,7 +150,7 @@ namespace Flagship.FsVisitor.Tests
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
             var trackingManager = trackingManagerMock.Object;
 
-            var decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
+            var decisionManagerMock = new Mock<Decision.DecisionManager>([null, null]);
 
             var decisionManager = decisionManagerMock.Object;
             decisionManager.TrackingManager = trackingManager;

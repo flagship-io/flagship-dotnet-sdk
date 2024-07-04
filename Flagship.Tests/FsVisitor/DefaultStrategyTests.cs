@@ -407,7 +407,7 @@ namespace Flagship.FsVisitor.Tests
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
-            var resultatMetadata = defaultStrategy.GetFlagMetadata(metadata, "key", false);
+            var resultatMetadata = defaultStrategy.GetFlagMetadata("key", null);
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultatMetadata));
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_CAST_ERROR, "key"), functionName), Times.Once());
@@ -421,7 +421,7 @@ namespace Flagship.FsVisitor.Tests
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
-            var resultatMetadata = defaultStrategy.GetFlagMetadata(metadata, "key", true);
+            var resultatMetadata = defaultStrategy.GetFlagMetadata("key", null);
 
             Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(resultatMetadata));
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_CAST_ERROR, "key"), functionName), Times.Never());
@@ -641,7 +641,7 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.LookupVisitor();
 
-            fsLogManagerMock.Verify(x => x.Info(string.Format(VisitorStrategyAbstract.VISITOR_ID_MISMATCH_ERROR, "any", visitorId), "LookupVisitor"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(StrategyAbstract.VISITOR_ID_MISMATCH_ERROR, "any", visitorId), "LookupVisitor"), Times.Once());
 
             Assert.IsNull(visitorDelegate.VisitorCache);
 
@@ -680,7 +680,7 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.LookupVisitor();
 
-            fsLogManagerMock.Verify(x => x.Error(VisitorStrategyAbstract.LOOKUP_VISITOR_JSON_OBJECT_ERROR, "LookupVisitor"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(StrategyAbstract.LOOKUP_VISITOR_JSON_OBJECT_ERROR, "LookupVisitor"), Times.Once());
 
             visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult<JObject>(null));
 

@@ -83,7 +83,7 @@ namespace Flagship.Enums
 
         public const string USER_EXPOSED_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has been exposed despite having a different type compared to the default value";
 
-        public const string GET_METADATA_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, an empty metadata object is returned";
+        public const string GET_METADATA_NO_FLAG_FOUND = "For the visitor `{0}`, no flags were found with the key `{1}`, an empty metadata object is returned";
 
         public const string HIT_NOT_NULL = "A hit must not be null";
 

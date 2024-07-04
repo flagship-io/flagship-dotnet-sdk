@@ -11,6 +11,7 @@ using Flagship.Logger;
 using Newtonsoft.Json.Linq;
 using Flagship.Model;
 using Flagship.Hit;
+using Flagship.Tests.Helpers;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -45,26 +46,25 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void NoConsentStrategyTest()
         {
-            var noConsentStategy = new NoConsentStrategy(visitorDelegate);
+            var noConsentStrategy = new NoConsentStrategy(visitorDelegate);
 
             var VisitorCacheImplementation = new Mock<Flagship.Cache.IVisitorCacheImplementation>();
-            var HitCaheImplementation = new Mock<Cache.IHitCacheImplementation>();
+            var HitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
 
             config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
-            config.HitCacheImplementation = HitCaheImplementation.Object;
+            config.HitCacheImplementation = HitCacheImplementation.Object;
 
 
-            noConsentStategy.CacheVisitorAsync();
-            noConsentStategy.LookupVisitor();
+            noConsentStrategy.CacheVisitorAsync();
+            noConsentStrategy.LookupVisitor();
 
             VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
 
+            var FetchVisitorCacheCampaigns = TestHelpers.GetPrivateMethod(noConsentStrategy, "FetchVisitorCacheCampaigns");
 
-            var privateNoConsentStrategy = new PrivateObject(noConsentStategy);
+            var campaigns = (ICollection<Campaign>?)FetchVisitorCacheCampaigns?.Invoke(noConsentStrategy, []);
 
-            ICollection<Campaign> compaigns = (ICollection<Campaign>)privateNoConsentStrategy.Invoke("FetchVisitorCacheCampaigns", visitorDelegate);
-
-            Assert.AreEqual(compaigns.Count, 0);
+            Assert.AreEqual(campaigns?.Count, 0);
 
         }
 
@@ -100,9 +100,9 @@ namespace Flagship.FsVisitor.Tests
             var visitorDelegate = visitorDelegateMock.Object;
 
 
-            var noConsentStategy = new NoConsentStrategy(visitorDelegate);
+            var noConsentStrategy = new NoConsentStrategy(visitorDelegate);
 
-            await noConsentStategy.SendHit(new Flagship.Hit.Screen("Home")).ConfigureAwait(false);
+            await noConsentStrategy.SendHit(new Flagship.Hit.Screen("Home")).ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, "SendHit", visitorDelegate.VisitorId), "SendHit"), Times.Once());
         }

@@ -232,8 +232,7 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
 
             var batch = new Batch
@@ -296,7 +295,7 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 20)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod()]
@@ -319,8 +318,7 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
 
             var batch = new Batch
@@ -387,7 +385,7 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 124)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod()]
@@ -409,8 +407,7 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
             
             var batch = new Batch
             {
@@ -478,7 +475,7 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Any(z => z.Contains(visitorId)) && y.Length == 2)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod()]
@@ -501,8 +498,7 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
 
             var httpClient = new HttpClient(mockHandler.Object);
@@ -537,7 +533,7 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.SendBatch(CacheTriggeredBy.BatchLength), Times.Exactly(4));
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod()]
@@ -560,8 +556,7 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
 
             var batch = new Batch
@@ -621,7 +616,7 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item=> item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod()]
@@ -635,8 +630,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -785,8 +779,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -896,8 +889,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1105,8 +1097,7 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             var hits = new ConcurrentDictionary<string, HitAbstract>() {
                 [$"{visitorId}:{Guid.NewGuid()}"]= new Page("http://localhost") 
@@ -1154,7 +1145,7 @@ namespace Flagship.Api.Tests
 
             hitCacheImplementation.Verify(x => x.CacheHit(It.Is<JObject>(y => y.ToString() == data.ToString())), Times.Once());
 
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod]
@@ -1183,8 +1174,7 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             var hits = new ConcurrentDictionary<string, Activate>();
             hits.TryAdd($"{visitorId}:{Guid.NewGuid()}", new Activate("variationGroupId", "variationId"));
@@ -1218,7 +1208,7 @@ namespace Flagship.Api.Tests
 
             hitCacheImplementation.Verify(x => x.CacheHit(It.Is<JObject>(y => y.ToString() == data.ToString())), Times.Once());
 
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod]
@@ -1242,8 +1232,7 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             var hits = new ConcurrentDictionary<string, HitAbstract>() {
                 [$"{visitorId}:{Guid.NewGuid()}"] = new Page("http://localhost")
@@ -1282,7 +1271,7 @@ namespace Flagship.Api.Tests
 
             fsLogManagerMock.Verify(x => x.Error(exception.Message, BatchingCachingStrategyAbstract.PROCESS_CACHE_HIT), Times.Once());
 
-            shimeContext.Dispose();
+            
         }
 
         [TestMethod]
@@ -1451,8 +1440,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1500,8 +1488,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1601,8 +1588,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1682,8 +1668,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1754,8 +1739,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1803,8 +1787,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1888,8 +1871,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
@@ -1960,8 +1942,7 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+
 
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {

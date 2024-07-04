@@ -100,7 +100,7 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagMetadataTest()
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
-            var value = notReadyStategy.GetFlagMetadata(null,"key", false);
+            var value = notReadyStategy.GetFlagMetadata("key", null);
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(value));
 

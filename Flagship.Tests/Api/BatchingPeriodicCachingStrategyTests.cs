@@ -932,7 +932,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
             
             httpResponse.Dispose();
-            shimeContext.Dispose();
         }
     }
 }

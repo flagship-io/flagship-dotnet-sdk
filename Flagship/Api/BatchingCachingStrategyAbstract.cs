@@ -224,6 +224,7 @@ namespace Flagship.Api
 
             if (!batch.Hits.Any())
             {
+                await FlushHitsAsync(hitKeysToRemove.ToArray());
                 return;
             }
 

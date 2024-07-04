@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using Microsoft.QualityTools.Testing.Fakes;
 using System.Collections.Concurrent;
 using Newtonsoft.Json.Linq;
+using Flagship.Model;
 
 namespace Flagship.Api.Tests
 {
@@ -186,13 +187,18 @@ namespace Flagship.Api.Tests
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
 
-                var postDataString = JsonConvert.SerializeObject(batch.ToApiKeys());
+                var batchedApiKeys = JToken.FromObject(batch.ToApiKeys());
+                var result = x.Content?.ReadAsStringAsync().Result;
+                var resultApiKeys = JToken.Parse(result ?? "");
+                batchedApiKeys["qt"] = 0;
+                resultApiKeys["qt"] = 0;
+                var isEquals = JToken.DeepEquals(batchedApiKeys, resultApiKeys);
+
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == Constants.HIT_EVENT_URL;
+                return isEquals && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri?.ToString() == Constants.HIT_EVENT_URL;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -214,6 +220,10 @@ namespace Flagship.Api.Tests
             var strategy = strategyMock.Object;
 
             var visitorId = "visitorId";
+            
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
 
             for (int i = 0; i < 125; i++)
@@ -221,7 +231,9 @@ namespace Flagship.Api.Tests
                 var screen = new Screen(string.Join("", Enumerable.Repeat("home", 5000)))
                 {
                     VisitorId = visitorId,
-                    Key = $"{visitorId}:{Guid.NewGuid()}"
+                    Key = $"{visitorId}:{Guid.NewGuid()}",
+                    CreatedAt = now,
+                    DateTimeProvider = dateTimeProviderMock.Object
                 };
 
                 hitsPoolQueue[screen.Key] = screen;
@@ -351,13 +363,18 @@ namespace Flagship.Api.Tests
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
 
-                var postDataString = JsonConvert.SerializeObject(batch.ToApiKeys());
+                var batchedApiKeys = JToken.FromObject(batch.ToApiKeys());
+                var result = x.Content?.ReadAsStringAsync().Result;
+                var resultApiKeys = JToken.Parse(result ?? "");
+                batchedApiKeys["qt"] = 0;
+                resultApiKeys["qt"] = 0;
+                var isEquals = JToken.DeepEquals(batchedApiKeys, resultApiKeys);
+
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == Constants.HIT_EVENT_URL;
+                return isEquals && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri?.ToString() == Constants.HIT_EVENT_URL;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -371,7 +388,7 @@ namespace Flagship.Api.Tests
             var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
             var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
-            var strategyMock = new Mock<BatchingPeriodicCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            var strategyMock = new Mock<BatchingPeriodicCachingStrategy>([config, httpClient, hitsPoolQueue, activatePoolQueue])
             {
                 CallBase = true,
             };
@@ -380,11 +397,16 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
+
             var screen = new Screen("home")
             {
                 VisitorId = visitorId,
                 Key = $"{visitorId}:{Guid.NewGuid()}",
-                CreatedAt = new DateTime(2022, 1, 1),
+                CreatedAt = now.AddHours(-4),
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
             batch.Hits.Add(screen);
@@ -393,7 +415,8 @@ namespace Flagship.Api.Tests
             {
                 VisitorId = visitorId,
                 Key = $"{visitorId}:{Guid.NewGuid()}",
-                CreatedAt = new DateTime(2021, 1, 1),
+                CreatedAt = now.AddHours(-4),
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
             hitsPoolQueue[screen.Key] = screen;

@@ -263,10 +263,12 @@ namespace Flagship.Api
 
             if (!batch.Hits.Any())
             {
+                await FlushAllHitsAsync();
                 if (hasActivateHit)
                 {
                     await CacheHitAsync(ActivatePoolQueue);
                 }
+                await CacheHitAsync(HitsPoolQueue);
                 return;
             }
 

@@ -9,6 +9,7 @@ using Moq;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using Moq.Protected;
+using Flagship.FsFlag;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -81,53 +82,11 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest()
         {
-            var flag = new FsFlag.Flag<string>("key", visitorDelegateMock.Object, "string");
-            visitorDelegateMock.Setup(x => x.GetFlag("key", "string")).Returns(flag);
-            var resultFlag = Visitor.GetFlag("key", "string");
+            var flag = new Flag("key", visitorDelegateMock.Object);
+            visitorDelegateMock.Setup(x => x.GetFlag("key")).Returns(flag);
+            var resultFlag = Visitor.GetFlag("key");
             Assert.AreEqual(flag, resultFlag);
-            visitorDelegateMock.Verify(x => x.GetFlag("key", "string"), Times.Once());
-        }
-
-        [TestMethod()]
-        public void GetFlagTest1()
-        {
-            var flag = new FsFlag.Flag<long>("key", visitorDelegateMock.Object, 2);
-            visitorDelegateMock.Setup(x => x.GetFlag("key", 2)).Returns(flag);
-            var resultFlag = Visitor.GetFlag("key", 2);
-            Assert.AreEqual(flag, resultFlag);
-            visitorDelegateMock.Verify(x => x.GetFlag("key", 2), Times.Once());
-        }
-
-        [TestMethod()]
-        public void GetFlagTest2()
-        {
-            var flag = new FsFlag.Flag<bool>("key", visitorDelegateMock.Object, true);
-            visitorDelegateMock.Setup(x => x.GetFlag("key", true)).Returns(flag);
-            var resultFlag = Visitor.GetFlag("key", true);
-            Assert.AreEqual(flag, resultFlag);
-            visitorDelegateMock.Verify(x => x.GetFlag("key", true), Times.Once());
-        }
-
-        [TestMethod()]
-        public void GetFlagTest3()
-        {
-            var defaultValue = new JArray(new object[] { "a", "b" });
-            var flag = new FsFlag.Flag<JArray>("key", visitorDelegateMock.Object, defaultValue);
-            visitorDelegateMock.Setup(x => x.GetFlag("key", defaultValue)).Returns(flag);
-            var resultFlag = Visitor.GetFlag("key", defaultValue);
-            Assert.AreEqual(flag, resultFlag);
-            visitorDelegateMock.Verify(x => x.GetFlag("key", defaultValue), Times.Once());
-        }
-
-        [TestMethod()]
-        public void GetFlagTest4()
-        {
-            var defaultValue = new JObject();
-            var flag = new FsFlag.Flag<JObject>("key", visitorDelegateMock.Object, defaultValue);
-            visitorDelegateMock.Setup(x => x.GetFlag("key", defaultValue)).Returns(flag);
-            var resultFlag = Visitor.GetFlag("key", defaultValue);
-            Assert.AreEqual(flag, resultFlag);
-            visitorDelegateMock.Verify(x => x.GetFlag("key", defaultValue), Times.Once());
+            visitorDelegateMock.Verify(x => x.GetFlag("key"), Times.Once());
         }
 
         [TestMethod()]

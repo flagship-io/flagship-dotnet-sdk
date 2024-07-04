@@ -1,23 +1,14 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Flagship.Api;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Flagship.Logger;
 using Moq;
 using Flagship.Hit;
-using System.Net.Http;
-using System.Threading;
 using Moq.Protected;
 using Flagship.Enums;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
-using Microsoft.QualityTools.Testing.Fakes;
 using Flagship.Config;
 using System.Collections.Concurrent;
-using Newtonsoft.Json.Linq;
 
 namespace Flagship.Api.Tests
 {
@@ -36,25 +27,32 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            HttpResponseMessage httpResponse = new HttpResponseMessage
+            HttpResponseMessage httpResponse = new()
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
                 Content = new StringContent("", Encoding.UTF8, "application/json")
             };
 
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            Mock<HttpMessageHandler> mockHandler = new();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
             var visitorId = "visitorId";
 
-            var eventHit = new Event( EventCategory.ACTION_TRACKING, "click")
+            var eventHitMock = new Mock<Event>([EventCategory.ACTION_TRACKING, "click"])
             {
-                VisitorId = visitorId,
-                Config = config
+                CallBase = true,
             };
+            
+            eventHitMock.SetupProperty(x=> x.CurrentDateTime, new DateTime(2022, 1, 1));
+
+            var eventHit = eventHitMock.Object;
+            eventHit.CreatedAt = new DateTime(2022, 1, 1);
+            eventHit.VisitorId = visitorId;
+            eventHit.Config = config;
+
+
+            
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
@@ -79,7 +77,7 @@ namespace Flagship.Api.Tests
             var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
             var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
-            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>([config, httpClient, hitsPoolQueue, activatePoolQueue])
             {
                 CallBase = true,
             };
@@ -95,7 +93,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
 
         }
 
@@ -119,16 +116,21 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
-
             var visitorId = "visitorId";
 
-            var page = new Page("http://localhost")
+            var pageMock = new Mock<Page>("http://localhost")
             {
-                VisitorId = visitorId,
-                Config = config
+                CallBase = true,
             };
+            
+            pageMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
+
+            var page = pageMock.Object;
+            page.CreatedAt = new DateTime(2022, 1, 1);
+            page.VisitorId = visitorId;
+            page.Config = config;
+
+
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
@@ -170,7 +172,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
 
         }
 
@@ -397,20 +398,23 @@ namespace Flagship.Api.Tests
                 Content = new StringContent("", Encoding.UTF8, "application/json")
             };
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
-
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+            Mock<HttpMessageHandler> mockHandler = new();
 
             var visitorId = "visitorId";
 
-            var activate = new Activate("variationGroupId", "variationId")
+            var activateMock = new Mock<Activate>("variationGroupId", "variationId")
             {
-                VisitorId = visitorId,
-                Config = config
+                CallBase = true,
             };
+            
+            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
 
-            var activateBatch = new ActivateBatch(new List<Activate>() { activate }, config);
+            var activate = activateMock.Object;
+            activate.CreatedAt = new DateTime(2022, 1, 1);
+            activate.VisitorId = visitorId;
+            activate.Config = config;
+
+            var activateBatch = new ActivateBatch([activate], config);
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
@@ -457,7 +461,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
         }
 
 
@@ -480,16 +483,19 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
-
             var visitorId = "visitorId";
 
-            var activate = new Activate("variationGroupId", "variationId")
+            var activateMock = new Mock<Activate>("variationGroupId", "variationId")
             {
-                VisitorId = visitorId,
-                Config = config
+                CallBase = true,
             };
+            
+            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
+
+            var activate = activateMock.Object;
+            activate.CreatedAt = new DateTime(2022, 1, 1);
+            activate.VisitorId = visitorId;
+            activate.Config = config;
 
             var activateBatch = new ActivateBatch(new List<Activate>() { activate }, config);
 
@@ -539,7 +545,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
         }
 
 
@@ -554,9 +559,6 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
-
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
@@ -567,26 +569,46 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
-            var activate = new Activate("variationGroupId", "variationId")
+            var activateMock = new Mock<Activate>("variationGroupId", "variationId")
             {
-                VisitorId = visitorId,
-                Config = config,
-                Key = $"{visitorId}:{Guid.NewGuid()}"
+                CallBase = true,
             };
 
-            var activate2 = new Activate("variationGroupId-2", "variationId-2")
+            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
+
+            var activate = activateMock.Object;
+            activate.CreatedAt = new DateTime(2022, 1, 1);
+            activate.VisitorId = visitorId;
+            activate.Config = config;
+            activate.Key = $"{visitorId}:{Guid.NewGuid()}";
+
+            activateMock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
+
+            var activate2Mock = new Mock<Activate>("variationGroupId-2", "variationId-2")
             {
-                VisitorId = visitorId,
-                Config = config,
-                Key = $"{visitorId}:{Guid.NewGuid()}"
+                CallBase = true,
+            };
+            
+            activate2Mock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
+
+            var activate2 = activate2Mock.Object;
+            activate2.CreatedAt = new DateTime(2022, 1, 1);
+            activate2.VisitorId = visitorId;
+            activate2.Config = config;
+            activate2.Key = $"{visitorId}:{Guid.NewGuid()}";
+
+            var activate3Mock = new Mock<Activate>("variationGroupId-3", "variationId-3")
+            {
+                CallBase = true,
             };
 
-            var activate3 = new Activate("variationGroupId-3", "variationId-3")
-            {
-                VisitorId = visitorId,
-                Config = config,
-                Key = $"{visitorId}:{Guid.NewGuid()}"
-            };
+            activate3Mock.SetupProperty(x => x.CurrentDateTime, new DateTime(2022, 1, 1));
+
+            var activate3 = activate3Mock.Object;
+            activate3.CreatedAt = new DateTime(2022, 1, 1);
+            activate3.VisitorId = visitorId;
+            activate3.Config = config;
+            activate3.Key = $"{visitorId}:{Guid.NewGuid()}";
 
             var activateList = new List<Activate>()
             {

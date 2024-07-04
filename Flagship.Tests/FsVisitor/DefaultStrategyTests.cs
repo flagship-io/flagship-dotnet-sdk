@@ -16,6 +16,8 @@ using Flagship.Model;
 using System.Collections.ObjectModel;
 using Flagship.Hit;
 using Flagship.Config;
+using Moq.Protected;
+using Flagship.FsFlag;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -42,7 +44,7 @@ namespace Flagship.FsVisitor.Tests
             var trackingManager = trackingManagerMock.Object;
 
             decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>(new object[] { null, null });
-            
+
             var decisionManager = decisionManagerMock.Object;
             decisionManager.TrackingManager = trackingManager;
 
@@ -56,13 +58,6 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
 
         }
-
-        [TestMethod()]
-        public void DefaultStrategyTest()
-        {
-
-        }
-
 
         [TestMethod()]
         public void UpdateContexTest()
@@ -80,7 +75,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(visitorDelegate.Context.Count, 6);
             Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Status, FSFetchStatus.FETCH_REQUIRED);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Reason,  FSFetchReasons.UPDATE_CONTEXT);
+            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Reason, FSFetchReasons.UPDATE_CONTEXT);
 
             var newContext2 = new Dictionary<string, object>()
             {
@@ -190,9 +185,9 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
-        async public Task FetchFlagsPanicModeTest() 
+        async public Task FetchFlagsPanicModeTest()
         {
-            decisionManagerMock.SetupGet(x=> x.IsPanic).Returns(true);
+            decisionManagerMock.SetupGet(x => x.IsPanic).Returns(true);
             decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
                 .Returns(Task.FromResult(CampaignsData.DecisionResponse().Campaigns));
 
@@ -296,39 +291,140 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitorDelegate.Flags.Count, 0);
         }
 
+
         [TestMethod()]
         public async Task VisitorExposedTest()
         {
+            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+
+            var defaultStrategy = defaultStrategyMock.Object;
+
+            var flagDto = CampaignsData.GetFlag()[0];
+
+            defaultStrategyMock.Protected().Setup("SendActivate", [flagDto, 1]).Verifiable();
+
+            var defaultValueString = "defaultValueString";
+
+            await defaultStrategy.VisitorExposed(flagDto.Key, defaultValueString, flagDto, true).ConfigureAwait(false);
+
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, defaultValueString]);
+
+            fsLogManagerMock.Verify(x => x.Warning(It.IsAny<string>(), It.IsAny<string>()), Times.Never());
+
+            defaultStrategyMock.Verify(x => x.SendTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
+
+            //     trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Exactly(2));
+
+            //    defaultStrategyMock.Protected().Setup("SendActivate", [flagDto, "defaultValueString"]).Verifiable();
+
+            //     await defaultStrategy.VisitorExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
+
+            //     var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
+
+            //     trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+            //         y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)), Times.Once());
+
+            //     var flagDtoValueNull = CampaignsData.GetFlag()[1];
+
+            //     await defaultStrategy.VisitorExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
+
+            //     trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
+            //         y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)
+            //         ), Times.Once());
+
+        }
+
+        [TestMethod()]
+        //<summary>
+        //Test visitor exposed with flag null
+        //</summary>
+        public async Task VisitorExposed2Test()
+        {
             const string functionName = "VisitorExposed";
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+
+            var defaultStrategy = defaultStrategyMock.Object;
 
             var key = "key1";
             await defaultStrategy.VisitorExposed(key, "defaultValue", null).ConfigureAwait(false);
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_FLAG_ERROR, key), functionName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_FLAG_ERROR, visitorDelegate.VisitorId, key), functionName), Times.Once());
+
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Never(), [ItExpr.IsAny<FlagDTO>(), ItExpr.IsAny<object>()]);
+
+            defaultStrategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(
+                y => y.Type == HitType.TROUBLESHOOTING && y.Label == DiagnosticLabel.VISITOR_EXPOSED_FLAG_NOT_FOUND
+            )),
+            Times.Once());
+        }
+
+        [TestMethod()]
+        //<summary>
+        //Test visitor exposed without calling getFlagValue
+        //</summary>
+        public async Task VisitorExposed3Test()
+        {
+            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+
+            var defaultStrategy = defaultStrategyMock.Object;
 
             var flagDto = CampaignsData.GetFlag()[0];
-            await defaultStrategy.VisitorExposed(flagDto.Key, 1, flagDto).ConfigureAwait(false);
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.USER_EXPOSED_CAST_ERROR, flagDto.Key), functionName), Times.Once());
-            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Exactly(2));
+            defaultStrategyMock.Protected().Setup("SendActivate", [flagDto, 1]).Verifiable();
 
-            await defaultStrategy.VisitorExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
+            var defaultValueString = "defaultValueString";
 
-            var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
+            await defaultStrategy.VisitorExposed(flagDto.Key, defaultValueString, flagDto, false).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
-                y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)), Times.Once());
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, defaultValueString]);
 
-            var flagDtoValueNull = CampaignsData.GetFlag()[1];
+            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED, visitorDelegate.VisitorId, flagDto.Key), "VisitorExposed"), Times.Once());
 
-            await defaultStrategy.VisitorExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
-
-            trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
-                y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)
-                ), Times.Once());
-
+            defaultStrategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(
+                y => y.Type == HitType.TROUBLESHOOTING && y.Label == DiagnosticLabel.FLAG_VALUE_NOT_CALLED
+            )),
+            Times.Once());
         }
+
+        [TestMethod()]
+        //<summary>
+        //Test visitor exposed with different flag value type
+        //</summary>
+        public async Task VisitorExposed4Test()
+        {
+            const string functionName = "VisitorExposed";
+            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+
+            var defaultStrategy = defaultStrategyMock.Object;
+
+            var flagDto = CampaignsData.GetFlag()[0];
+
+            defaultStrategyMock.Protected().Setup("SendActivate", [flagDto, 1]).Verifiable();
+
+            await defaultStrategy.VisitorExposed(flagDto.Key, 1, flagDto, true).ConfigureAwait(false);
+
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, 1]);
+
+            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.USER_EXPOSED_CAST_ERROR, visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Once());
+
+            defaultStrategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(
+                y => y.Type == HitType.TROUBLESHOOTING && y.Label == DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING
+            )),
+            Times.Once());
+        }
+
 
         [TestMethod()]
         public void GetFlagValueWithFlagNullTest()
@@ -339,7 +435,7 @@ namespace Flagship.FsVisitor.Tests
             var key = "key 1";
             var value = defaultStrategy.GetFlagValue(key, defaultValueString, null);
             Assert.AreEqual(defaultValueString, value);
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_MISSING_ERROR, key), functionName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.GET_FLAG_MISSING_ERROR, visitorDelegate.VisitorId, key, defaultValueString), functionName), Times.Once());
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Once());
         }
 
@@ -362,16 +458,25 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagValueTypeDifferent()
         {
             const string functionName = "getFlag.value";
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+            var defaultStrategy = defaultStrategyMock.Object;
             var flagDto = CampaignsData.GetFlag()[0];
+
+            defaultStrategyMock.Protected().Setup("SendActivate", [flagDto, 1]).Verifiable();
 
             var value3 = defaultStrategy.GetFlagValue(flagDto.Key, 1, flagDto);
             Assert.AreEqual(1, value3);
 
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.GET_FLAG_CAST_ERROR, flagDto.Key), functionName), Times.Once());
-            var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
-            trackingManagerMock.Verify(x => x.Add(activate), Times.Never());
-            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Once());
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, 1]);
+
+            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.GET_FLAG_CAST_ERROR, visitorDelegate.VisitorId, flagDto.Key, 1), functionName), Times.Once());
+
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING
+            && y.Label == DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING
+            )), Times.Once());
         }
 
         [TestMethod()]
@@ -394,24 +499,31 @@ namespace Flagship.FsVisitor.Tests
 
             var value = defaultStrategy.GetFlagValue(flagDto.Key, "Default", flagDto);
             Assert.AreEqual(flagDto.Value, value);
-       
+
             trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
-                y=>y.VariationGroupId== flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)
+                y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)
                 ), Times.Once());
         }
 
         [TestMethod()]
-        public void GetFlagMetadataFailedTest()
+        public void GetFlagMetadataNotFoundTest()
         {
             const string functionName = "flag.metadata";
-            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+
+            var defaultStrategy = defaultStrategyMock.Object;
 
             var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
-            var resultatMetadata = defaultStrategy.GetFlagMetadata("key", null);
+            var resultMetadata = defaultStrategy.GetFlagMetadata("key", null);
 
-            Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultatMetadata));
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_CAST_ERROR, "key"), functionName), Times.Once());
-            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y=> y.Type == HitType.TROUBLESHOOTING)), Times.Once());
+            Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultMetadata));
+
+            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, visitorDelegate.VisitorId,  "key"), functionName), Times.Once());
+
+            defaultStrategyMock.Protected().Verify("SendFlagMetadataTroubleshooting", Times.Once(), ["key"]);
         }
 
         [TestMethod()]
@@ -419,12 +531,23 @@ namespace Flagship.FsVisitor.Tests
         {
             const string functionName = "flag.metadata";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            var flagDto = CampaignsData.GetFlag()[0];
+            var metadata = new FlagMetadata(
+                flagDto.CampaignId,
+                flagDto.VariationGroupId,
+                flagDto.VariationId,
+                flagDto.IsReference,
+                flagDto.CampaignType,
+                flagDto.Slug,
+                flagDto.CampaignName,
+                flagDto.VariationGroupName,
+                flagDto.VariationName
+            );
 
-            var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
-            var resultatMetadata = defaultStrategy.GetFlagMetadata("key", null);
+            var resultMetadata = defaultStrategy.GetFlagMetadata(flagDto.Key, flagDto);
 
-            Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(resultatMetadata));
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_CAST_ERROR, "key"), functionName), Times.Never());
+            Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(resultMetadata));
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND,visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Never());
         }
 
         [TestMethod()]
@@ -624,7 +747,7 @@ namespace Flagship.FsVisitor.Tests
             }
 
 
-            var failedData = new VisitorCacheDTOV1 
+            var failedData = new VisitorCacheDTOV1
             {
                 Version = 1,
                 Data = new VisitorCacheData
@@ -748,7 +871,7 @@ namespace Flagship.FsVisitor.Tests
                     Consent = visitorDelegate.HasConsented,
                     Context = visitorDelegate.Context,
                     Campaigns = VisitorCacheCampaigns,
-                    AssignmentsHistory= variationHistory
+                    AssignmentsHistory = variationHistory
                 }
             };
 

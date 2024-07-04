@@ -877,10 +877,6 @@ namespace Flagship.Api.Tests
                 CallBase = true,
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
-
-
             var strategy = strategyMock.Object;
 
             var visitorId = "visitorId";

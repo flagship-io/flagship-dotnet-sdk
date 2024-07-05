@@ -50,7 +50,7 @@ namespace Flagship.Utils
             var sb = new StringBuilder();
             foreach (char c in jsonString)
             {
-                sb.AppendFormat("{0:x2}", Convert.ToInt32(c));
+                sb.Append(Convert.ToInt32(c).ToString("x"));
             }
             return sb.ToString();
         }

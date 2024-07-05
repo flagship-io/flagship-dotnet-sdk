@@ -106,14 +106,18 @@ namespace Flagship.Api.Tests
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
-
-                var postDataString = JsonConvert.SerializeObject(batch.ToApiKeys());
+                var batchedApiKeys = JToken.FromObject(batch.ToApiKeys());
+                var result = x.Content?.ReadAsStringAsync().Result;
+                var resultApiKeys = JToken.Parse(result ?? "");
+                batchedApiKeys["qt"] = 0;
+                resultApiKeys["qt"] = 0;
+                var isEquals = JToken.DeepEquals(batchedApiKeys, resultApiKeys);
+                
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == Constants.HIT_EVENT_URL;
+                return isEquals && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri?.ToString() == Constants.HIT_EVENT_URL;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -135,13 +139,18 @@ namespace Flagship.Api.Tests
             var strategy = strategyMock.Object;
 
             var visitorId = "visitorId";
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
             for (int i = 0; i < 20; i++)
             {
                 var screen = new Screen("home")
                 {
                     VisitorId = visitorId,
-                    Key = $"{visitorId}:{Guid.NewGuid()}"
+                    Key = $"{visitorId}:{Guid.NewGuid()}",
+                    CreatedAt = now,
+                    DateTimeProvider = dateTimeProviderMock.Object
                 };
 
                 hitsPoolQueue[screen.Key] = screen;

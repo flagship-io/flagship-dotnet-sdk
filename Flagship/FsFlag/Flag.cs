@@ -28,7 +28,7 @@ namespace Flagship.FsFlag
                     return false;
                 }
 
-                var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
+                var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
                 return flagDTO!=null && !string.IsNullOrWhiteSpace(flagDTO.CampaignId) && 
                     !string.IsNullOrWhiteSpace(flagDTO.VariationId) && 
                     !string.IsNullOrWhiteSpace(flagDTO.VariationGroupId);
@@ -44,7 +44,7 @@ namespace Flagship.FsFlag
                     return  FlagMetadata.EmptyMetadata();
                 }
 
-                var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
+                var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
 
                 return _visitorDelegateAbstract.GetFlagMetadata(_key, flagDTO);
             }
@@ -54,8 +54,13 @@ namespace Flagship.FsFlag
         {
             get
             {
-                var fetchFlagsStatus = _visitorDelegateAbstract?.FetchFlagsStatus;
-                if (fetchFlagsStatus?.Status == FSFetchStatus.PANIC)
+                if (_visitorDelegateAbstract == null || _visitorDelegateAbstract.Flags == null)
+                {
+                    return FSFlagStatus.NOT_FOUND;
+                }
+
+                var fetchFlagsStatus = _visitorDelegateAbstract.FetchFlagsStatus;
+                if (fetchFlagsStatus.Status == FSFetchStatus.PANIC)
                 {
                     return FSFlagStatus.PANIC;
                 }
@@ -65,7 +70,7 @@ namespace Flagship.FsFlag
                     return FSFlagStatus.NOT_FOUND;
                 }
 
-                if (fetchFlagsStatus?.Status == FSFetchStatus.FETCH_REQUIRED || fetchFlagsStatus?.Status == FSFetchStatus.FETCHING)
+                if (fetchFlagsStatus.Status == FSFetchStatus.FETCH_REQUIRED)
                 {
                     return FSFlagStatus.FETCH_REQUIRED;
                 }
@@ -81,7 +86,7 @@ namespace Flagship.FsFlag
                 return Utils.Helper.VoidTask();
             }
 
-            var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
+            var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
 
             return _visitorDelegateAbstract.VisitorExposed(_key, _defaultValue, flagDTO, _hasGetValueBeenCalled);
         }
@@ -97,7 +102,7 @@ namespace Flagship.FsFlag
             }
 
 
-            var flagDTO = _visitorDelegateAbstract.Flags?.FirstOrDefault(x => x.Key == _key);
+            var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
             return _visitorDelegateAbstract.GetFlagValue(_key, defaultValue, flagDTO, visitorExposed);
         }
     }

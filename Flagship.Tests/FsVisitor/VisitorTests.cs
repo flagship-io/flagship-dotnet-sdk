@@ -16,12 +16,12 @@ namespace Flagship.FsVisitor.Tests
     [TestClass()]
     public class VisitorTests
     {
-        Mock<VisitorDelegateAbstract> visitorDelegateMock;
-        Visitor Visitor;
+        readonly Mock<VisitorDelegateAbstract> visitorDelegateMock;
+        readonly Visitor Visitor;
         public VisitorTests()
         {
             var configManager = new Mock<Flagship.Config.IConfigManager>();
-            visitorDelegateMock = new Mock<VisitorDelegateAbstract>(new object[] { "visitor_id", false, new Dictionary<string, object>(), false, configManager.Object, null });
+            visitorDelegateMock = new Mock<VisitorDelegateAbstract>(["visitor_id", false, new Dictionary<string, object>(), false, configManager.Object, null]);
 
             visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
             Visitor = new Visitor(visitorDelegateMock.Object);

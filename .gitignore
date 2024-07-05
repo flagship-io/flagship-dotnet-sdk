@@ -10,3 +10,5 @@ CoverageResults.xml
 Flagship/NugetPackageRelease/Flagship.SDK.3.0.3.nupkg
 /Flagship.Tests/FakesAssemblies
 /WebApplication3
+/**/coverageReport
+/**/coverage.cobertura.xml

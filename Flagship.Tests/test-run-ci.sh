@@ -2,4 +2,4 @@
 
 set -e
 
-dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+dotnet test -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura

@@ -54,7 +54,6 @@
     </None>
     <Fakes Include="Fakes\System.fakes" />
     <Fakes Include="Fakes\mscorlib.fakes" />
-    <None Include="packages.config" />
     <None Include="test.snk" />
   </ItemGroup>
 

@@ -216,10 +216,6 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
         /// <returns></returns>
         public static VisitorBuilder NewVisitor(string visitorId, bool hasConsented)
         {
-            if (!IsReady())
-            {
-                return null;
-            }
             var instance = GetInstance();
             return VisitorBuilder.Builder(instance._configManager, visitorId, hasConsented, instance._sdkInitialData);
         }

@@ -13,11 +13,11 @@ namespace Flagship.FsFlag
 {
     public class FlagCollection : IFlagCollection
     {
-        private readonly VisitorDelegate _visitor;
+        private readonly VisitorDelegateAbstract _visitor;
         private readonly HashSet<string> _keys = new HashSet<string>();
         private readonly Dictionary<string, IFlag> _flags = new Dictionary<string, IFlag>();
 
-        internal FlagCollection(VisitorDelegate visitor = null, Dictionary<string, IFlag> flags = null)
+        internal FlagCollection(VisitorDelegateAbstract visitor = null, Dictionary<string, IFlag> flags = null)
         {
             _visitor = visitor;
             _flags = flags ?? new Dictionary<string, IFlag>();
@@ -42,7 +42,7 @@ namespace Flagship.FsFlag
         {
             if (!_flags.TryGetValue(key, out var flag))
             {
-                Log.LogWarning(_visitor?.Config, string.Format(Constants.GET_FLAG_NOT_FOUND, key), Constants.GET_FLAG);
+                Log.LogWarning(_visitor?.Config, string.Format(Constants.GET_FLAG_NOT_FOUND, _visitor?.VisitorId, key), Constants.GET_FLAG);
                 return new Flag(key, null);
             }
             return flag;
@@ -99,11 +99,13 @@ namespace Flagship.FsFlag
         public string ToJson()
         {
             var serializedData = new List<SerializedFlagMetadata>();
+
             foreach (var kvp in _flags)
             {
                 var key = kvp.Key;
                 var flag = kvp.Value;
                 var metadata = flag.Metadata;
+                var value = flag.GetValue<object>(null, false);
                 serializedData.Add(new SerializedFlagMetadata
                 {
                     Key = key,
@@ -116,7 +118,7 @@ namespace Flagship.FsFlag
                     IsReference = metadata.IsReference,
                     CampaignType = metadata.CampaignType,
                     Slug = metadata.Slug,
-                    Hex = Utils.Helper.ValueToHex(flag.GetValue<object>(null, false))
+                    Hex = Utils.Helper.ValueToHex(new Dictionary<string, object> { { "v", value } })
                 });
             }
             return JsonConvert.SerializeObject(serializedData);
@@ -124,7 +126,7 @@ namespace Flagship.FsFlag
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator(); 
+            return GetEnumerator();
         }
     }
 }

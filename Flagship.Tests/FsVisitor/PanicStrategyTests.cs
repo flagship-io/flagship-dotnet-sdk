@@ -51,10 +51,10 @@ namespace Flagship.FsVisitor.Tests
             var panicStrategy = new PanicStrategy(visitorDelegate);
 
             var VisitorCacheImplementation = new Mock<Flagship.Cache.IVisitorCacheImplementation>();
-            var HitCaheImplementation = new Mock<Cache.IHitCacheImplementation>();
+            var HitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
 
             config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
-            config.HitCacheImplementation = HitCaheImplementation.Object;
+            config.HitCacheImplementation = HitCacheImplementation.Object;
 
             panicStrategy.CacheVisitorAsync();
             panicStrategy.LookupVisitor();
@@ -65,7 +65,7 @@ namespace Flagship.FsVisitor.Tests
 
             var FetchVisitorCacheCampaigns = TestHelpers.GetPrivateMethod(panicStrategy, "FetchVisitorCacheCampaigns");
 
-            var campaigns = (ICollection<Campaign>?)FetchVisitorCacheCampaigns?.Invoke(panicStrategy, []);
+            var campaigns = (ICollection<Campaign>?)FetchVisitorCacheCampaigns?.Invoke(panicStrategy, [visitorDelegate]);
 
             Assert.AreEqual(campaigns?.Count, 0);
         }

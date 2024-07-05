@@ -213,8 +213,10 @@ namespace Flagship.FsVisitor.Tests
         {
             defaultStrategy.Setup(x => x.VisitorExposed("key", "default", null, true))
                 .Verifiable();
-            visitorDelegateMock.Object.VisitorExposed("key", "default", null);
+            visitorDelegateMock.Object.VisitorExposed("key", "default", null, true);
             defaultStrategy.Verify();
+
+            defaultStrategy.Verify(x => x.VisitorExposed("key", "default", null, true), Times.Once());
         }
 
         [TestMethod()]

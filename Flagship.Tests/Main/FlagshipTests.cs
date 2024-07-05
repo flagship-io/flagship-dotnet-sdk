@@ -9,6 +9,7 @@ using Flagship.Utils;
 using System.IO;
 using Flagship.Enums;
 using Flagship.Logger;
+using Flagship.FsVisitor;
 
 namespace Flagship.Main.Tests
 {
@@ -114,7 +115,7 @@ namespace Flagship.Main.Tests
             Fs.Start(null, null);
 
             visitorBuilder = Fs.NewVisitor("visitorId", true);
-            Assert.IsNull(visitorBuilder);
+            Assert.IsInstanceOfType<VisitorBuilder>(visitorBuilder);
 
             var envId = "envId";
             var apiKey = "apiKey";

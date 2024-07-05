@@ -32,7 +32,7 @@ namespace Flagship.FsVisitor.Tests
                 LogManager = fsLogManagerMock.Object,
             };
             trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
-            decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>(new object[] { null, null });
+            decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>([null, null]);
             var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>()
@@ -40,7 +40,7 @@ namespace Flagship.FsVisitor.Tests
                 ["key0"] = 1,
             };
 
-            visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
+            visitorDelegate = new FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
 
         }
         [TestMethod()]
@@ -62,7 +62,7 @@ namespace Flagship.FsVisitor.Tests
 
             var FetchVisitorCacheCampaigns = TestHelpers.GetPrivateMethod(noConsentStrategy, "FetchVisitorCacheCampaigns");
 
-            var campaigns = (ICollection<Campaign>?)FetchVisitorCacheCampaigns?.Invoke(noConsentStrategy, []);
+            var campaigns = (ICollection<Campaign>?)FetchVisitorCacheCampaigns?.Invoke(noConsentStrategy, [visitorDelegate]);
 
             Assert.AreEqual(campaigns?.Count, 0);
 
@@ -87,7 +87,7 @@ namespace Flagship.FsVisitor.Tests
                 LogManager = fsLogManagerMock.Object,
             };
             trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
-            decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>(new object[] { null, null });
+            decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>([null, null]);
             var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>()
@@ -121,7 +121,7 @@ namespace Flagship.FsVisitor.Tests
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
             var trackingManager = trackingManagerMock.Object;
 
-            var decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
+            var decisionManagerMock = new Mock<Decision.DecisionManager>([null, null]);
 
             var decisionManager = decisionManagerMock.Object;
             decisionManager.TrackingManager = trackingManager;

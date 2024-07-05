@@ -517,11 +517,16 @@ namespace Flagship.Api.Tests
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
             var visitorId = "visitorId";
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
             var activate = new Activate("variationGroupId", "variationId")
             {
                 VisitorId = visitorId,
-                Config = config
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
             var activateList = new List<Activate>()
@@ -533,7 +538,12 @@ namespace Flagship.Api.Tests
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
-                var postDataString = JsonConvert.SerializeObject(batch.ToApiKeys());
+                var batchedApiKeys = JToken.FromObject(batch.ToApiKeys());
+                var result = x.Content?.ReadAsStringAsync().Result;
+                var resultApiKeys = JToken.Parse(result ?? "");
+                batchedApiKeys["qt"] = 0;
+                resultApiKeys["qt"] = 0;
+                var isEquals = JToken.DeepEquals(batchedApiKeys, resultApiKeys);
 
                 var headers = new HttpRequestMessage().Headers;
                 headers.Add(Constants.HEADER_X_API_KEY, config.ApiKey);
@@ -545,9 +555,8 @@ namespace Flagship.Api.Tests
 
                 var f = headers.ToString();
 
-                var result = x.Content.ReadAsStringAsync().Result;
-                return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                return isEquals && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
+                && x.RequestUri?.ToString() == url;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(

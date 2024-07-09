@@ -33,7 +33,7 @@ namespace Flagship.FsVisitor
         virtual public string SessionId { get; set; }
         virtual public SdkInitialData SdkInitialData { get; set; }
         public static FSSdkStatus SDKStatus { get; set; }
-        public IFetchFlagsStatus FetchFlagsStatus
+        public virtual IFetchFlagsStatus FetchFlagsStatus
         {
             get => fetchFlagsStatus; 
             internal set

@@ -10,6 +10,8 @@ using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using Moq.Protected;
 using Flagship.FsFlag;
+using Flagship.Model;
+using Flagship.Delegate;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -52,6 +54,12 @@ namespace Flagship.FsVisitor.Tests
             Visitor.VisitorId = "newvisitorId";
 
             Assert.AreEqual(visitorDelegateMock.Object.VisitorId, Visitor.VisitorId);
+
+            var fetchFlagsStatus = new FetchFlagsStatus();
+
+            visitorDelegateMock.SetupGet(x=>x.FetchFlagsStatus).Returns(fetchFlagsStatus);
+
+            Assert.AreEqual(fetchFlagsStatus, Visitor.FetchFlagsStatus);
             
         }
 
@@ -164,6 +172,43 @@ namespace Flagship.FsVisitor.Tests
             visitorDelegateMock.Setup(x => x.Unauthenticate()).Verifiable();
             Visitor.Unauthenticate();
             visitorDelegateMock.Verify(x => x.Unauthenticate(), Times.Once());
+        }
+
+        [TestMethod()]
+        public void GetFlagsTest()
+        { 
+            visitorDelegateMock.Setup(x => x.GetFlags()).Verifiable();
+            Visitor.GetFlags();
+            visitorDelegateMock.Verify(x => x.GetFlags(), Times.Once());
+        }
+
+
+        [TestMethod()]
+        public void OnFetchFlagsStatusChangedTest()
+        { 
+            var configManager = new Mock<Flagship.Config.IConfigManager>();
+            var visitorDelegateMock = new Mock<VisitorDelegateAbstract>(["visitor_id", false, new Dictionary<string, object>(), false, configManager.Object, null]){
+                CallBase = true
+            };
+
+            visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
+            visitorDelegateMock.Setup(x=> x.SetConsent(It.IsAny<bool>())).Verifiable();
+
+            var Visitor = new Visitor(visitorDelegateMock.Object);
+
+            var fetchFlagsStatus = new FetchFlagsStatus();
+
+            void onFetchFlagsStatusChangedFunc(IFetchFlagsStatus status)
+            {
+                Assert.AreEqual(fetchFlagsStatus, status);
+            }
+
+            Visitor.OnFetchFlagsStatusChanged += onFetchFlagsStatusChangedFunc;
+
+            visitorDelegateMock.Object.FetchFlagsStatus = fetchFlagsStatus; 
+
+            Visitor.OnFetchFlagsStatusChanged -= onFetchFlagsStatusChangedFunc;
+
         }
     }
 }

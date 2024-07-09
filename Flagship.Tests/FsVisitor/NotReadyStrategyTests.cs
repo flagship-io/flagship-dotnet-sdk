@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Flagship.Logger;
 using Newtonsoft.Json.Linq;
 using Flagship.Hit;
+using Flagship.Model;
+using Flagship.Api;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -38,7 +40,7 @@ namespace Flagship.FsVisitor.Tests
             {
                 ["key0"] = 1,
             };
-             
+
             visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
 
         }
@@ -92,7 +94,7 @@ namespace Flagship.FsVisitor.Tests
         public async Task UserExposedTest()
         {
             var notReadyStategy = new NotReadyStrategy(visitorDelegate);
-            await notReadyStategy.VisitorExposed("key","defaultValue", null).ConfigureAwait(false);
+            await notReadyStategy.VisitorExposed("key", "defaultValue", null).ConfigureAwait(false);
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FSSdkStatus.SDK_NOT_INITIALIZED), "VisitorExposed"), Times.Once());
         }
 
@@ -121,7 +123,7 @@ namespace Flagship.FsVisitor.Tests
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
             var trackingManager = trackingManagerMock.Object;
 
-            var decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
+            var decisionManagerMock = new Mock<Decision.DecisionManager>([null, null]);
 
             var decisionManager = decisionManagerMock.Object;
             decisionManager.TrackingManager = trackingManager;
@@ -151,7 +153,45 @@ namespace Flagship.FsVisitor.Tests
 
             trackingManagerMock.Verify(x => x.AddTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
         }
+
+        [TestMethod()]
+        public void GetTroubleshootingData()
+        {
+            var config = new Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                DisableDeveloperUsageTracking = true,
+                TrackingManagerConfig = new Config.TrackingManagerConfig()
+            };
+
+            var trackingManager = new TrackingManager(config, new HttpClient());
+
+            var decisionManagerMock = new Mock<Decision.DecisionManager>([null, null]);
+
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var configManager = new Config.ConfigManager(config, decisionManager, trackingManager);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key"] = 1,
+            };
+
+            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var strategy = new NotReadyStrategy(visitorDelegate);
+
+            trackingManager.TroubleshootingData = new TroubleshootingData();
+
+            Assert.AreNotSame(trackingManager.TroubleshootingData, null);
+
+            var troubleshootingHit = strategy.GetTroubleshootingData();
+
+            Assert.AreEqual(troubleshootingHit, null);
+
+            Assert.AreEqual(trackingManager.TroubleshootingData, null);
+        }
     }
-
-
 }

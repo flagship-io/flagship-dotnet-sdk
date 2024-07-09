@@ -67,11 +67,11 @@ namespace Flagship.Tests.FsFlag
             visitorMock.Setup(x => x.GetFlagValue(flagDTO.Key, defaultValue, flagDTO, true)).Returns((string)flagDTO.Value);
             visitorMock.Setup(x => x.VisitorExposed(flagDTO.Key, defaultValue, flagDTO, true)).Returns(Task.CompletedTask);
             visitorMock.Setup(x => x.GetFlagMetadata(flagDTO.Key, It.IsAny<FlagDTO>())).Returns(metadata);
-            visitorMock.Object.FetchFlagsStatus = new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
             {
                 Status = FSFetchStatus.FETCHED,
                 Reason = FSFetchReasons.NONE
-            };
+            });
 
             var value = flag.GetValue(defaultValue);
 
@@ -83,12 +83,11 @@ namespace Flagship.Tests.FsFlag
             Assert.AreEqual(metadata, resultMeta);
             Assert.AreEqual(FSFlagStatus.FETCHED, flag.Status);
 
-
-            visitorMock.Object.FetchFlagsStatus = new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
             {
                 Status = FSFetchStatus.FETCH_REQUIRED,
                 Reason = FSFetchReasons.UPDATE_CONTEXT
-            };
+            });
 
             Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flag.Status);
 
@@ -148,6 +147,12 @@ namespace Flagship.Tests.FsFlag
             visitorMock.Verify(x => x.GetFlagValue(keyNotExists, defaultValue, null, true), Times.Once());
             visitorMock.Verify(x => x.GetFlagMetadata(It.IsAny<string>(), null), Times.Once());
             visitorMock.Verify(x => x.VisitorExposed<object>(keyNotExists, defaultValue, null, true), Times.Once());
+            
+            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
+            {
+                Status = FSFetchStatus.FETCH_REQUIRED,
+                Reason = FSFetchReasons.UPDATE_CONTEXT
+            });
 
             Assert.AreEqual(FSFlagStatus.NOT_FOUND, flag.Status);
         }
@@ -228,27 +233,27 @@ namespace Flagship.Tests.FsFlag
 
             var flag = new Flag(flagDTO.Key, visitorMock.Object);
 
-            visitorMock.Object.FetchFlagsStatus = new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
             {
                 Status = FSFetchStatus.PANIC,
                 Reason = FSFetchReasons.NONE
-            };
+            });
 
             Assert.AreEqual(FSFlagStatus.PANIC, flag.Status);
 
-            visitorMock.Object.FetchFlagsStatus = new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
             {
-                Status = FSFetchStatus.FETCHED,
+                Status = FSFetchStatus.FETCHING,
                 Reason = FSFetchReasons.NONE
-            };
+            });
 
             Assert.AreEqual(FSFlagStatus.FETCHED, flag.Status);
 
-            visitorMock.Object.FetchFlagsStatus = new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
             {
                 Status = FSFetchStatus.FETCH_REQUIRED,
                 Reason = FSFetchReasons.UPDATE_CONTEXT
-            };
+            });
 
             Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flag.Status);
 

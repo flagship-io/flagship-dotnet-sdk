@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using Flagship.Model;
 using Flagship.Hit;
 using Flagship.Tests.Helpers;
+using Flagship.Api;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -150,6 +151,45 @@ namespace Flagship.FsVisitor.Tests
             strategy.AddTroubleshootingHit(troubleshootingHit);
 
             trackingManagerMock.Verify(x => x.AddTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
+        }
+
+        [TestMethod()]
+        public void GetTroubleshootingData(){
+            var config = new Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                DisableDeveloperUsageTracking = true,
+                TrackingManagerConfig = new Config.TrackingManagerConfig()
+            };
+
+            var trackingManager = new TrackingManager(config, new HttpClient());
+
+            var decisionManagerMock = new Mock<Decision.DecisionManager>([null, null]);
+
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var configManager = new Config.ConfigManager(config, decisionManager, trackingManager);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key"] = 1,
+            };
+
+            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var strategy = new NoConsentStrategy(visitorDelegate);
+
+            trackingManager.TroubleshootingData = new TroubleshootingData();
+
+            Assert.AreNotSame(trackingManager.TroubleshootingData, null);
+
+            var troubleshootingHit = strategy.GetTroubleshootingData();
+
+            Assert.AreEqual(troubleshootingHit, null);
+
+            Assert.AreEqual(trackingManager.TroubleshootingData, null);
         }
     }
 }

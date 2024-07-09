@@ -195,5 +195,18 @@ public class FlagCollectionTests
 
         _mockVisitor.Verify(x => x.GetFlagValue<object?>(key1, null, flag1, false), Times.Once);
         _mockVisitor.Verify(x => x.GetFlagValue<object?>(key2, null, flag2, false), Times.Once);
+
+
+    }
+
+    [TestMethod]
+    public void TestIterator()
+    {
+        var flagCollection = new FlagCollection(_mockVisitor.Object, null);
+
+        foreach (var item in flagCollection)
+        {
+            Assert.IsNotNull(item);
+        }
     }
 }

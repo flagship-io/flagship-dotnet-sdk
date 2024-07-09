@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Flagship.FsVisitor;
+using Flagship.FsFlag;
 
 namespace Flagship.Config.Tests
 {
@@ -36,7 +38,20 @@ namespace Flagship.Config.Tests
             config.DisableCache = true;
             Assert.AreEqual(config.DisableCache, true);
 
+            var exposedVisitor = new ExposedVisitor("visitorId", "visitorContext", new Dictionary<string, object>());
+            var exposedFlag = new ExposedFlag("key", "value", "defaultValue", null);
+
+            void Config_VisitorExposed(IExposedVisitor visitor, IExposedFlag flag)
+            {
+                Assert.AreEqual(visitor, exposedVisitor);
+                Assert.AreEqual(flag, exposedFlag);
+            }
+
+            config.OnVisitorExposed += Config_VisitorExposed;
+
+            config.InvokeOnVisitorExposed(exposedVisitor, exposedFlag);
         }
+
 
         private void Config_StatusChange(Enums.FSSdkStatus status)
         {

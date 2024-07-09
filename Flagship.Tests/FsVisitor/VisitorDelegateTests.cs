@@ -26,7 +26,7 @@ namespace Flagship.FsVisitor.Tests
     {
         Mock<VisitorDelegate> visitorDelegateMock;
         string visitorId = "visitorId";
-        Dictionary<string,object> context = new Dictionary<string, object>()
+        Dictionary<string, object> context = new Dictionary<string, object>()
         {
             ["key"] = "value"
         };
@@ -45,10 +45,10 @@ namespace Flagship.FsVisitor.Tests
             };
 
             visitorDelegateMock = new Mock<VisitorDelegate>(new object[] { visitorId, false, context, false, configManager.Object, null });
-            visitorDelegateMock.Setup(x=> x.GetStrategy()).CallBase();
+            visitorDelegateMock.Setup(x => x.GetStrategy()).CallBase();
             defaultStrategy = new Mock<StrategyAbstract>(visitorDelegateMock.Object);
 
-            visitorDelegateMock.Setup(x=> x.GetStrategy()).Returns(defaultStrategy.Object);
+            visitorDelegateMock.Setup(x => x.GetStrategy()).Returns(defaultStrategy.Object);
             visitorDelegateMock.CallBase = true;
             visitorDelegateMock.SetupGet(x => x.Config).Returns(config);
 
@@ -59,7 +59,7 @@ namespace Flagship.FsVisitor.Tests
         public void TestStrategy()
         {
             var flagship = new Mock<Main.Fs>();
-            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string,object>(),false, configManager.Object, null);
+            var visitorDelegate = new VisitorDelegate(null, true, new Dictionary<string, object>(), false, configManager.Object, null);
             var getStrategy = TestHelpers.GetPrivateMethod(visitorDelegate, "GetStrategy");
             getStrategy?.Invoke(visitorDelegate, null);
         }
@@ -67,8 +67,8 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void VisitorDelegateTest()
         {
-            
-            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object, null );
+
+            var visitor = new VisitorDelegate(visitorId, false, context, false, configManager.Object, null);
 
             Assert.IsNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
@@ -83,8 +83,8 @@ namespace Flagship.FsVisitor.Tests
             visitor = new VisitorDelegate(visitorId, true, context, false, configManager.Object);
             Assert.IsNotNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
-            Assert.AreEqual(36,visitor.AnonymousId.Length);
-            Assert.AreEqual(Enums.FSFetchStatus.FETCH_REQUIRED , visitor.FetchFlagsStatus.Status);
+            Assert.AreEqual(36, visitor.AnonymousId.Length);
+            Assert.AreEqual(Enums.FSFetchStatus.FETCH_REQUIRED, visitor.FetchFlagsStatus.Status);
             Assert.AreEqual(Enums.FSFetchReasons.VISITOR_CREATED, visitor.FetchFlagsStatus.Reason);
         }
 
@@ -111,7 +111,7 @@ namespace Flagship.FsVisitor.Tests
         public void ClearContextTest()
         {
 
-            defaultStrategy.Setup(x=>x.ClearContext()).Verifiable();
+            defaultStrategy.Setup(x => x.ClearContext()).Verifiable();
             visitorDelegateMock.Object.ClearContext();
             defaultStrategy.Verify();
         }
@@ -128,6 +128,11 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCHED,
+                Reason = Enums.FSFetchReasons.NONE
+            });
             var flag = visitorDelegateMock.Object.GetFlag("key");
             Assert.IsNotNull(flag);
             Assert.IsTrue(flag.Exists);
@@ -137,6 +142,11 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest1()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCHED,
+                Reason = Enums.FSFetchReasons.NONE
+            });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
@@ -146,6 +156,11 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest2()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCHED,
+                Reason = Enums.FSFetchReasons.NONE
+            });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
@@ -155,7 +170,13 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest3()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCHED,
+                Reason = Enums.FSFetchReasons.NONE
+            });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
+
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
         }
@@ -164,7 +185,13 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest4()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCHED,
+                Reason = Enums.FSFetchReasons.NONE
+            });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
+
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
         }
@@ -183,7 +210,7 @@ namespace Flagship.FsVisitor.Tests
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
             Assert.IsNotNull(flag);
             Assert.IsFalse(flag.Exists);
-            fsLogManagerMock.Verify(x=> x.Warning(It.IsAny<string>(), "GET_FLAG"), Times.Once()); 
+            fsLogManagerMock.Verify(x => x.Warning(It.IsAny<string>(), "GET_FLAG"), Times.Once());
         }
 
         [TestMethod()]
@@ -204,7 +231,7 @@ namespace Flagship.FsVisitor.Tests
                 .Returns("value")
                 .Verifiable();
 
-            var value = visitorDelegateMock.Object.GetFlagValue("key","defaultValue", null, true);
+            var value = visitorDelegateMock.Object.GetFlagValue("key", "defaultValue", null, true);
             defaultStrategy.Verify();
         }
 
@@ -262,7 +289,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void UpdateContexTest3()
         {
-            defaultStrategy.Setup(x => x.UpdateContext("key","string"))
+            defaultStrategy.Setup(x => x.UpdateContext("key", "string"))
               .Verifiable();
             visitorDelegateMock.Object.UpdateContext("key", "string");
             defaultStrategy.Verify();
@@ -305,7 +332,7 @@ namespace Flagship.FsVisitor.Tests
 
             visitorDelegateMock.Object.Authenticate(visitorId);
 
-            defaultStrategy.Verify(x=>x.Authenticate(visitorId),Times.Once());
+            defaultStrategy.Verify(x => x.Authenticate(visitorId), Times.Once());
         }
 
         [TestMethod()]

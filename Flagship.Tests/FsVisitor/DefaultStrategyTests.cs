@@ -26,13 +26,13 @@ namespace Flagship.FsVisitor.Tests
     {
         private Mock<IFsLogManager> fsLogManagerMock;
         private VisitorDelegate visitorDelegate;
-        private Mock<Flagship.Decision.DecisionManager> decisionManagerMock;
-        private Mock<Flagship.Api.ITrackingManager> trackingManagerMock;
+        private Mock<Decision.DecisionManager> decisionManagerMock;
+        private Mock<Api.ITrackingManager> trackingManagerMock;
         private DecisionApiConfig config;
         public DefaultStrategyTests()
         {
             fsLogManagerMock = new Mock<IFsLogManager>();
-            config = new Flagship.Config.DecisionApiConfig()
+            config = new DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -40,22 +40,22 @@ namespace Flagship.FsVisitor.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            trackingManagerMock = new Mock<Api.ITrackingManager>();
             var trackingManager = trackingManagerMock.Object;
 
-            decisionManagerMock = new Mock<Flagship.Decision.DecisionManager>(new object[] { null, null });
+            decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
 
             var decisionManager = decisionManagerMock.Object;
             decisionManager.TrackingManager = trackingManager;
 
-            var configManager = new Flagship.Config.ConfigManager(config, decisionManager, trackingManagerMock.Object);
+            var configManager = new ConfigManager(config, decisionManager, trackingManagerMock.Object);
 
             var context = new Dictionary<string, object>()
             {
                 ["key0"] = 1,
             };
 
-            visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitorId", false, context, false, configManager);
+            visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
 
         }
 
@@ -203,11 +203,11 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         async public Task FetchFlagsWithCacheTest()
         {
-            ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+            ICollection<Campaign> campaigns = new Collection<Campaign>();
             decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
                 .Returns(Task.FromResult(campaigns));
 
-            visitorDelegate.VisitorCache = new Model.VisitorCache
+            visitorDelegate.VisitorCache = new VisitorCache
             {
                 Version = 1,
                 Data = new VisitorCacheDTOV1()
@@ -217,10 +217,9 @@ namespace Flagship.FsVisitor.Tests
                     {
                         VisitorId = "visitorID",
                         Consent = true,
-                        Campaigns = new List<VisitorCacheCampaign>
-                        {
-                            new VisitorCacheCampaign
-                            {
+                        Campaigns =
+                        [
+                            new() {
                                 Activated = true,
                                 CampaignId = "campaignID",
                                 IsReference = true,
@@ -232,7 +231,7 @@ namespace Flagship.FsVisitor.Tests
                                     ["key"] = "value"
                                 }
                             }
-                        }
+                        ]
                     }
                 }
             };
@@ -246,12 +245,12 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         async public Task FetchFlagsWithCacheV2Test()
         {
-            ICollection<Campaign> campaigns = new Collection<Flagship.Model.Campaign>();
+            ICollection<Campaign> campaigns = new Collection<Campaign>();
 
             decisionManagerMock.Setup(x => x.GetCampaigns(visitorDelegate))
                 .Returns(Task.FromResult(campaigns));
 
-            visitorDelegate.VisitorCache = new Model.VisitorCache
+            visitorDelegate.VisitorCache = new VisitorCache
             {
                 Version = 2,
                 Data = new VisitorCacheDTOV1()
@@ -268,7 +267,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(visitorDelegate.Flags.Count, 0);
 
-            visitorDelegate.VisitorCache = new Model.VisitorCache
+            visitorDelegate.VisitorCache = new VisitorCache
             {
                 Version = 1,
                 Data = new VisitorCacheDTOV1()
@@ -315,26 +314,6 @@ namespace Flagship.FsVisitor.Tests
             fsLogManagerMock.Verify(x => x.Warning(It.IsAny<string>(), It.IsAny<string>()), Times.Never());
 
             defaultStrategyMock.Verify(x => x.SendTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
-
-            //     trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)), Times.Exactly(2));
-
-            //    defaultStrategyMock.Protected().Setup("SendActivate", [flagDto, "defaultValueString"]).Verifiable();
-
-            //     await defaultStrategy.VisitorExposed(flagDto.Key, "defaultValueString", flagDto).ConfigureAwait(false);
-
-            //     var activate = new Activate(flagDto.VariationGroupId, flagDto.VariationId);
-
-            //     trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
-            //         y => y.VariationGroupId == flagDto.VariationGroupId && y.VariationId == flagDto.VariationId)), Times.Once());
-
-            //     var flagDtoValueNull = CampaignsData.GetFlag()[1];
-
-            //     await defaultStrategy.VisitorExposed(flagDtoValueNull.Key, "defaultValueString", flagDtoValueNull).ConfigureAwait(false);
-
-            //     trackingManagerMock.Verify(x => x.ActivateFlag(It.Is<Activate>(
-            //         y => y.VariationGroupId == flagDtoValueNull.VariationGroupId && y.VariationId == flagDtoValueNull.VariationId)
-            //         ), Times.Once());
-
         }
 
         [TestMethod()]
@@ -516,7 +495,7 @@ namespace Flagship.FsVisitor.Tests
 
             var defaultStrategy = defaultStrategyMock.Object;
 
-            var metadata = new FsFlag.FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
+            var metadata = new FlagMetadata("CampaignId", "variationGroupId", "variationId", false, "", null, "CampaignName", "VariationGroupName", "VariationName");
             var resultMetadata = defaultStrategy.GetFlagMetadata("key", null);
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultMetadata));
@@ -564,7 +543,7 @@ namespace Flagship.FsVisitor.Tests
         {
             const string functionName = "SendHit";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
-            var hit = new Flagship.Hit.Screen(null);
+            var hit = new Screen(null);
             await defaultStrategy.SendHit(hit).ConfigureAwait(false);
             fsLogManagerMock.Verify(x => x.Error(hit.GetErrorMessage(), functionName), Times.Once());
         }
@@ -575,7 +554,7 @@ namespace Flagship.FsVisitor.Tests
             const string functionName = "SendHit";
             var errorMessage = "error hit";
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
-            var hit = new Flagship.Hit.Screen("HomeView");
+            var hit = new Screen("HomeView");
             trackingManagerMock.Setup(x => x.Add(hit)).Throws(new Exception(errorMessage));
 
             await defaultStrategy.SendHit(hit).ConfigureAwait(false);
@@ -598,9 +577,9 @@ namespace Flagship.FsVisitor.Tests
         public async Task SendHitsTest()
         {
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
-            var screen = new Flagship.Hit.Screen("HomeView");
-            var page = new Flagship.Hit.Page("HomePage");
-            await defaultStrategy.SendHit(new List<Hit.HitAbstract>() { screen, page }).ConfigureAwait(false);
+            var screen = new Screen("HomeView");
+            var page = new Page("HomePage");
+            await defaultStrategy.SendHit(new List<HitAbstract>() { screen, page }).ConfigureAwait(false);
             trackingManagerMock.Verify(x => x.Add(screen), Times.Once());
             trackingManagerMock.Verify(x => x.Add(page), Times.Once());
         }
@@ -612,7 +591,7 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.SendConsentHitAsync(true).ConfigureAwait(false);
 
-            trackingManagerMock.Verify(x => x.Add(It.Is<Hit.Event>(
+            trackingManagerMock.Verify(x => x.Add(It.Is<Event>(
                 item => item.Label == $"{Constants.SDK_LANGUAGE}:{true}" &&
                 item.VisitorId == visitorDelegate.VisitorId &&
                 item.DS == Constants.SDK_APP &&
@@ -647,7 +626,7 @@ namespace Flagship.FsVisitor.Tests
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.VISITOR_ID_ERROR, methodName), methodName), Times.Once());
 
             // Bucketing mode test
-            var config = new Flagship.Config.BucketingConfig()
+            var config = new BucketingConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -677,7 +656,7 @@ namespace Flagship.FsVisitor.Tests
             fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName), Times.Once());
 
 
-            visitorDelegate.ConfigManager.Config = new Flagship.Config.DecisionApiConfig()
+            visitorDelegate.ConfigManager.Config = new DecisionApiConfig()
             {
                 EnvId = "envID",
                 LogManager = fsLogManagerMock.Object,
@@ -709,7 +688,7 @@ namespace Flagship.FsVisitor.Tests
 
             ICollection<Campaign> campaigns = new Collection<Campaign>()
             {
-                new Campaign()
+                new()
                 {
                     Id = "id",
                     Variation = new Variation

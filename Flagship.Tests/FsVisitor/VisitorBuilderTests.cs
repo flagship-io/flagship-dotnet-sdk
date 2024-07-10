@@ -64,6 +64,11 @@ namespace Flagship.FsVisitor.Tests
             Builder.SetShouldSaveInstance(true);
             visitor = Builder.Build();
             Assert.AreEqual(visitor, Flagship.Main.Fs.Visitor);
+
+            Builder = VisitorBuilder.Builder(configManager, visitorId, true);
+            Builder.SetIsAuthenticated(true);
+            visitor = Builder.Build();
+            Assert.AreNotEqual(visitor.AnonymousId, null);
         }
 
      

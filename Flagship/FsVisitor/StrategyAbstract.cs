@@ -71,7 +71,7 @@ namespace Flagship.FsVisitor
                 HitContent = hitEvent.ToApiKeys()
             };
 
-            if (DecisionManager.TroubleshootingData != null && Visitor.Traffic>0)
+            if (DecisionManager.TroubleshootingData != null)
             {
                 _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
                 return;

@@ -18,6 +18,7 @@ using Flagship.Hit;
 using Flagship.Model;
 using Flagship.Utils;
 using Flagship.Tests.Helpers;
+using Flagship.FsFlag;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -30,16 +31,16 @@ namespace Flagship.FsVisitor.Tests
         {
             ["key"] = "value"
         };
-        Mock<Flagship.Config.ConfigManager> configManager;
+        Mock<ConfigManager> configManager;
         Mock<StrategyAbstract> defaultStrategy;
         Mock<ITrackingManager> trackingManagerMock = new Mock<ITrackingManager>();
 
         public VisitorDelegateTests()
         {
-            var config = new Config.DecisionApiConfig();
+            var config = new DecisionApiConfig();
             var decisionManagerMock = new Mock<IDecisionManager>();
 
-            configManager = new Mock<Flagship.Config.ConfigManager>(config, decisionManagerMock.Object, trackingManagerMock.Object)
+            configManager = new Mock<ConfigManager>(config, decisionManagerMock.Object, trackingManagerMock.Object)
             {
                 CallBase = true
             };
@@ -199,28 +200,90 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public void GetFlagTest5()
         {
-            Mock<IFsLogManager> fsLogManagerMock = new Mock<IFsLogManager>();
+            Mock<IFsLogManager> fsLogManagerMock = new();
             visitorDelegateMock.Object.Config.LogManager = fsLogManagerMock.Object;
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.Object.FetchFlagsStatus = new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.VISITOR_CREATED
+            });
+            var flag = visitorDelegateMock.Object.GetFlag("key");
+            fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("created")), "GET_FLAG"), Times.Once());
+
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.UPDATE_CONTEXT
+            });
+
+            flag = visitorDelegateMock.Object.GetFlag("key");
+            fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("context")), "GET_FLAG"), Times.Once());
+
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
             {
                 Status = Enums.FSFetchStatus.FETCH_REQUIRED,
                 Reason = Enums.FSFetchReasons.AUTHENTICATE
-            };
-            var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
-            Assert.IsNotNull(flag);
-            Assert.IsFalse(flag.Exists);
-            fsLogManagerMock.Verify(x => x.Warning(It.IsAny<string>(), "GET_FLAG"), Times.Once());
+            });
+
+            flag = visitorDelegateMock.Object.GetFlag("key");
+
+            fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("authenticate")), "GET_FLAG"), Times.Once());
+
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.UNAUTHENTICATE
+            });
+
+            flag = visitorDelegateMock.Object.GetFlag("key");
+
+            fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("unauthenticate")), "GET_FLAG"), Times.Once());
+
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.FETCH_ERROR
+            });
+
+            flag = visitorDelegateMock.Object.GetFlag("key");
+
+            fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("error")), "GET_FLAG"), Times.Once());
+
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.READ_FROM_CACHE
+            });
+
+            flag = visitorDelegateMock.Object.GetFlag("key");
+
+            fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("cache")), "GET_FLAG"), Times.Once());
+        }
+
+        [TestMethod()]
+        public void GetFlagsTest()
+        {
+            var flagsCollection = new FlagCollection();
+            visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
+            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            {
+                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.AUTHENTICATE
+            });
+
+            var flags = visitorDelegateMock.Object.GetFlags();
+            Assert.IsNotNull(flags);
         }
 
         [TestMethod()]
         public void GetFlagMetadataTest()
         {
             defaultStrategy.Setup(x => x.GetFlagMetadata("key", null))
-                .Returns(Flagship.FsFlag.FlagMetadata.EmptyMetadata())
+                .Returns(FlagMetadata.EmptyMetadata())
                 .Verifiable();
             var metadata = visitorDelegateMock.Object.GetFlagMetadata("key", null);
-            Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()));
+            Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(FlagMetadata.EmptyMetadata()));
             defaultStrategy.Verify();
         }
 
@@ -249,7 +312,7 @@ namespace Flagship.FsVisitor.Tests
         [TestMethod()]
         public async Task SendHitTest()
         {
-            var screen = new Flagship.Hit.Screen("home");
+            var screen = new Screen("home");
             defaultStrategy.Setup(x => x.SendHit(screen))
                .Verifiable();
             await visitorDelegateMock.Object.SendHit(screen).ConfigureAwait(false);

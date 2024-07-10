@@ -105,8 +105,6 @@ namespace Flagship.FsVisitor
                 case FSFetchReasons.READ_FROM_CACHE:
                     message = "Flags for visitor `{0}` have been fetched from cache";
                     break;
-                default:
-                    break;
             }
             return message;
         }

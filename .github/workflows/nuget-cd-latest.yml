@@ -13,7 +13,7 @@ jobs:
       FS_ENV_ID: "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
       ASSEMBLY_SIGNING_KEY: "${{ secrets.ASSEMBLY_SIGNING_KEY }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v1
         with:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Run tests
         shell: pwsh
-        run: ./coverage-ci.bat
+        run: ./Flagship.Tests/test-run-ci.bat
 
       - name: Create signing Key file
         shell: pwsh

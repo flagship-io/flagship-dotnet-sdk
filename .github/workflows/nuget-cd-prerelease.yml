@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests
         shell: pwsh
-        run: ./coverage-ci.bat
+        run: ./Flagship.Tests/test-run-ci.bat
 
       - name: Create signing Key file
         shell: pwsh
@@ -56,8 +56,3 @@ jobs:
       - name: Push Nuget Packages
         run: nuget push Flagship.SDK.*.nupkg -Source https://api.nuget.org/v3/index.json
         working-directory: Flagship/NugetPackageRelease
-
-      # - name: Upload coverage to codecov
-      #   uses: codecov/codecov-action@v2
-      #   with:
-      #     files: ./CoverageResults.xml

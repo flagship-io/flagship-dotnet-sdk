@@ -1,11 +1,7 @@
-name: CI pipeline
-# This workflow is triggered on pushes to the repository.
+name: Test & Coverage
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-
 jobs:
   build:
     name: Test & Coverage
@@ -36,3 +32,11 @@ jobs:
       - name: Run tests
         shell: pwsh
         run: ./Flagship.Tests/test-run-ci.bat
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./Flagship.Tests/coverage.cobertura.xml
+          flags: unittests
+          name: codecov-flagship-dotnet-sdk
+          fail_ci_if_error: true

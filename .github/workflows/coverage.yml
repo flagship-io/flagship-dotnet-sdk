@@ -11,27 +11,17 @@ jobs:
       FS_ENV_ID:  "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.x"
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+          dotnet-version: "8.0.x"
 
       - name: Restore NuGet Packages
-        run: nuget restore Flagship.sln
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Build dll
-        run: MSBuild Flagship.Tests/Flagship.Tests.csproj -property:Configuration=Debug
+        run: dotnet restore Flagship.sln
 
       - name: Run tests
         shell: pwsh
-        run: ./Flagship.Tests/test-run-ci.bat
+        run: ./test-run-ci.bat
+        working-directory: Flagship.Tests
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
@@ -40,3 +30,4 @@ jobs:
           flags: unittests
           name: codecov-flagship-dotnet-sdk
           fail_ci_if_error: true
+

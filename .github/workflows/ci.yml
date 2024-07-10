@@ -1,29 +1,23 @@
 name: CI pipeline
-# This workflow is triggered on pushes to the repository.
 on:
   pull_request:
     branches: [main]
 
 jobs:
   build:
-    name: Test & Coverage
+    name: Test
     runs-on: windows-latest
     env: 
       FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
       FS_ENV_ID:  "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
-
       - name: Restore NuGet Packages
-        run: nuget restore Flagship.sln
+        run: dotnet restore Flagship.sln
 
       - name: Run tests
         shell: pwsh

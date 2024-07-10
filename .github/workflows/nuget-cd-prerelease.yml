@@ -6,35 +6,34 @@ on:
       - 3.[0-9]+.[0-9]+-alpha.[0-9]+
 jobs:
   build:
-    name: Test & Coverage
+    name: Deploy NuGet package
     runs-on: windows-latest
     env:
       FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
       FS_ENV_ID: "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
-      ASSEMBLY_SIGNING_KEY: ${{ secrets.ASSEMBLY_SIGNING_KEY }}
+      ASSEMBLY_SIGNING_KEY: "${{ secrets.ASSEMBLY_SIGNING_KEY }}"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.x"
+          dotnet-version: "8.0.x"
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1
+        uses: NuGet/setup-nuget@v2
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
 
       - name: Restore NuGet Packages
-        run: nuget restore Flagship.sln
+        run: dotnet restore Flagship.sln
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Build dll
-        run: MSBuild Flagship.Tests/Flagship.Tests.csproj -property:Configuration=Debug
+        uses: microsoft/setup-msbuild@v2
 
       - name: Run tests
         shell: pwsh
-        run: ./Flagship.Tests/test-run-ci.bat
+        run: ./test-run-ci.bat
+        working-directory: Flagship.Tests
 
       - name: Create signing Key file
         shell: pwsh

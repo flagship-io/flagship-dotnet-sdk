@@ -1,8 +1,6 @@
 name: CI pipeline
 # This workflow is triggered on pushes to the repository.
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -27,12 +25,7 @@ jobs:
       - name: Restore NuGet Packages
         run: nuget restore Flagship.sln
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Build dll
-        run: MSBuild Flagship.Tests/Flagship.Tests.csproj -property:Configuration=Debug
-
       - name: Run tests
         shell: pwsh
-        run: ./Flagship.Tests/test-run-ci.bat
+        run: .\test-run-ci.bat
+        working-directory: Flagship.Tests

@@ -21,8 +21,10 @@ namespace Flagship.Delegate
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="fetchFlagsStatus"></param>
-    public delegate void onFetchFlagsStatusChangedDelegate(IFetchFlagsStatus fetchFlagsStatus);
+    /// <param name="flagsStatus"></param>
+    public delegate void OnFlagStatusChangedDelegate(FSFlagStatus flagsStatus);
 
+    public delegate void OnFlagStatusFetchRequiredDelegate(FSFetchReasons reason);
 
+    public delegate void OnFlagStatusFetchedDelegate();
 }

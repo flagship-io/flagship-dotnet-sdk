@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Flagship.Enums;
 
 namespace Flagship.FsFlag
 {
@@ -55,5 +56,8 @@ namespace Flagship.FsFlag
         /// </summary>
         /// <returns>An array of serialized flag metadata.</returns>
         string ToJson();
+
+
+        FSFlagStatus Status { get; }
     }
 }

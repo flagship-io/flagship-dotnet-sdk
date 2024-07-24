@@ -38,6 +38,8 @@ namespace Flagship.FsFlag
 
         public int Size => _keys.Count;
 
+        public FSFlagStatus Status => _visitor?.FlagsStatus.Status ?? FSFlagStatus.NOT_FOUND;
+
         public IFlag Get(string key)
         {
             if (!_flags.TryGetValue(key, out var flag))

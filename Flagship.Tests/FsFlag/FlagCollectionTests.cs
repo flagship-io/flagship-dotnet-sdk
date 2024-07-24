@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using Flagship.Api;
 using Flagship.Config;
 using Newtonsoft.Json.Linq;
+using Flagship.Enums;
 
 namespace Flagship.Tests.FsFlag;
 
@@ -77,14 +78,21 @@ public class FlagCollectionTests
     {
         var flagCollection = new FlagCollection();
         Assert.AreEqual(0, flagCollection.Size);
+        Assert.AreEqual(FSFlagStatus.NOT_FOUND, flagCollection.Status);
     }
 
     [TestMethod]
     public void Constructor_WithVisitorAndNoFlags_PopulatesFromVisitor()
     {
         _mockVisitor.Setup(v => v.Flags).Returns(_flagsDTO);
+        _mockVisitor.Setup(v => v.FlagsStatus).Returns(new FlagsStatus()
+        {
+            Status = FSFlagStatus.FETCH_REQUIRED,
+            Reason = FSFetchReasons.NONE
+        });
         var flagCollection = new FlagCollection(_mockVisitor.Object);
         Assert.AreEqual(_flagsDTO.Count, flagCollection.Size);
+        Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flagCollection.Status);
     }
 
     [TestMethod]

@@ -59,8 +59,8 @@ namespace Flagship.FsFlag
                     return FSFlagStatus.NOT_FOUND;
                 }
 
-                var fetchFlagsStatus = _visitorDelegateAbstract.FetchFlagsStatus;
-                if (fetchFlagsStatus.Status == FSFetchStatus.PANIC)
+                var fetchFlagsStatus = _visitorDelegateAbstract.FlagsStatus;
+                if (fetchFlagsStatus.Status == FSFlagStatus.PANIC)
                 {
                     return FSFlagStatus.PANIC;
                 }
@@ -70,12 +70,7 @@ namespace Flagship.FsFlag
                     return FSFlagStatus.NOT_FOUND;
                 }
 
-                if (fetchFlagsStatus.Status == FSFetchStatus.FETCH_REQUIRED)
-                {
-                    return FSFlagStatus.FETCH_REQUIRED;
-                }
-
-                return FSFlagStatus.FETCHED;
+                return fetchFlagsStatus.Status;
             }
         }
 

@@ -74,8 +74,8 @@ namespace Flagship.FsVisitor.Tests
             defaultStrategy.UpdateContext(newContext);
 
             Assert.AreEqual(visitorDelegate.Context.Count, 6);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Status, FSFetchStatus.FETCH_REQUIRED);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Reason, FSFetchReasons.UPDATE_CONTEXT);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Status, FSFlagStatus.FETCH_REQUIRED);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Reason, FSFetchReasons.VISITOR_CONTEXT_UPDATED);
 
             var newContext2 = new Dictionary<string, object>()
             {
@@ -178,8 +178,8 @@ namespace Flagship.FsVisitor.Tests
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             await defaultStrategy.FetchFlags().ConfigureAwait(false);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Status, FSFetchStatus.FETCHED);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Reason, FSFetchReasons.NONE);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Status, FSFlagStatus.FETCHED);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Reason, FSFetchReasons.NONE);
 
             Assert.AreEqual(visitorDelegate.Flags.Count, 6);
         }
@@ -194,8 +194,8 @@ namespace Flagship.FsVisitor.Tests
             var defaultStrategy = new DefaultStrategy(visitorDelegate);
 
             await defaultStrategy.FetchFlags().ConfigureAwait(false);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Status, FSFetchStatus.PANIC);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Reason, FSFetchReasons.NONE);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Status, FSFlagStatus.PANIC);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Reason, FSFetchReasons.NONE);
 
             Assert.AreEqual(visitorDelegate.Flags.Count, 6);
         }
@@ -612,8 +612,8 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
             Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Status, FSFetchStatus.FETCH_REQUIRED);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Reason, FSFetchReasons.AUTHENTICATE);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Status, FSFlagStatus.FETCH_REQUIRED);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Reason, FSFetchReasons.VISITOR_AUTHENTICATED);
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)));
 
             defaultStrategy.Authenticate(null);
@@ -667,8 +667,8 @@ namespace Flagship.FsVisitor.Tests
             Assert.IsNull(visitorDelegate.AnonymousId);
             Assert.AreEqual(visitorId, visitorDelegate.VisitorId);
 
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Status, FSFetchStatus.FETCH_REQUIRED);
-            Assert.AreEqual(visitorDelegate.FetchFlagsStatus.Reason, FSFetchReasons.UNAUTHENTICATE);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Status, FSFlagStatus.FETCH_REQUIRED);
+            Assert.AreEqual(visitorDelegate.FlagsStatus.Reason, FSFetchReasons.VISITOR_UNAUTHENTICATED);
 
             defaultStrategy.Unauthenticate();
 

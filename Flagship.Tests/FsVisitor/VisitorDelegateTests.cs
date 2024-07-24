@@ -85,8 +85,8 @@ namespace Flagship.FsVisitor.Tests
             Assert.IsNotNull(visitor.AnonymousId);
             Assert.AreEqual(visitorId, visitor.VisitorId);
             Assert.AreEqual(36, visitor.AnonymousId.Length);
-            Assert.AreEqual(Enums.FSFetchStatus.FETCH_REQUIRED, visitor.FetchFlagsStatus.Status);
-            Assert.AreEqual(Enums.FSFetchReasons.VISITOR_CREATED, visitor.FetchFlagsStatus.Reason);
+            Assert.AreEqual(Enums.FSFlagStatus.FETCH_REQUIRED, visitor.FlagsStatus.Status);
+            Assert.AreEqual(Enums.FSFetchReasons.FLAGS_NEVER_FETCHED, visitor.FlagsStatus.Reason);
         }
 
         [TestMethod()]
@@ -129,9 +129,9 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCHED,
+                Status = Enums.FSFlagStatus.FETCHED,
                 Reason = Enums.FSFetchReasons.NONE
             });
             var flag = visitorDelegateMock.Object.GetFlag("key");
@@ -143,9 +143,9 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest1()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCHED,
+                Status = Enums.FSFlagStatus.FETCHED,
                 Reason = Enums.FSFetchReasons.NONE
             });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
@@ -157,9 +157,9 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest2()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCHED,
+                Status = Enums.FSFlagStatus.FETCHED,
                 Reason = Enums.FSFetchReasons.NONE
             });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
@@ -171,9 +171,9 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest3()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCHED,
+                Status = Enums.FSFlagStatus.FETCHED,
                 Reason = Enums.FSFetchReasons.NONE
             });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
@@ -186,9 +186,9 @@ namespace Flagship.FsVisitor.Tests
         public void GetFlagTest4()
         {
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCHED,
+                Status = Enums.FSFlagStatus.FETCHED,
                 Reason = Enums.FSFetchReasons.NONE
             });
             var flag = visitorDelegateMock.Object.GetFlag("keyNotExist");
@@ -203,57 +203,57 @@ namespace Flagship.FsVisitor.Tests
             Mock<IFsLogManager> fsLogManagerMock = new();
             visitorDelegateMock.Object.Config.LogManager = fsLogManagerMock.Object;
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
-                Reason = Enums.FSFetchReasons.VISITOR_CREATED
+                Status = Enums.FSFlagStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.FLAGS_NEVER_FETCHED
             });
             var flag = visitorDelegateMock.Object.GetFlag("key");
             fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("created")), "GET_FLAG"), Times.Once());
 
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
-                Reason = Enums.FSFetchReasons.UPDATE_CONTEXT
+                Status = Enums.FSFlagStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.VISITOR_CONTEXT_UPDATED
             });
 
             flag = visitorDelegateMock.Object.GetFlag("key");
             fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("context")), "GET_FLAG"), Times.Once());
 
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
-                Reason = Enums.FSFetchReasons.AUTHENTICATE
+                Status = Enums.FSFlagStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.VISITOR_AUTHENTICATED
             });
 
             flag = visitorDelegateMock.Object.GetFlag("key");
 
             fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("authenticate")), "GET_FLAG"), Times.Once());
 
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
-                Reason = Enums.FSFetchReasons.UNAUTHENTICATE
+                Status = Enums.FSFlagStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.VISITOR_UNAUTHENTICATED
             });
 
             flag = visitorDelegateMock.Object.GetFlag("key");
 
             fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("unauthenticate")), "GET_FLAG"), Times.Once());
 
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
-                Reason = Enums.FSFetchReasons.FETCH_ERROR
+                Status = Enums.FSFlagStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.FLAGS_FETCHING_ERROR
             });
 
             flag = visitorDelegateMock.Object.GetFlag("key");
 
             fsLogManagerMock.Verify(x => x.Warning(It.Is<string>(y => y.Contains("error")), "GET_FLAG"), Times.Once());
 
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
-                Reason = Enums.FSFetchReasons.READ_FROM_CACHE
+                Status = Enums.FSFlagStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.FLAGS_FETCHED_FROM_CACHE
             });
 
             flag = visitorDelegateMock.Object.GetFlag("key");
@@ -266,10 +266,10 @@ namespace Flagship.FsVisitor.Tests
         {
             var flagsCollection = new FlagCollection();
             visitorDelegateMock.SetupGet(x => x.Flags).Returns(CampaignsData.GetFlag());
-            visitorDelegateMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus
+            visitorDelegateMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus
             {
-                Status = Enums.FSFetchStatus.FETCH_REQUIRED,
-                Reason = Enums.FSFetchReasons.AUTHENTICATE
+                Status = Enums.FSFlagStatus.FETCH_REQUIRED,
+                Reason = Enums.FSFetchReasons.VISITOR_AUTHENTICATED
             });
 
             var flags = visitorDelegateMock.Object.GetFlags();

@@ -1,12 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Flagship.FsFlag;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Moq;
-using Moq.Protected;
 using Flagship.Config;
 using Flagship.Model;
 using Newtonsoft.Json;
@@ -67,9 +61,9 @@ namespace Flagship.Tests.FsFlag
             visitorMock.Setup(x => x.GetFlagValue(flagDTO.Key, defaultValue, flagDTO, true)).Returns((string)flagDTO.Value);
             visitorMock.Setup(x => x.VisitorExposed(flagDTO.Key, defaultValue, flagDTO, true)).Returns(Task.CompletedTask);
             visitorMock.Setup(x => x.GetFlagMetadata(flagDTO.Key, It.IsAny<FlagDTO>())).Returns(metadata);
-            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus()
             {
-                Status = FSFetchStatus.FETCHED,
+                Status = FSFlagStatus.FETCHED,
                 Reason = FSFetchReasons.NONE
             });
 
@@ -83,10 +77,10 @@ namespace Flagship.Tests.FsFlag
             Assert.AreEqual(metadata, resultMeta);
             Assert.AreEqual(FSFlagStatus.FETCHED, flag.Status);
 
-            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus()
             {
-                Status = FSFetchStatus.FETCH_REQUIRED,
-                Reason = FSFetchReasons.UPDATE_CONTEXT
+                Status = FSFlagStatus.FETCH_REQUIRED,
+                Reason = FSFetchReasons.VISITOR_CONTEXT_UPDATED
             });
 
             Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flag.Status);
@@ -148,10 +142,10 @@ namespace Flagship.Tests.FsFlag
             visitorMock.Verify(x => x.GetFlagMetadata(It.IsAny<string>(), null), Times.Once());
             visitorMock.Verify(x => x.VisitorExposed<object>(keyNotExists, defaultValue, null, true), Times.Once());
             
-            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus()
             {
-                Status = FSFetchStatus.FETCH_REQUIRED,
-                Reason = FSFetchReasons.UPDATE_CONTEXT
+                Status = FSFlagStatus.FETCH_REQUIRED,
+                Reason = FSFetchReasons.VISITOR_CONTEXT_UPDATED
             });
 
             Assert.AreEqual(FSFlagStatus.NOT_FOUND, flag.Status);
@@ -233,26 +227,26 @@ namespace Flagship.Tests.FsFlag
 
             var flag = new Flag(flagDTO.Key, visitorMock.Object);
 
-            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus()
             {
-                Status = FSFetchStatus.PANIC,
+                Status = FSFlagStatus.PANIC,
                 Reason = FSFetchReasons.NONE
             });
 
             Assert.AreEqual(FSFlagStatus.PANIC, flag.Status);
 
-            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus()
             {
-                Status = FSFetchStatus.FETCHING,
+                Status = FSFlagStatus.FETCHING,
                 Reason = FSFetchReasons.NONE
             });
 
-            Assert.AreEqual(FSFlagStatus.FETCHED, flag.Status);
+            Assert.AreEqual(FSFlagStatus.FETCHING, flag.Status);
 
-            visitorMock.SetupGet(x => x.FetchFlagsStatus).Returns(new FetchFlagsStatus()
+            visitorMock.SetupGet(x => x.FlagsStatus).Returns(new FlagsStatus()
             {
-                Status = FSFetchStatus.FETCH_REQUIRED,
-                Reason = FSFetchReasons.UPDATE_CONTEXT
+                Status = FSFlagStatus.FETCH_REQUIRED,
+                Reason = FSFetchReasons.VISITOR_CONTEXT_UPDATED
             });
 
             Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flag.Status);

@@ -12,6 +12,7 @@ using Moq.Protected;
 using Flagship.FsFlag;
 using Flagship.Model;
 using Flagship.Delegate;
+using Flagship.Enums;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -55,11 +56,11 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(visitorDelegateMock.Object.VisitorId, Visitor.VisitorId);
 
-            var fetchFlagsStatus = new FetchFlagsStatus();
+            var fetchFlagsStatus = new FlagsStatus();
 
-            visitorDelegateMock.SetupGet(x=>x.FetchFlagsStatus).Returns(fetchFlagsStatus);
+            visitorDelegateMock.SetupGet(x=>x.FlagsStatus).Returns(fetchFlagsStatus);
 
-            Assert.AreEqual(fetchFlagsStatus, Visitor.FetchFlagsStatus);
+            Assert.AreEqual(fetchFlagsStatus, Visitor.FlagsStatus);
             
         }
 
@@ -196,19 +197,21 @@ namespace Flagship.FsVisitor.Tests
 
             var Visitor = new Visitor(visitorDelegateMock.Object);
 
-            var fetchFlagsStatus = new FetchFlagsStatus();
+            var fetchFlagsStatus = new FlagsStatus(){
+                Status = FSFlagStatus.FETCH_REQUIRED,
+                Reason = FSFetchReasons.FLAGS_NEVER_FETCHED
+            };
 
-            void onFetchFlagsStatusChangedFunc(IFetchFlagsStatus status)
+            void onFetchFlagsStatusChangedFunc(FSFlagStatus flagStatus)
             {
-                Assert.AreEqual(fetchFlagsStatus, status);
+                Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flagStatus);
             }
 
-            Visitor.OnFetchFlagsStatusChanged += onFetchFlagsStatusChangedFunc;
+            Visitor.OnFlagsStatusChanged += onFetchFlagsStatusChangedFunc;
 
-            visitorDelegateMock.Object.FetchFlagsStatus = fetchFlagsStatus; 
+            visitorDelegateMock.Object.FlagsStatus = fetchFlagsStatus; 
 
-            Visitor.OnFetchFlagsStatusChanged -= onFetchFlagsStatusChangedFunc;
-
+            Visitor.OnFlagsStatusChanged -= onFetchFlagsStatusChangedFunc;
         }
     }
 }

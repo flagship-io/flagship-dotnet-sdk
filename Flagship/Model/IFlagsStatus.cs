@@ -2,9 +2,9 @@
 
 namespace Flagship.Model
 {
-    public interface IFetchFlagsStatus
+    public interface IFlagsStatus
     {
         FSFetchReasons Reason { get; set; }
-        FSFetchStatus Status { get; set; }
+        FSFlagStatus Status { get; set; }
     }
 }

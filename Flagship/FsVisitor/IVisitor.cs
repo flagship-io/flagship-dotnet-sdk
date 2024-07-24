@@ -43,11 +43,11 @@ namespace Flagship.FsVisitor
         /// <summary>
         /// The fetch status of the flags.
         /// </summary>
-        IFetchFlagsStatus FetchFlagsStatus { get; }
+        IFlagsStatus FlagsStatus { get; }
 
         /// <summary>
         /// This event is triggered when the fetch flags status changes.
         /// </summary>
-        event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged;
+        event OnFlagStatusChangedDelegate OnFlagsStatusChanged;
     }
 }

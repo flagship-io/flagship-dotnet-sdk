@@ -28,10 +28,10 @@ namespace Flagship.FsVisitor
 
         public override IFlag GetFlag(string key)
         {
-            if (FetchFlagsStatus.Status != FSFetchStatus.FETCHED && FetchFlagsStatus.Status != FSFetchStatus.PANIC
-                && FetchFlagsStatus.Status != FSFetchStatus.FETCHING)
+            if (FlagsStatus.Status != FSFlagStatus.FETCHED && FlagsStatus.Status != FSFlagStatus.PANIC
+                && FlagsStatus.Status != FSFlagStatus.FETCHING)
             {
-                Log.LogWarning(Config, string.Format(FlagSyncStatusMessage(FetchFlagsStatus.Reason), VisitorId, key), "GET_FLAG");
+                Log.LogWarning(Config, string.Format(FlagSyncStatusMessage(FlagsStatus.Reason), VisitorId, key), "GET_FLAG");
             }
             return new Flag(key, this);
         }
@@ -87,22 +87,22 @@ namespace Flagship.FsVisitor
             const string VISITOR_SYNC_FLAGS_MESSAGE = "without calling `fetchFlags` method afterwards. So, the value of the flag `{1}` might be outdated";
             switch (reason)
             {
-                case FSFetchReasons.VISITOR_CREATED:
+                case FSFetchReasons.FLAGS_NEVER_FETCHED:
                     message = $"Visitor `{{0}}` has been created. So, the value of the flag `{{1}}` is the default value";
                     break;
-                case FSFetchReasons.UPDATE_CONTEXT:
+                case FSFetchReasons.VISITOR_CONTEXT_UPDATED:
                     message = $"Visitor context for visitor `{{0}}` has been updated {VISITOR_SYNC_FLAGS_MESSAGE}";
                     break;
-                case FSFetchReasons.AUTHENTICATE:
+                case FSFetchReasons.VISITOR_AUTHENTICATED:
                     message = $"Visitor `{{0}}` has been authenticated {VISITOR_SYNC_FLAGS_MESSAGE}";
                     break;
-                case FSFetchReasons.UNAUTHENTICATE:
+                case FSFetchReasons.VISITOR_UNAUTHENTICATED:
                     message = $"Visitor `{{0}}` has been unauthenticated {VISITOR_SYNC_FLAGS_MESSAGE}";
                     break;
-                case FSFetchReasons.FETCH_ERROR:
+                case FSFetchReasons.FLAGS_FETCHING_ERROR:
                     message = "There was an error while fetching flags for visitor `{0}`. So the value of the flag `{1}` may be outdated";
                     break;
-                case FSFetchReasons.READ_FROM_CACHE:
+                case FSFetchReasons.FLAGS_FETCHED_FROM_CACHE:
                     message = "Flags for visitor `{0}` have been fetched from cache";
                     break;
             }

@@ -16,9 +16,13 @@ namespace Flagship.FsVisitor
         private readonly IDictionary<string, object> _context;
         private bool _hasConsented;
         protected string _anonymousId;
-        private IFetchFlagsStatus fetchFlagsStatus;
+        private IFlagsStatus flagsStatus;
 
-        public event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged;
+        public event OnFlagStatusChangedDelegate OnFlagsStatusChanged;
+
+        public event OnFlagStatusFetchRequiredDelegate OnFlagStatusFetchRequired;
+
+        public event OnFlagStatusFetchedDelegate OnFlagStatusFetched;
 
         virtual public string VisitorId { get; set; }
         virtual public ICollection<FlagDTO> Flags { get; set; }
@@ -33,13 +37,21 @@ namespace Flagship.FsVisitor
         virtual public string SessionId { get; set; }
         virtual public SdkInitialData SdkInitialData { get; set; }
         public static FSSdkStatus SDKStatus { get; set; }
-        public virtual IFetchFlagsStatus FetchFlagsStatus
+        public virtual IFlagsStatus FlagsStatus
         {
-            get => fetchFlagsStatus; 
+            get => flagsStatus; 
             internal set
             {
-                OnFetchFlagsStatusChanged?.Invoke(value);
-                fetchFlagsStatus = value;
+                flagsStatus = value;
+                OnFlagsStatusChanged?.Invoke(value.Status);
+                if (value.Status == FSFlagStatus.FETCH_REQUIRED)
+                {
+                    OnFlagStatusFetchRequired?.Invoke(value.Reason);
+                }
+                else if (value.Status == FSFlagStatus.FETCHED)
+                {
+                    OnFlagStatusFetched?.Invoke();
+                }
             }
         }
 
@@ -66,10 +78,10 @@ namespace Flagship.FsVisitor
 
             GetStrategy().LookupVisitor();
 
-            FetchFlagsStatus = new FetchFlagsStatus
+            FlagsStatus = new FlagsStatus
             {
-                Reason = FSFetchReasons.VISITOR_CREATED,
-                Status = FSFetchStatus.FETCH_REQUIRED
+                Reason = FSFetchReasons.FLAGS_NEVER_FETCHED,
+                Status = FSFlagStatus.FETCH_REQUIRED
             };
         }
 

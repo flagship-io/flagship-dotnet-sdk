@@ -22,14 +22,14 @@ namespace Flagship.FsVisitor
 
         public IDictionary<string, object> Context => _visitorDelegate.Context;
 
-        public IFetchFlagsStatus FetchFlagsStatus => _visitorDelegate.FetchFlagsStatus;
+        public IFlagsStatus FlagsStatus => _visitorDelegate.FlagsStatus;
 
         private readonly VisitorDelegateAbstract _visitorDelegate;
 
-        public event onFetchFlagsStatusChangedDelegate OnFetchFlagsStatusChanged
+        public event OnFlagStatusChangedDelegate OnFlagsStatusChanged
         {
-            add => _visitorDelegate.OnFetchFlagsStatusChanged += value;
-            remove => _visitorDelegate.OnFetchFlagsStatusChanged -= value;
+            add => _visitorDelegate.OnFlagsStatusChanged += value;
+            remove => _visitorDelegate.OnFlagsStatusChanged -= value;
         }
 
         internal Visitor(VisitorDelegateAbstract visitorDelegate)

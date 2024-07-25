@@ -18,6 +18,8 @@ namespace Flagship.Enums
 
         public const int BATCH_MAX_SIZE = 2500000;
 
+        public const int BATCH_ACTIVATE_HIT_COUNT_LIMIT = 100;
+
         public const int USAGE_HIT_ALLOCATION = 1;
 
         public const int NB_MIN_CONTEXT_KEYS = 3;

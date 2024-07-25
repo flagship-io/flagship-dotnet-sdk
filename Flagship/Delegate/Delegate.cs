@@ -22,7 +22,7 @@ namespace Flagship.Delegate
     /// 
     /// </summary>
     /// <param name="flagsStatus"></param>
-    public delegate void OnFlagStatusChangedDelegate(FSFlagStatus flagsStatus);
+    public delegate void OnFlagStatusChangedDelegate(IFlagsStatus flagsStatus);
 
     public delegate void OnFlagStatusFetchRequiredDelegate(FSFetchReasons reason);
 

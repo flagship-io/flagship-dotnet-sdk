@@ -49,5 +49,9 @@ namespace Flagship.FsVisitor
         /// This event is triggered when the fetch flags status changes.
         /// </summary>
         event OnFlagStatusChangedDelegate OnFlagsStatusChanged;
+
+        event OnFlagStatusFetchRequiredDelegate OnFlagStatusFetchRequired;
+
+        event OnFlagStatusFetchedDelegate OnFlagStatusFetched;
     }
 }

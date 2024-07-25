@@ -87,7 +87,7 @@ namespace Flagship.Api
             var activateHitPool = new List<Activate>();
             lock (ActivatePoolQueue)
             {
-                    activateHitPool = ActivatePoolQueue.Values.ToList();
+                    activateHitPool = ActivatePoolQueue.Values.Take(Constants.BATCH_ACTIVATE_HIT_COUNT_LIMIT).ToList();
                     var keys = activateHitPool.Select(x => x.Key).ToList();
                     foreach (var item in keys)
                     {

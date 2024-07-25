@@ -43,7 +43,7 @@ namespace Flagship.FsVisitor
             internal set
             {
                 flagsStatus = value;
-                OnFlagsStatusChanged?.Invoke(value.Status);
+                OnFlagsStatusChanged?.Invoke(value);
                 if (value.Status == FSFlagStatus.FETCH_REQUIRED)
                 {
                     OnFlagStatusFetchRequired?.Invoke(value.Reason);

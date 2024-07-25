@@ -26,6 +26,15 @@ namespace Flagship.FsVisitor
 
         private readonly VisitorDelegateAbstract _visitorDelegate;
 
+        public event OnFlagStatusFetchRequiredDelegate OnFlagStatusFetchRequired{
+            add => _visitorDelegate.OnFlagStatusFetchRequired += value;
+            remove => _visitorDelegate.OnFlagStatusFetchRequired -= value;
+        }
+        public event OnFlagStatusFetchedDelegate OnFlagStatusFetched{
+            add => _visitorDelegate.OnFlagStatusFetched += value;
+            remove => _visitorDelegate.OnFlagStatusFetched -= value;
+        }
+
         public event OnFlagStatusChangedDelegate OnFlagsStatusChanged
         {
             add => _visitorDelegate.OnFlagsStatusChanged += value;

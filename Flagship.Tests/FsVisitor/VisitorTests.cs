@@ -202,16 +202,40 @@ namespace Flagship.FsVisitor.Tests
                 Reason = FSFetchReasons.FLAGS_NEVER_FETCHED
             };
 
-            void onFetchFlagsStatusChangedFunc(FSFlagStatus flagStatus)
+            void onFetchFlagsStatusChangedFunc(IFlagsStatus flagStatus)
             {
-                Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flagStatus);
+                Assert.AreEqual(FSFlagStatus.FETCH_REQUIRED, flagStatus.Status);
+                Assert.AreEqual(FSFetchReasons.FLAGS_NEVER_FETCHED, flagStatus.Reason);
             }
 
             Visitor.OnFlagsStatusChanged += onFetchFlagsStatusChangedFunc;
 
+            void onFlagStatusFetchRequiredFunc(FSFetchReasons reason)
+            {
+                Assert.AreEqual(FSFetchReasons.FLAGS_NEVER_FETCHED, reason);
+            }
+
+            Visitor.OnFlagStatusFetchRequired += onFlagStatusFetchRequiredFunc;
+
             visitorDelegateMock.Object.FlagsStatus = fetchFlagsStatus; 
 
             Visitor.OnFlagsStatusChanged -= onFetchFlagsStatusChangedFunc;
+            Visitor.OnFlagStatusFetchRequired -= onFlagStatusFetchRequiredFunc;
+
+            void onFlagStatusFetchedFunc()
+            {
+                Assert.IsTrue(true);
+            }
+
+            Visitor.OnFlagStatusFetched += onFlagStatusFetchedFunc;
+
+            fetchFlagsStatus= new FlagsStatus(){
+                Status = FSFlagStatus.FETCHED,
+                Reason = FSFetchReasons.NONE
+            };
+            visitorDelegateMock.Object.FlagsStatus = fetchFlagsStatus;
+
+            Visitor.OnFlagStatusFetched -= onFlagStatusFetchedFunc;
         }
     }
 }

@@ -58,6 +58,9 @@ namespace Flagship.FsFlag
         string ToJson();
 
 
+        /// <summary>
+        /// Return flags status
+        /// </summary>
         FSFlagStatus Status { get; }
     }
 }

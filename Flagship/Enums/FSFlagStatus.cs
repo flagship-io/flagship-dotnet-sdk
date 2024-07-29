@@ -31,6 +31,9 @@ namespace Flagship.Enums
         /// </summary>
         PANIC = 3,
 
+        /// <summary>
+        /// The flags were not found. 
+        /// </summary>
         NOT_FOUND = 4
     }
 }

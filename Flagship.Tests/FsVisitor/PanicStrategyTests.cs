@@ -12,6 +12,8 @@ using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json.Linq;
 using Flagship.Hit;
+using Flagship.Tests.Helpers;
+using Flagship.Api;
 
 namespace Flagship.FsVisitor.Tests
 {
@@ -50,21 +52,23 @@ namespace Flagship.FsVisitor.Tests
             var panicStrategy = new PanicStrategy(visitorDelegate);
 
             var VisitorCacheImplementation = new Mock<Flagship.Cache.IVisitorCacheImplementation>();
-            var HitCaheImplementation = new Mock<Cache.IHitCacheImplementation>();
+            var HitCacheImplementation = new Mock<Cache.IHitCacheImplementation>();
 
             config.VisitorCacheImplementation = VisitorCacheImplementation.Object;
-            config.HitCacheImplementation = HitCaheImplementation.Object;
+            config.HitCacheImplementation = HitCacheImplementation.Object;
 
             panicStrategy.CacheVisitorAsync();
             panicStrategy.LookupVisitor();
 
             VisitorCacheImplementation.Verify(x => x.CacheVisitor(It.IsAny<string>(), It.IsAny<JObject>()), Times.Never());
 
-            var privateNoConsentStrategy = new PrivateObject(panicStrategy);
 
-            ICollection<Campaign> compaigns = (ICollection<Campaign>)privateNoConsentStrategy.Invoke("FetchVisitorCacheCampaigns", visitorDelegate);
 
-            Assert.AreEqual(compaigns.Count, 0);
+            var FetchVisitorCacheCampaigns = TestHelpers.GetPrivateMethod(panicStrategy, "FetchVisitorCacheCampaigns");
+
+            var campaigns = (ICollection<Campaign>?)FetchVisitorCacheCampaigns?.Invoke(panicStrategy, [visitorDelegate]);
+
+            Assert.AreEqual(campaigns?.Count, 0);
         }
 
         [TestMethod()]
@@ -72,7 +76,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             await panicStrategy.SendConsentHitAsync(false).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendConsentHitAsync", FlagshipStatus.READY_PANIC_ON), "SendConsentHitAsync"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendConsentHitAsync", FSSdkStatus.SDK_PANIC), "SendConsentHitAsync"), Times.Once());
         }
 
         [TestMethod()]
@@ -80,7 +84,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             panicStrategy.UpdateContext(new Dictionary<string, object>());
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FSSdkStatus.SDK_PANIC), "UpdateContex"), Times.Once());
         }
 
         [TestMethod()]
@@ -88,7 +92,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             panicStrategy.UpdateContext("key","value");
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FlagshipStatus.READY_PANIC_ON), "UpdateContex"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "UpdateContex", FSSdkStatus.SDK_PANIC), "UpdateContex"), Times.Once());
         }
 
         [TestMethod()]
@@ -96,7 +100,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             panicStrategy.ClearContext();
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "ClearContext", FlagshipStatus.READY_PANIC_ON), "ClearContext"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "ClearContext", FSSdkStatus.SDK_PANIC), "ClearContext"), Times.Once());
         }
 
         [TestMethod()]
@@ -104,7 +108,7 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             await panicStrategy.SendHit(new Flagship.Hit.Screen("")).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FlagshipStatus.READY_PANIC_ON), "SendHit"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "SendHit", FSSdkStatus.SDK_PANIC), "SendHit"), Times.Once());
         }
 
         [TestMethod()]
@@ -113,7 +117,7 @@ namespace Flagship.FsVisitor.Tests
             var panicStrategy = new PanicStrategy(visitorDelegate);
             var value = panicStrategy.GetFlagValue("key", "defaultValue", null);
             Assert.AreEqual(value, "defaultValue");
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FlagshipStatus.READY_PANIC_ON), "Flag.value"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.value", FSSdkStatus.SDK_PANIC), "Flag.value"), Times.Once());
         }
 
         [TestMethod()]
@@ -121,16 +125,16 @@ namespace Flagship.FsVisitor.Tests
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
             await panicStrategy.VisitorExposed("key", "defaultValue", null).ConfigureAwait(false);
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FlagshipStatus.READY_PANIC_ON), "VisitorExposed"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "VisitorExposed", FSSdkStatus.SDK_PANIC), "VisitorExposed"), Times.Once());
         }
 
         [TestMethod()]
         public void GetFlagMetadataTest()
         {
             var panicStrategy = new PanicStrategy(visitorDelegate);
-            var value = panicStrategy.GetFlagMetadata(null, "key", false);
+            var value = panicStrategy.GetFlagMetadata( "key", null);
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(value));
-            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.metadata", FlagshipStatus.READY_PANIC_ON), "Flag.metadata"), Times.Once());
+            fsLogManagerMock.Verify(x => x.Info(string.Format(Constants.METHOD_DEACTIVATED_ERROR, "Flag.metadata", FSSdkStatus.SDK_PANIC), "Flag.metadata"), Times.Once());
         }
 
         [TestMethod()]
@@ -147,7 +151,7 @@ namespace Flagship.FsVisitor.Tests
             var trackingManagerMock = new Mock<Api.ITrackingManager>();
             var trackingManager = trackingManagerMock.Object;
 
-            var decisionManagerMock = new Mock<Decision.DecisionManager>(new object[] { null, null });
+            var decisionManagerMock = new Mock<Decision.DecisionManager>([null, null]);
 
             var decisionManager = decisionManagerMock.Object;
             decisionManager.TrackingManager = trackingManager;
@@ -176,6 +180,46 @@ namespace Flagship.FsVisitor.Tests
             strategy.AddTroubleshootingHit(troubleshootingHit);
 
             trackingManagerMock.Verify(x => x.AddTroubleshootingHit(It.IsAny<Troubleshooting>()), Times.Never());
+        }
+
+          [TestMethod()]
+        public void GetTroubleshootingData()
+        {
+            var config = new Config.DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                DisableDeveloperUsageTracking = true,
+                TrackingManagerConfig = new Config.TrackingManagerConfig()
+            };
+
+            var trackingManager = new TrackingManager(config, new HttpClient());
+
+            var decisionManagerMock = new Mock<Decision.DecisionManager>([null, null]);
+
+            var decisionManager = decisionManagerMock.Object;
+            decisionManager.TrackingManager = trackingManager;
+
+            var configManager = new Config.ConfigManager(config, decisionManager, trackingManager);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key"] = 1,
+            };
+
+            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+
+            var strategy = new PanicStrategy(visitorDelegate);
+
+            trackingManager.TroubleshootingData = new TroubleshootingData();
+
+            Assert.AreNotSame(trackingManager.TroubleshootingData, null);
+
+            var troubleshootingHit = strategy.GetTroubleshootingData();
+
+            Assert.AreEqual(troubleshootingHit, null);
+
+            Assert.AreEqual(trackingManager.TroubleshootingData, null);
         }
     }
 }

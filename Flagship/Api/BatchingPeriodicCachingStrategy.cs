@@ -114,7 +114,7 @@ namespace Flagship.Api
                     ActivatePoolQueue.TryAdd(item.Key, item);
                 }
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url,
                     headers = new Dictionary<string, string>
@@ -171,7 +171,7 @@ namespace Flagship.Api
             catch (Exception ex)
             {
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                     batchTriggeredBy = $"{batchTriggeredBy}"
@@ -238,7 +238,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                     batchTriggeredBy = $"{batchTriggeredBy}"
@@ -263,10 +263,12 @@ namespace Flagship.Api
 
             if (!batch.Hits.Any())
             {
+                await FlushAllHitsAsync();
                 if (hasActivateHit)
                 {
                     await CacheHitAsync(ActivatePoolQueue);
                 }
+                await CacheHitAsync(HitsPoolQueue);
                 return;
             }
 
@@ -314,7 +316,7 @@ namespace Flagship.Api
                 {
                     HitsPoolQueue.TryAdd(item.Key, item);
                 }
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url = Constants.HIT_EVENT_URL,
                     body = requestBody,

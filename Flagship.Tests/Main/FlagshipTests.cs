@@ -9,6 +9,7 @@ using Flagship.Utils;
 using System.IO;
 using Flagship.Enums;
 using Flagship.Logger;
+using Flagship.FsVisitor;
 
 namespace Flagship.Main.Tests
 {
@@ -27,7 +28,7 @@ namespace Flagship.Main.Tests
             Assert.IsNull(Fs.Config.EnvId);
             Assert.IsNull(Fs.Config.ApiKey);
 
-            Assert.AreEqual(FlagshipStatus.NOT_INITIALIZED, Fs.Status);
+            Assert.AreEqual(FSSdkStatus.SDK_NOT_INITIALIZED, Fs.Status);
 
             Assert.IsTrue(stringWriter.ToString().Contains(Constants.INITIALIZATION_PARAM_ERROR));
             stringWriter.Dispose();
@@ -51,7 +52,7 @@ namespace Flagship.Main.Tests
             Assert.AreEqual(envId, Fs.Config.EnvId);
             Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
-            Assert.AreEqual(FlagshipStatus.READY, Fs.Status);
+            Assert.AreEqual(FSSdkStatus.SDK_INITIALIZED, Fs.Status);
 
             envId = "new envId";
             apiKey = "new apiKey";
@@ -76,7 +77,7 @@ namespace Flagship.Main.Tests
             Assert.AreEqual(envId, Fs.Config.EnvId);
             Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
-            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION)));
+            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION, FSSdkStatus.SDK_INITIALIZED)));
             stringWriter.Dispose();
         }
 
@@ -100,7 +101,7 @@ namespace Flagship.Main.Tests
             Assert.AreEqual(envId, Fs.Config.EnvId);
             Assert.AreEqual(apiKey, Fs.Config.ApiKey);
 
-            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION)));
+            Assert.IsTrue(stringWriter.ToString().Contains(string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION, FSSdkStatus.SDK_INITIALIZING)));
             Assert.IsTrue(stringWriter.ToString().Contains("Bucketing polling starts"));
 
             stringWriter.Dispose();
@@ -109,33 +110,29 @@ namespace Flagship.Main.Tests
         [TestMethod()]
         public void NewVisitorTest()
         {
-            var visitorBuilder = Fs.NewVisitor();
+            var visitorBuilder = Fs.NewVisitor("visitorId", true);
 
             Fs.Start(null, null);
 
-            visitorBuilder = Fs.NewVisitor();
-            Assert.IsNull(visitorBuilder);
+            visitorBuilder = Fs.NewVisitor("visitorId", true);
+            Assert.IsInstanceOfType<VisitorBuilder>(visitorBuilder);
 
             var envId = "envId";
             var apiKey = "apiKey";
 
             Fs.Start(envId, apiKey);
 
-            visitorBuilder = Fs.NewVisitor();
+            visitorBuilder = Fs.NewVisitor("visitorId", true);
 
             Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
 
             var visitorId = "visitorId";
-            visitorBuilder = Fs.NewVisitor(visitorId);
+            visitorBuilder = Fs.NewVisitor(visitorId, true);
             Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
-            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
 
-            visitorBuilder = Fs.NewVisitor(visitorId, InstanceType.SINGLE_INSTANCE);
-            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
-            Assert.AreEqual(visitorBuilder.Build().VisitorId, visitorId);
-
-            visitorBuilder = Fs.NewVisitor(InstanceType.SINGLE_INSTANCE);
-            Assert.IsInstanceOfType(visitorBuilder, typeof(FsVisitor.VisitorBuilder));
+            var visitor = visitorBuilder.Build();
+            Assert.AreEqual(visitor.VisitorId, visitorId);
+            Assert.AreEqual(visitor.HasConsented, true);
 
         }
     }

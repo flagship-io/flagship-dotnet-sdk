@@ -37,11 +37,11 @@ namespace Flagship.Config
         /// <summary>
         /// Define a callable in order to get callback when the SDK status has changed.
         /// </summary>
-        public event StatusChangeDelegate StatusChanged;
+        public event StatusChangedDelegate OnSdkStatusChanged;
 
-        internal void SetStatus(FlagshipStatus status)
+        internal void SetStatus(FSSdkStatus status)
         {
-            StatusChanged?.Invoke(status);
+            OnSdkStatusChanged?.Invoke(status);
         }
 
         /// <summary>
@@ -79,13 +79,6 @@ namespace Flagship.Config
         /// If it's set to true, hit cache and visitor cache will be disabled otherwise will be enabled.
         /// </summary>
         public bool DisableCache { get; set; }
-
-        /// <summary>
-        /// Define options to configure hit batching
-        /// </summary>
-        /// 
-        [Obsolete("Please use TrackingManagerConfig instead ")]
-        public ITrackingManagerConfig TrackingMangerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
 
         /// <summary>
         /// Define options to configure hit batching

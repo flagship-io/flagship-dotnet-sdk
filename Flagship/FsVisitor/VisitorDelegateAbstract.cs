@@ -2,25 +2,31 @@
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Flagship.Enums;
 using Flagship.Main;
+using Flagship.Delegate;
 
 namespace Flagship.FsVisitor
-{ 
+{
     internal abstract class VisitorDelegateAbstract : IVisitor
     {
         private readonly IDictionary<string, object> _context;
         private bool _hasConsented;
         protected string _anonymousId;
+        private IFlagsStatus flagsStatus;
+
+        public event OnFlagStatusChangedDelegate OnFlagsStatusChanged;
+
+        public event OnFlagStatusFetchRequiredDelegate OnFlagStatusFetchRequired;
+
+        public event OnFlagStatusFetchedDelegate OnFlagStatusFetched;
+
         virtual public string VisitorId { get; set; }
         virtual public ICollection<FlagDTO> Flags { get; set; }
-        virtual public ICollection<Campaign> Campaigns { get; set; } 
+        virtual public ICollection<Campaign> Campaigns { get; set; }
         virtual public bool HasConsented => _hasConsented;
         virtual public FlagshipConfig Config => ConfigManager.Config;
         virtual public IConfigManager ConfigManager { get; set; }
@@ -30,8 +36,24 @@ namespace Flagship.FsVisitor
         virtual public uint Traffic { get; set; }
         virtual public string SessionId { get; set; }
         virtual public SdkInitialData SdkInitialData { get; set; }
-        public FlagSyncStatus FlagSyncStatus { get; set; }
-        public static FlagshipStatus SDKStatus { get; set; }
+        public static FSSdkStatus SDKStatus { get; set; }
+        public virtual IFlagsStatus FlagsStatus
+        {
+            get => flagsStatus; 
+            internal set
+            {
+                flagsStatus = value;
+                OnFlagsStatusChanged?.Invoke(value);
+                if (value.Status == FSFlagStatus.FETCH_REQUIRED)
+                {
+                    OnFlagStatusFetchRequired?.Invoke(value.Reason);
+                }
+                else if (value.Status == FSFlagStatus.FETCHED)
+                {
+                    OnFlagStatusFetched?.Invoke();
+                }
+            }
+        }
 
         public Troubleshooting ConsentHitTroubleshooting { get; set; }
 
@@ -55,15 +77,20 @@ namespace Flagship.FsVisitor
             LoadPredefinedContext();
 
             GetStrategy().LookupVisitor();
-            this.FlagSyncStatus = FlagSyncStatus.CREATED;
+
+            FlagsStatus = new FlagsStatus
+            {
+                Reason = FSFetchReasons.FLAGS_NEVER_FETCHED,
+                Status = FSFlagStatus.FETCH_REQUIRED
+            };
         }
-       
+
         protected string CreateVisitorId()
         {
             return Guid.NewGuid().ToString();
         }
 
-        public FlagshipStatus GetSdkStatus()
+        public FSSdkStatus GetSdkStatus()
         {
             return SDKStatus;
         }
@@ -72,27 +99,27 @@ namespace Flagship.FsVisitor
         {
             _context[PredefinedContext.FLAGSHIP_CLIENT] = Constants.SDK_LANGUAGE;
             _context[PredefinedContext.FLAGSHIP_VERSION] = Constants.SDK_VERSION;
-            _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;  
+            _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;
         }
 
-        virtual public VisitorStrategyAbstract GetStrategy()
+        virtual public StrategyAbstract GetStrategy()
         {
-            VisitorStrategyAbstract strategy;
-            if (Fs.Status == FlagshipStatus.NOT_INITIALIZED)
+            StrategyAbstract strategy;
+            if (Fs.Status == FSSdkStatus.SDK_NOT_INITIALIZED)
             {
                 strategy = new NotReadyStrategy(this);
             }
-            else if (Fs.Status == FlagshipStatus.READY_PANIC_ON)
+            else if (Fs.Status == FSSdkStatus.SDK_PANIC)
             {
-                strategy =  new PanicStrategy(this);
+                strategy = new PanicStrategy(this);
             }
             else if (!HasConsented)
             {
-                strategy =  new NoConsentStrategy(this);
+                strategy = new NoConsentStrategy(this);
             }
             else
             {
-                strategy =  new DefaultStrategy(this);
+                strategy = new DefaultStrategy(this);
             }
             strategy.Murmur32 = Murmur.MurmurHash.Create32();
             return strategy;
@@ -108,18 +135,16 @@ namespace Flagship.FsVisitor
 
         abstract public Task FetchFlags();
 
-        abstract public IFlag<string> GetFlag(string key, string defaultValue);
-        abstract public IFlag<long> GetFlag(string key, long defaultValue);
-        abstract public IFlag<bool> GetFlag(string key, bool defaultValue);
-        abstract public IFlag<JObject> GetFlag(string key, JObject defaultValue);
-        abstract public IFlag<JArray> GetFlag(string key, JArray defaultValue);
+        abstract public IFlag GetFlag(string key);
 
-        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
-        abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
-        abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
-        abstract public Task SendHit(HitAbstract hit); 
+        abstract public IFlagCollection GetFlags();
 
-        abstract public void UpdateContext(IDictionary<string, object> context); 
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false);
+        abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed);
+        abstract public IFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
+        abstract public Task SendHit(HitAbstract hit);
+
+        abstract public void UpdateContext(IDictionary<string, object> context);
         abstract public void UpdateContext(string key, string value);
 
         abstract public void UpdateContext(string key, double value);

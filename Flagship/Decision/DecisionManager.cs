@@ -16,7 +16,7 @@ namespace Flagship.Decision
 {
     internal abstract class DecisionManager : IDecisionManager
     {
-        public event StatusChangeDelegate StatusChange;
+        public event StatusChangedDelegate StatusChange;
         protected bool _isPanic = false;
         public TroubleshootingData TroubleshootingData { get; set; }
 
@@ -24,14 +24,19 @@ namespace Flagship.Decision
 
         public string LastBucketingTimestamp { get ; set; }
 
-        public bool IsPanic
+        virtual public bool IsPanic
         {
             get => _isPanic;
             protected set
             {
                 _isPanic = value;
-                StatusChange?.Invoke(_isPanic ? FlagshipStatus.READY_PANIC_ON : FlagshipStatus.READY);
+                StatusChange?.Invoke(_isPanic ? FSSdkStatus.SDK_PANIC : FSSdkStatus.SDK_INITIALIZED);
             }
+        }
+
+        protected void UpdateStatus(FSSdkStatus sdkStatus)
+        {
+            StatusChange?.Invoke(sdkStatus); 
         }
 
         public HttpClient HttpClient { get; set; }

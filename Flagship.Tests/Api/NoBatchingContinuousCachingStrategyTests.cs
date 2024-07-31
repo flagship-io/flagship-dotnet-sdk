@@ -1,23 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Flagship.Api;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Flagship.Logger;
 using Moq;
 using Flagship.Hit;
-using System.Net.Http;
-using System.Threading;
 using Moq.Protected;
 using Flagship.Enums;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
-using Microsoft.QualityTools.Testing.Fakes;
 using Flagship.Config;
 using System.Collections.Concurrent;
-using Newtonsoft.Json.Linq;
+using Flagship.Model;
 
 namespace Flagship.Api.Tests
 {
@@ -36,36 +28,41 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            HttpResponseMessage httpResponse = new HttpResponseMessage
+            HttpResponseMessage httpResponse = new()
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
                 Content = new StringContent("", Encoding.UTF8, "application/json")
             };
 
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+            Mock<HttpMessageHandler> mockHandler = new();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
 
             var visitorId = "visitorId";
 
-            var eventHit = new Event( EventCategory.ACTION_TRACKING, "click")
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
+
+            var eventHit = new Event(EventCategory.ACTION_TRACKING, "click")
             {
                 VisitorId = visitorId,
-                Config = config
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
-
+                
                 var postDataString = JsonConvert.SerializeObject(eventHit.ToApiKeys());
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == Constants.HIT_EVENT_URL;
+                && x.RequestUri?.ToString() == Constants.HIT_EVENT_URL;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -79,7 +76,7 @@ namespace Flagship.Api.Tests
             var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
             var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
-            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>([config, httpClient, hitsPoolQueue, activatePoolQueue])
             {
                 CallBase = true,
             };
@@ -95,7 +92,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
 
         }
 
@@ -119,15 +115,18 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
-
             var visitorId = "visitorId";
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
             var page = new Page("http://localhost")
             {
                 VisitorId = visitorId,
-                Config = config
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                CreatedAt = now,
+                Config = config,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
@@ -137,9 +136,9 @@ namespace Flagship.Api.Tests
                 var headers = new HttpRequestMessage().Headers;
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == Constants.HIT_EVENT_URL;
+                && x.RequestUri?.ToString() == Constants.HIT_EVENT_URL;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -170,7 +169,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
 
         }
 
@@ -397,20 +395,24 @@ namespace Flagship.Api.Tests
                 Content = new StringContent("", Encoding.UTF8, "application/json")
             };
 
-            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
-
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
+            Mock<HttpMessageHandler> mockHandler = new();
 
             var visitorId = "visitorId";
+
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
             var activate = new Activate("variationGroupId", "variationId")
             {
                 VisitorId = visitorId,
-                Config = config
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
-            var activateBatch = new ActivateBatch(new List<Activate>() { activate }, config);
+            var activateBatch = new ActivateBatch([activate], config);
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
@@ -424,10 +426,10 @@ namespace Flagship.Api.Tests
                 headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
 
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                && x.RequestUri?.ToString() == url;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -441,7 +443,7 @@ namespace Flagship.Api.Tests
             var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
             var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
 
-            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            var strategyMock = new Mock<NoBatchingContinuousCachingStrategy>([config, httpClient, hitsPoolQueue, activatePoolQueue])
             {
                 CallBase = true,
             };
@@ -457,7 +459,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.FlushHitsAsync(It.IsAny<string[]>()), Times.Never());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
         }
 
 
@@ -480,18 +481,22 @@ namespace Flagship.Api.Tests
 
             Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
-
             var visitorId = "visitorId";
+
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
 
             var activate = new Activate("variationGroupId", "variationId")
             {
                 VisitorId = visitorId,
-                Config = config
+                Key = $"{visitorId}:{Guid.NewGuid()}",
+                Config = config,
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
-            var activateBatch = new ActivateBatch(new List<Activate>() { activate }, config);
+            var activateBatch = new ActivateBatch([activate], config);
 
             Func<HttpRequestMessage, bool> actionBatch1 = (HttpRequestMessage x) =>
             {
@@ -505,10 +510,10 @@ namespace Flagship.Api.Tests
                 headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
                 headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
 
                 return result == postDataString && headers.ToString() == x.Headers.ToString() && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                && x.RequestUri?.ToString() == url;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
@@ -539,7 +544,6 @@ namespace Flagship.Api.Tests
             strategyMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(item => item.Type == HitType.TROUBLESHOOTING)), Times.Once());
 
             httpResponse.Dispose();
-            shimeContext.Dispose();
         }
 
 
@@ -554,9 +558,6 @@ namespace Flagship.Api.Tests
                 TrackingManagerConfig = new TrackingManagerConfig()
             };
 
-            var shimeContext = ShimsContext.Create();
-            System.Fakes.ShimDateTime.NowGet = () => { return new DateTime(2022, 1, 1); };
-
             HttpResponseMessage httpResponse = new HttpResponseMessage
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
@@ -567,15 +568,22 @@ namespace Flagship.Api.Tests
 
             var visitorId = "visitorId";
 
+            var now = DateTime.Now;
+            var dateTimeProviderMock = new Mock<IDateTimeProvider>();
+            dateTimeProviderMock.Setup(x => x.Now).Returns(now);
+
             var activate = new Activate("variationGroupId", "variationId")
             {
                 VisitorId = visitorId,
+                Key = $"{visitorId}:{Guid.NewGuid()}",
                 Config = config,
-                Key = $"{visitorId}:{Guid.NewGuid()}"
+                CreatedAt = now,
+                DateTimeProvider = dateTimeProviderMock.Object
             };
 
             var activate2 = new Activate("variationGroupId-2", "variationId-2")
             {
+                CreatedAt = now,
                 VisitorId = visitorId,
                 Config = config,
                 Key = $"{visitorId}:{Guid.NewGuid()}"
@@ -583,6 +591,7 @@ namespace Flagship.Api.Tests
 
             var activate3 = new Activate("variationGroupId-3", "variationId-3")
             {
+                CreatedAt = now,
                 VisitorId = visitorId,
                 Config = config,
                 Key = $"{visitorId}:{Guid.NewGuid()}"
@@ -609,14 +618,14 @@ namespace Flagship.Api.Tests
 
                 var url = Constants.BASE_API_URL + BatchingCachingStrategyAbstract.URL_ACTIVATE;
 
-                var result = x.Content.ReadAsStringAsync().Result;
+                var result = x.Content?.ReadAsStringAsync().Result;
                 return result.Contains(activate.VariationId) && 
                 result.Contains(activate.VariationGroupId) && 
                 result.Contains(activate2.VariationId) && 
                 result.Contains(activate2.VariationGroupId) && 
                 result.Contains(activate3.VariationId) && 
                 result.Contains(activate3.VariationGroupId) && x.Method == HttpMethod.Post
-                && x.RequestUri.ToString() == url;
+                && x.RequestUri?.ToString() == url;
             };
 
             mockHandler.Protected().Setup<Task<HttpResponseMessage>>(

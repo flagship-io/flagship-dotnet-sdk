@@ -13,8 +13,6 @@ using System.Diagnostics;
 using Newtonsoft.Json;
 using static System.Net.WebRequestMethods;
 using System.Security.Policy;
-using System.Runtime.Remoting.Messaging;
-using System.Runtime.Remoting.Contexts;
 using Newtonsoft.Json.Linq;
 using Moq;
 
@@ -40,7 +38,7 @@ namespace Flagship.Hit.Tests
             var lastBucketingTimestamp = DateTime.Now.ToString();
             uint traffic = 50;
             var flagshipInstanceId = "FlagshipInstanceId";
-            var sdkStatus = FlagshipStatus.READY;
+            var sdkStatus = FSSdkStatus.SDK_INITIALIZED;
             var sdkConfigMode = DecisionMode.DECISION_API;
             var sdkConfigTimeout = TimeSpan.FromSeconds(10);
             var sdkConfigPollingInterval = TimeSpan.FromSeconds(11);

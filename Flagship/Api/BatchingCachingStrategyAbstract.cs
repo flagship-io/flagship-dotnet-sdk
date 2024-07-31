@@ -87,7 +87,7 @@ namespace Flagship.Api
             var activateHitPool = new List<Activate>();
             lock (ActivatePoolQueue)
             {
-                    activateHitPool = ActivatePoolQueue.Values.ToList();
+                    activateHitPool = ActivatePoolQueue.Values.Take(Constants.BATCH_ACTIVATE_HIT_COUNT_LIMIT).ToList();
                     var keys = activateHitPool.Select(x => x.Key).ToList();
                     foreach (var item in keys)
                     {
@@ -108,7 +108,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     fromFlag,
                     exposedVisitor
@@ -134,7 +134,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                     batchTriggeredBy = $"{batchTriggeredBy}"
@@ -199,7 +199,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace, 
                     batchTriggeredBy = $"{batchTriggeredBy}"
@@ -224,6 +224,7 @@ namespace Flagship.Api
 
             if (!batch.Hits.Any())
             {
+                await FlushHitsAsync(hitKeysToRemove.ToArray());
                 return;
             }
 
@@ -273,7 +274,7 @@ namespace Flagship.Api
                     HitsPoolQueue.TryAdd(item.Key, item);
                 }
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url = Constants.HIT_EVENT_URL,
                     body = requestBody,
@@ -527,7 +528,7 @@ namespace Flagship.Api
                     AddTroubleshootingHit(hit); ;
                 }
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url,
                     headers = new Dictionary<string, string>(),
@@ -549,7 +550,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                 }), SEND_TROUBLESHOOTING_QUEUE);
@@ -647,7 +648,7 @@ namespace Flagship.Api
             {
                 AddUsageHit(hit);
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url,
                     headers = new Dictionary<string, string>(),
@@ -670,7 +671,7 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     errorStackTrace = ex.StackTrace,
                 }), SEND_USAGE_HIT_QUEUE); 

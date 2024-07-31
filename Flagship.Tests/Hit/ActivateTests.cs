@@ -1,15 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Flagship.Hit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Flagship.Enums;
 using Flagship.Config;
 using Newtonsoft.Json;
 using Moq;
-using static Microsoft.QualityTools.Testing.Fakes.FakesDelegates;
 
 namespace Flagship.Hit.Tests
 {

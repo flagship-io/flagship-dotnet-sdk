@@ -26,7 +26,7 @@ namespace Flagship.Main
     {
         private static Fs instance;
 
-        private FlagshipStatus _status = FlagshipStatus.NOT_INITIALIZED;
+        private FSSdkStatus _status = FSSdkStatus.SDK_NOT_INITIALIZED;
 
         private FlagshipConfig _config;
 
@@ -54,21 +54,21 @@ namespace Flagship.Main
         /// <summary>
         /// Return current status of Flagship SDK.
         /// </summary>
-        public static FlagshipStatus Status => GetInstance()._status;
+        public static FSSdkStatus Status => GetInstance()._status;
 
         /// <summary>
         /// Return the current config used by the SDK.
         /// </summary>
         public static FlagshipConfig Config => GetInstance()._config;
 
-        private void SetStatus(FlagshipStatus status)
+        private void SetStatus(FSSdkStatus status)
         {
             if (_status == status)
             {
                 return;
             }
 
-            if (status == FlagshipStatus.READY)
+            if (status == FSSdkStatus.SDK_INITIALIZED)
             {
                 _configManager?.TrackingManager?.StartBatchingLoop();
             }
@@ -83,7 +83,7 @@ namespace Flagship.Main
 
         private static bool IsReady()
         {
-            return GetInstance()._status == FlagshipStatus.READY;
+            return GetInstance()._status == FSSdkStatus.SDK_INITIALIZED;
         }
 
         /// <summary>
@@ -93,6 +93,28 @@ namespace Flagship.Main
         {
             get { return GetInstance()._visitor; }
             internal set { GetInstance()._visitor = value; }
+        }
+
+        private IDecisionManager BuildDecisionManager( FlagshipConfig config, HttpClient httpClient)
+        {
+            IDecisionManager decisionManager = this._configManager?.DecisionManager;
+
+            if (decisionManager != null && decisionManager is BucketingManager bucketingManager)
+            {
+                bucketingManager.StopPolling();
+            }
+
+            if (config.DecisionMode == DecisionMode.BUCKETING)
+            {
+                decisionManager = new BucketingManager((BucketingConfig)config, httpClient, Murmur.MurmurHash.Create32());
+
+                decisionManager.StatusChange += DecisionManager_StatusChange;
+                _ = ((BucketingManager)decisionManager).StartPolling();
+                return decisionManager;
+            }
+            decisionManager = new ApiManager(config, httpClient);
+            decisionManager.StatusChange += DecisionManager_StatusChange;
+            return decisionManager;
         }
 
         /// <summary>
@@ -128,7 +150,7 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
 
             if (string.IsNullOrWhiteSpace(envId) || string.IsNullOrWhiteSpace(apiKey))
             {
-                fsInstance.SetStatus(FlagshipStatus.NOT_INITIALIZED);
+                fsInstance.SetStatus(FSSdkStatus.SDK_NOT_INITIALIZED);
                 Log.LogError(config, Constants.INITIALIZATION_PARAM_ERROR, Constants.PROCESS_INITIALIZATION);
                 return;
             }
@@ -136,28 +158,12 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             config.EnvId = envId;
             config.ApiKey = apiKey;
 
-            fsInstance.SetStatus(FlagshipStatus.STARTING);
             var httpClient = new HttpClient()
             {
                 Timeout = config.Timeout ?? TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT)
             };
 
-            IDecisionManager decisionManager = fsInstance._configManager?.DecisionManager;
-
-            if (decisionManager != null && decisionManager is BucketingManager bucketingManager)
-            {
-                bucketingManager.StopPolling();
-            }
-
-            if (config.DecisionMode == DecisionMode.BUCKETING)
-            {
-                decisionManager = new BucketingManager((BucketingConfig)config, httpClient, Murmur.MurmurHash.Create32());
-                _ = ((BucketingManager)decisionManager).StartPolling();
-            }
-            else
-            {
-                decisionManager = new ApiManager(config, httpClient);
-            }
+            var decisionManager = fsInstance.BuildDecisionManager(config, httpClient);
 
             var trackingManager = new TrackingManager(config, httpClient, instance._sdkInitialData.InstanceId);
 
@@ -166,7 +172,6 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
 
             decisionManager.TrackingManager = trackingManager;
 
-            decisionManager.StatusChange += DecisionManager_StatusChange;
 
             if (fsInstance._configManager == null)
             {
@@ -180,9 +185,13 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
 
             instance._sdkInitialData.LastInitializationTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
 
-            fsInstance.SetStatus(FlagshipStatus.READY);
-            Log.LogInfo(config, string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION),
-                Constants.PROCESS_INITIALIZATION);
+            if (fsInstance._status != FSSdkStatus.SDK_INITIALIZING)
+            {
+                fsInstance.SetStatus(FSSdkStatus.SDK_INITIALIZED);
+            }
+
+
+            Log.LogInfo(config, string.Format(Constants.SDK_STARTED_INFO, Constants.SDK_VERSION, fsInstance._status), Constants.PROCESS_INITIALIZATION);
         }
 
         /// <summary>
@@ -193,54 +202,24 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
         {
             await instance?._configManager?.TrackingManager?.SendBatch(CacheTriggeredBy.Flush);
         }
-        private static void DecisionManager_StatusChange(FlagshipStatus status)
+        private static void DecisionManager_StatusChange(FSSdkStatus status)
         {
             GetInstance().SetStatus(status);
         }
 
-        /// <summary>
-        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
-        /// </summary>
-        /// <param name="visitorId"></param>
-        /// <returns>VisitorBuilder | null</returns>
-        public static VisitorBuilder NewVisitor(string visitorId)
-        {
-            return NewVisitor(visitorId, InstanceType.NEW_INSTANCE);
-        }
-
-        /// <summary>
-        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
-        /// </summary>
-        /// <returns></returns>
-        public static VisitorBuilder NewVisitor()
-        {
-            return NewVisitor(null, InstanceType.NEW_INSTANCE);
-        }
-
+    
         /// <summary>
         /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
         /// </summary>
         /// <param name="visitorId"></param>
         /// <param name="instanceType"></param>
         /// <returns></returns>
-        public static VisitorBuilder NewVisitor(string visitorId, InstanceType instanceType)
+        public static VisitorBuilder NewVisitor(string visitorId, bool hasConsented)
         {
-            if (!IsReady())
-            {
-                return null;
-            }
             var instance = GetInstance();
-            return VisitorBuilder.Builder(instance._configManager, visitorId, instanceType, instance._sdkInitialData);
+            return VisitorBuilder.Builder(instance._configManager, visitorId, hasConsented, instance._sdkInitialData);
         }
 
-        /// <summary>
-        /// Initialize the builder and Return a VisitorBuilder or null if the SDK hasn't started successfully.
-        /// </summary>
-        /// <param name="instanceType"></param>
-        /// <returns></returns>
-        public static VisitorBuilder NewVisitor(InstanceType instanceType)
-        {
-            return NewVisitor(null, instanceType);
-        }
+   
     }
 }

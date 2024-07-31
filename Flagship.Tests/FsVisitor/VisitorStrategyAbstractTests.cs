@@ -135,27 +135,45 @@ namespace Flagship.FsVisitor.Tests
                 ["key"] = 1,
             };
 
-            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+            var visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager)
+            {
+                Flags = new List<FlagDTO>
+            {
+                new FlagDTO()
+                {
+                    Key= "key",
+                    CampaignId = "campaignId",
+                    CampaignName = "campaignName",
+                    CampaignType = "ab",
+                    IsReference = false,
+                    Value = "value",
+                    VariationGroupId = "variationGrId",
+                    VariationGroupName = "variationGrName",
+                    VariationId = "id",
+                    VariationName= "name",
+                }
+            },
 
-            visitorDelegate.ConsentHitTroubleshooting = new Troubleshooting();
-            visitorDelegate.SegmentHitTroubleshooting = new Troubleshooting();
+                ConsentHitTroubleshooting = new Troubleshooting(),
+                SegmentHitTroubleshooting = new Troubleshooting()
+            };
 
             var strategy = new DefaultStrategy(visitorDelegate)
             {
                 Murmur32 = MurmurHash.Create32()
             };
 
-            await strategy.SendFetchFlagsTroubleshootingHit(new List<Campaign>(), DateTime.Now);
+            await strategy.SendFetchFlagsTroubleshootingHit([], DateTime.Now);
 
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_FETCH_CAMPAIGNS)), Times.Once());
-            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_SEND_HIT)), Times.Exactly(2));
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_SEND_HIT)), Times.Exactly(3));
 
             decisionManager.TroubleshootingData = null;
 
-            await strategy.SendFetchFlagsTroubleshootingHit(new List<Campaign>(), DateTime.Now);
+            await strategy.SendFetchFlagsTroubleshootingHit([], DateTime.Now);
 
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_FETCH_CAMPAIGNS)), Times.Once());
-            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_SEND_HIT)), Times.Exactly(2));
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Label == Enums.DiagnosticLabel.VISITOR_SEND_HIT)), Times.Exactly(3));
         }
 
         [TestMethod()]

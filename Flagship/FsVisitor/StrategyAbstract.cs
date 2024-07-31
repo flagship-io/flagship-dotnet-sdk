@@ -3,7 +3,6 @@ using Flagship.Config;
 using Flagship.Decision;
 using Flagship.Enums;
 using Flagship.FsFlag;
-using Flagship.FsVisitor;
 using Flagship.Hit;
 using Flagship.Model;
 using Murmur;
@@ -11,14 +10,13 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
-    internal abstract class VisitorStrategyAbstract : IVisitorCore
+    internal abstract class StrategyAbstract : IVisitorCore
     {
         public const string LOOKUP_HITS_JSON_OBJECT_ERROR = "JSON DATA must fit the type HitCacheDTO";
         public const string LOOKUP_VISITOR_JSON_OBJECT_ERROR = "JSON DATA must fit the type VisitorCacheDTO, property version is required";
@@ -34,7 +32,7 @@ namespace Flagship.FsVisitor
 
         public Murmur32 Murmur32 { get; set; }
 
-        public VisitorStrategyAbstract(VisitorDelegateAbstract visitor)
+        public StrategyAbstract(VisitorDelegateAbstract visitor)
         {
             Visitor = visitor;
         }
@@ -73,7 +71,7 @@ namespace Flagship.FsVisitor
                 HitContent = hitEvent.ToApiKeys()
             };
 
-            if (DecisionManager.TroubleshootingData != null && Visitor.Traffic>0)
+            if (DecisionManager.TroubleshootingData != null)
             {
                 _ = TrackingManager.SendTroubleshootingHit(troubleshootingHit);
                 return;
@@ -392,9 +390,9 @@ namespace Flagship.FsVisitor
 
         abstract protected Task SendActivate(FlagDTO flag, object defaultValue = null);
 
-        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag);
+        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false);
         abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed);
-        abstract public IFlagMetadata GetFlagMetadata(IFlagMetadata metadata, string key, bool hasSameType);
+        abstract public IFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
 
         abstract public Task SendHit(HitAbstract hit);
 

@@ -1,43 +1,25 @@
 name: CI pipeline
-# This workflow is triggered on pushes to the repository.
 on:
-  push:
-    branches: [main, new_archi_v2]
   pull_request:
     branches: [main]
 
 jobs:
   build:
-    name: Test & Coverage
+    name: Test
     runs-on: windows-latest
     env: 
       FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
       FS_ENV_ID:  "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.x"
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+          dotnet-version: "8.0.x"
 
       - name: Restore NuGet Packages
-        run: nuget restore Flagship.sln
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Build dll
-        run: MSBuild Flagship.Tests/Flagship.Tests.csproj -property:Configuration=Debug
+        run: dotnet restore Flagship.sln
 
       - name: Run tests
         shell: pwsh
-        run: ./coverage-ci.bat
-
-      # - name: Upload coverage to codecov
-      #   uses: codecov/codecov-action@v2
-      #   with:
-      #     files: ./CoverageResults.xml
+        run: .\test-run-ci.bat
+        working-directory: Flagship.Tests

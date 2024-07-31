@@ -1,12 +1,9 @@
 ﻿using Flagship.Config;
+using Flagship.Delegate;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
@@ -25,7 +22,24 @@ namespace Flagship.FsVisitor
 
         public IDictionary<string, object> Context => _visitorDelegate.Context;
 
+        public IFlagsStatus FlagsStatus => _visitorDelegate.FlagsStatus;
+
         private readonly VisitorDelegateAbstract _visitorDelegate;
+
+        public event OnFlagStatusFetchRequiredDelegate OnFlagStatusFetchRequired{
+            add => _visitorDelegate.OnFlagStatusFetchRequired += value;
+            remove => _visitorDelegate.OnFlagStatusFetchRequired -= value;
+        }
+        public event OnFlagStatusFetchedDelegate OnFlagStatusFetched{
+            add => _visitorDelegate.OnFlagStatusFetched += value;
+            remove => _visitorDelegate.OnFlagStatusFetched -= value;
+        }
+
+        public event OnFlagStatusChangedDelegate OnFlagsStatusChanged
+        {
+            add => _visitorDelegate.OnFlagsStatusChanged += value;
+            remove => _visitorDelegate.OnFlagsStatusChanged -= value;
+        }
 
         internal Visitor(VisitorDelegateAbstract visitorDelegate)
         {
@@ -47,29 +61,14 @@ namespace Flagship.FsVisitor
              _visitorDelegate.SetConsent(hasConsented);   
         }
 
-        public IFlag<string> GetFlag(string key, string defaultValue)
+        public IFlag GetFlag(string key)
         {
-            return _visitorDelegate.GetFlag(key, defaultValue);
+            return _visitorDelegate.GetFlag(key);
         }
 
-        public IFlag<long> GetFlag(string key, long defaultValue)
+        public IFlagCollection GetFlags()
         {
-            return _visitorDelegate.GetFlag(key, defaultValue);
-        }
-
-        public IFlag<bool> GetFlag(string key, bool defaultValue)
-        {
-            return _visitorDelegate.GetFlag(key, defaultValue);
-        }
-
-        public IFlag<JObject> GetFlag(string key, JObject defaultValue)
-        {
-            return _visitorDelegate.GetFlag(key, defaultValue);
-        }
-
-        public IFlag<JArray> GetFlag(string key, JArray defaultValue)
-        {
-            return _visitorDelegate.GetFlag(key, defaultValue);
+            return _visitorDelegate.GetFlags();
         }
 
         public Task SendHit(HitAbstract hit)

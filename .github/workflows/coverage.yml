@@ -1,0 +1,33 @@
+name: Test & Coverage
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    name: Test & Coverage
+    runs-on: windows-latest
+    env: 
+      FS_API_KEY: "${{ secrets.FS_CI_CAMPAIGNS_API_KEY }}"
+      FS_ENV_ID:  "${{ secrets.FS_CI_CAMPAIGNS_ENV_ID }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore NuGet Packages
+        run: dotnet restore Flagship.sln
+
+      - name: Run tests
+        shell: pwsh
+        run: ./test-run-ci.bat
+        working-directory: Flagship.Tests
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./Flagship.Tests/coverage.cobertura.xml
+          flags: unittests
+          name: codecov-flagship-dotnet-sdk
+          fail_ci_if_error: true
+

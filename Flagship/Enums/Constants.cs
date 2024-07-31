@@ -18,6 +18,8 @@ namespace Flagship.Enums
 
         public const int BATCH_MAX_SIZE = 2500000;
 
+        public const int BATCH_ACTIVATE_HIT_COUNT_LIMIT = 100;
+
         public const int USAGE_HIT_ALLOCATION = 1;
 
         public const int NB_MIN_CONTEXT_KEYS = 3;
@@ -43,7 +45,7 @@ namespace Flagship.Enums
 
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
-        public const string SDK_VERSION = "3.3.2";
+        public const string SDK_VERSION = "4.0.0-alpha.0";
 
         public const string FLAGSHIP_SDK = "Flagship SDK";
 
@@ -68,19 +70,22 @@ namespace Flagship.Enums
 
         public const string FLAGSHIP_VISITOR_NOT_AUTHENTICATE = "Visitor is not authenticated yet";
 
-        public const string SDK_STARTED_INFO = "Flagship SDK (version: {0}) READY";
+        public const string SDK_STARTED_INFO = "Flagship SDK (version: {0}) {1}";
 
         public const string METHOD_DEACTIVATED_ERROR = "Method {0} is deactivated while SDK status is: {1}.";
 
-        public const string GET_FLAG_MISSING_ERROR = "No Flag for key {0}. Default value is returned.";
+        public const string GET_FLAG_MISSING_ERROR = "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, the default value `{2}` has been returned.";
 
-        public const string GET_FLAG_CAST_ERROR = "Flag for key {0} has a different type. Default value is returned.";
+        public const string GET_FLAG_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has a different type compared to the default value. Therefore, the default value `{2}` has been returned.";
 
-        public const string GET_FLAG_ERROR = "No flag for key {0}, no activate will be sent";
+        public const string GET_FLAG_VALUE =  "For the visitor `{0}`, the flag with key `{1}` has returned the value `{2}`.";
+        public const string GET_FLAG_ERROR = "For the visitor `{0}`, no flags were found with the key `{1}`. As a result, user exposure will not be sent.";
 
-        public const string USER_EXPOSED_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, no activate will be sent";
+        public const string VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED = "Visitor `{0}`, the flag with the key `{1}` has been exposed without calling the `getValue` method first.";
 
-        public const string GET_METADATA_CAST_ERROR = "Flag for key {0} has a different type with defaultValue, an empty metadata object is returned";
+        public const string USER_EXPOSED_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has been exposed despite having a different type compared to the default value";
+
+        public const string GET_METADATA_NO_FLAG_FOUND = "For the visitor `{0}`, no flags were found with the key `{1}`, an empty metadata object is returned";
 
         public const string HIT_NOT_NULL = "A hit must not be null";
 
@@ -89,6 +94,10 @@ namespace Flagship.Enums
         public const string PREDEFINED_CONTEXT_TYPE_ERROR = "Predefined Context {0} must be type of {1}";
 
         public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
+
+        public const string GET_FLAG = "GET_FLAG";
+
+        public const string GET_FLAG_NOT_FOUND = "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, an empty flag has been returned.";
 
         public const string BATCH = "batch";
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";

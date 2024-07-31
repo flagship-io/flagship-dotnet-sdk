@@ -79,9 +79,9 @@ namespace Flagship.Decision.Tests
             httpResponse.Dispose();
         }
 
-        private void DecisionManager_StatusChange1(FlagshipStatus status)
+        private void DecisionManager_StatusChange1(FSSdkStatus status)
         {
-            Assert.AreEqual(status, FlagshipStatus.READY);
+            Assert.AreEqual(status, FSSdkStatus.SDK_INITIALIZED);
         }
 
         [TestMethod()]
@@ -130,9 +130,9 @@ namespace Flagship.Decision.Tests
             httpResponse.Dispose();
         }
 
-        private void DecisionManager_StatusChange(FlagshipStatus status)
+        private void DecisionManager_StatusChange(FSSdkStatus status)
         {
-            Assert.AreEqual(status, FlagshipStatus.READY_PANIC_ON);
+            Assert.AreEqual(status, FSSdkStatus.SDK_PANIC);
         }
 
         [TestMethod()]

@@ -89,7 +89,7 @@ namespace Flagship.Hit
         public string StackName { get; set; }
         public string StackVersion { get; set; }
 
-        public FlagshipStatus? SdkStatus { get; set; }
+        public FSSdkStatus? SdkStatus { get; set; }
         public DecisionMode? SdkConfigMode { get; set; }
 
         public LogLevel? SdkConfigLogLevel { get; set; }

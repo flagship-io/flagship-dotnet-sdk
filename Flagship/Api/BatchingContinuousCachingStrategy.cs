@@ -131,7 +131,7 @@ namespace Flagship.Api
                     await CacheHitAsync(hitsDictionary);
                 }
 
-                Logger.Log.LogError(Config, Utils.Utils.ErrorFormat(ex.Message, new
+                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
                     url,
                     headers = new Dictionary<string, string>

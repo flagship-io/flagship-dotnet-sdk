@@ -15,7 +15,7 @@
             "codeRegexPatterns": [
                 "\/\/start demo([\\s\\S]*?)\/\/end demo"
             ],
-            "language": "c#"
+            "language": "csharp"
         }
     ]
 }

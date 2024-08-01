@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.1",
     "info": {
-      "title": "Flagship Demo Node Application",
+      "title": "Flagship Demo Asp.net core Application",
       "version": "1.0.0",
       "description": "This application is a demonstration of how to use Flagship for feature flagging and A/B testing in a Asp.Net core application."
     },

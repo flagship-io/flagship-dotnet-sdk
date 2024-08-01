@@ -1,5 +1,5 @@
 //start demo
-// Usage: node demo/Program.cs
+//demo/Program.cs
 using Flagship.Hit;
 using Flagship.Main;
 using Microsoft.Extensions.FileProviders;
@@ -18,14 +18,12 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/swagger"
 });
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Documentation v1");
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Documentation v1");
+    c.RoutePrefix = "";
+});
 
 // Step 1: Start the Flagship SDK by providing the environment ID and API key
 Fs.Start("<ENV_ID>", "<API_KEY>");
@@ -56,12 +54,12 @@ app.MapGet("/item", async (HttpContext context) =>
     var fsEnableDiscountValue = fsEnableDiscount.GetValue(false);
     var fsAddToCartBtnColorValue = fsAddToCartBtnColor.GetValue("blue");
 
-        return Results.Ok(new
-        {
-            item = new { name = "Flagship T-shirt", price = 20 },
-            fsEnableDiscount = fsEnableDiscountValue,
-            fsAddToCartBtnColor = fsAddToCartBtnColorValue
-        });
+    return Results.Ok(new
+    {
+        item = new { name = "Flagship T-shirt", price = 20 },
+        fsEnableDiscount = fsEnableDiscountValue,
+        fsAddToCartBtnColor = fsAddToCartBtnColorValue
+    });
 })
 .WithName("GetItem")
 .WithOpenApi();

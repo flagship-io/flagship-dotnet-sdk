@@ -75,7 +75,7 @@ app.MapPost("/add-to-cart", (HttpContext context) =>
             { "fs_is_vip", true }
         })
         .Build();
-        
+
     // Step 5: Send a hit to track an action
     var eventHit = new Event(EventCategory.ACTION_TRACKING, "add-to-cart-clicked");
     _ = visitor.SendHit(eventHit);
@@ -86,3 +86,4 @@ app.MapPost("/add-to-cart", (HttpContext context) =>
 .WithOpenApi();
 
 app.Run();
+//end demo

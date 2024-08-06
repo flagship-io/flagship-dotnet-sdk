@@ -1,0 +1,21 @@
+{
+    "sdkInstallSteps": [
+        {
+            "order": 1,
+            "description": "Install SDK",
+            "rawCode": "dotnet add package Flagship.SDK",
+            "language": "shell"
+        }
+    ],
+    "sdkUseSteps": [
+        {
+            "fileName": "Program.cs",
+            "order": 1,
+            "description": "This is a basic example of how to use the Flagship SDK using Asp.Net Core",
+            "codeRegexPatterns": [
+                "\/\/start demo([\\s\\S]*?)\/\/end demo"
+            ],
+            "language": "csharp"
+        }
+    ]
+}

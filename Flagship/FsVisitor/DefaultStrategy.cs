@@ -40,7 +40,7 @@ namespace Flagship.FsVisitor
                 return;
             }
 
-            if (Regex.IsMatch(key, @"^fs_", RegexOptions.IgnoreCase))
+            if (key == PredefinedContext.FLAGSHIP_CLIENT || key == PredefinedContext.FLAGSHIP_VERSION || key == PredefinedContext.FLAGSHIP_VISITOR)
             {
                 return;
             }

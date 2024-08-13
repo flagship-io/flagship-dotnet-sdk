@@ -70,5 +70,10 @@ namespace Flagship.FsVisitor
             TrackingManager.TroubleshootingData =null;
             return null;
         }
+
+        protected override Task SendActivate(FlagDTO flag, object defaultValue = null)
+        {
+           return Utils.Helper.VoidTask();
+        }
     }
 }

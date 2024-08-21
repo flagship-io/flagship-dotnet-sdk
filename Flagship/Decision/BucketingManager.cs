@@ -192,10 +192,13 @@ namespace Flagship.Decision
         {
             try
             {
-                if(!visitor.HasConsented || visitor.Context.Count <= Constants.NB_MIN_CONTEXT_KEYS)
+                if(!visitor.HasConsented || visitor.Context.Count <= Constants.NB_MIN_CONTEXT_KEYS || !visitor.HasContextBeenUpdated)
                 {
                     return;
                 }
+
+                visitor.HasContextBeenUpdated = false;
+
                 var segment = new Segment(visitor.Context);
                 await visitor.SendHit(segment);
 

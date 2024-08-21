@@ -55,7 +55,8 @@ namespace Flagship.Utils
             return sb.ToString();
         }
 
-        public static bool IsDeepEqual<TKey, TValue>(IDictionary<TKey, TValue> dict1, IDictionary<TKey, TValue> dict2)
+
+        public static bool IsDeepEqual(IDictionary<string, object> dict1, IDictionary<string, object> dict2)
         {
             if (dict1 == null && dict2 == null)
             {
@@ -69,13 +70,13 @@ namespace Flagship.Utils
             {
                 return false;
             }
-            foreach (var kvp in dict1)
+            foreach (var key in dict1.Keys)
             {
-                if (!dict2.TryGetValue(kvp.Key, out var value))
+                if (!dict2.ContainsKey(key))
                 {
                     return false;
                 }
-                if (!kvp.Value.Equals(value))
+                if (!dict1[key].Equals(dict2[key]))
                 {
                     return false;
                 }

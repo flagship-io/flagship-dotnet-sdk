@@ -54,5 +54,35 @@ namespace Flagship.Utils
             }
             return sb.ToString();
         }
+
+        public static bool IsDeepEqual<TKey, TValue>(IDictionary<TKey, TValue> dict1, IDictionary<TKey, TValue> dict2)
+        {
+            if (dict1 == null && dict2 == null)
+            {
+                return true;
+            }
+            if (dict1 == null || dict2 == null)
+            {
+                return false;
+            }
+            if (dict1.Count != dict2.Count)
+            {
+                return false;
+            }
+            foreach (var kvp in dict1)
+            {
+                if (!dict2.TryGetValue(kvp.Key, out var value))
+                {
+                    return false;
+                }
+                if (!kvp.Value.Equals(value))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
+
+
 }

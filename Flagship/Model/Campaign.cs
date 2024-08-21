@@ -7,10 +7,10 @@
         /// </summary>
         public string Id { get; set; }
 
-        public string Name { get; set; }    
+        public string Name { get; set; }
 
         public string Slug { get; set; }
-        
+
         /// <summary>
         /// The variation group ID (scenario)
         /// </summary>
@@ -22,8 +22,7 @@
         /// The variation assigned for the visitor
         /// </summary>
         public Variation Variation { get; set; }
-            
-        public string Type { get; set; }
 
+        public string Type { get; set; }
     }
 }

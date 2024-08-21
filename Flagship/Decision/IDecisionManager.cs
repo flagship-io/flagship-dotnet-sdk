@@ -1,14 +1,10 @@
-﻿using Flagship.Api;
-using Flagship.Config;
+﻿using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Flagship.Api;
 using Flagship.Delegate;
 using Flagship.FsVisitor;
 using Flagship.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.Decision
 {
@@ -22,7 +18,7 @@ namespace Flagship.Decision
 
         bool IsPanic { get; }
 
-        Task<ICollection<FlagDTO>> GetFlags (ICollection<Campaign> campaigns);
+        Task<ICollection<FlagDTO>> GetFlags(ICollection<Campaign> campaigns);
 
         Task<ICollection<Campaign>> GetCampaigns(VisitorDelegateAbstract visitor);
 
@@ -31,6 +27,5 @@ namespace Flagship.Decision
         string FlagshipInstanceId { get; set; }
 
         ITrackingManager TrackingManager { get; set; }
-
     }
 }

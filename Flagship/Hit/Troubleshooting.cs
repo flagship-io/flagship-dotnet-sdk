@@ -1,12 +1,8 @@
-﻿using System;
-namespace Flagship.Hit
+﻿namespace Flagship.Hit
 {
     internal class Troubleshooting : Diagnostic
     {
-        public Troubleshooting() : base(HitType.TROUBLESHOOTING)
-        {
-
-        }
+        public Troubleshooting()
+            : base(HitType.TROUBLESHOOTING) { }
     }
 }
-

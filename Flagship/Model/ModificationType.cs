@@ -8,6 +8,6 @@
         HTML,
         IMAGE,
         REDIRECT,
-        TURING_ENGINE
+        TURING_ENGINE,
     }
 }

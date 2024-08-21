@@ -1,17 +1,12 @@
-﻿using Flagship.Enums;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Flagship.Enums;
 
 namespace Flagship.Hit
 {
     /// <summary>
     /// This hit should be sent each time a visitor arrives on an interface on client side.
     /// </summary>
-    public class Screen:HitAbstract
+    public class Screen : HitAbstract
     {
         /// <summary>
         /// Screen name
@@ -22,14 +17,15 @@ namespace Flagship.Hit
         /// This hit should be sent each time a visitor arrives on an interface on client side.
         /// </summary>
         /// <param name="documentLocation">Screen name</param>
-        public Screen(string documentLocation):base(HitType.SCREENVIEW)
+        public Screen(string documentLocation)
+            : base(HitType.SCREENVIEW)
         {
             DocumentLocation = documentLocation;
         }
 
         internal override IDictionary<string, object> ToApiKeys()
         {
-            var apiKeys= base.ToApiKeys();
+            var apiKeys = base.ToApiKeys();
             apiKeys[Constants.DL_API_ITEM] = DocumentLocation;
             return apiKeys;
         }

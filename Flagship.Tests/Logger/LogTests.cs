@@ -1,14 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Flagship.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using Moq;
 using Flagship.Enums;
-using Flagship.Logger;
 
 namespace Flagship.Logger.Tests 
 {

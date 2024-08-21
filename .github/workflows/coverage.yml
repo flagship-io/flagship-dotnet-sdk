@@ -1,7 +1,7 @@
 name: Test & Coverage
 on:
   push:
-    branches: [main]
+    branches: [main, q2]
 jobs:
   build:
     name: Test & Coverage

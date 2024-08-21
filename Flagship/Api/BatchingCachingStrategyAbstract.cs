@@ -1,4 +1,12 @@
-﻿using Flagship.Config;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
+using Flagship.Config;
 using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.FsVisitor;
@@ -7,57 +15,53 @@ using Flagship.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.Api
 {
     internal abstract class BatchingCachingStrategyAbstract : ITrackingManagerCommon
     {
-        static public string PROCESS_CACHE_HIT = "CACHE HIT";
-        static public string HIT_DATA_CACHED = "Hit data has been saved into database : {0}";
-        static public string PROCESS_FLUSH_HIT = "FLUSH HIT";
-        static public string HIT_DATA_FLUSHED = "The following hit keys have been flushed from database : {0}";
-        static public string FLUSH_ALL_HITS = "All hits have been flushed from database";
-        static public string ADD_HIT = "ADD HIT";
-        static public string ADD_TROUBELSHOOTING_HIT = "ADD TROUBLESHOOTING HIT";
-        static public string ADD_ANALYTIC_HIT = "ADD ANALYTIC HIT"; 
-        static public string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
-        static public string HIT_TROUBLESHOOTING_ADDED_IN_QUEUE = "The hit troubleshooting has been added to the pool queue : {0}";
-        static public string HIT_ANALYTIC_ADDED_IN_QUEUE = "The hit analytic has been added to the pool queue : {0}";
-        static public string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
-        static public string SEND_BATCH = "SEND BATCH";
-        static public string SEND_HIT = "SEND HIT";
-        static public string SEND_ACTIVATE = "SEND ACTIVATE";
-        static public string SEND_TROUBLESHOOTING = "SEND TROUBLESHOOTING";
-        static public string SEND_TROUBLESHOOTING_QUEUE = "SEND TROUBLESHOOTING QUEUE";
-        static public string SEND_USAGE_HIT = "SEND USAGE HIT";
-        static public string SEND_USAGE_HIT_QUEUE = "SEND USAGE HIT QUEUE";
-        static public string ON_VISITOR_EXPOSED = "ON_VISITOR_EXPOSED";
-        static public string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
-        static public string HIT_SENT_SUCCESS = "hit has been sent : {0}";
-        static public string TROUBLESHOOTING_SENT_SUCCESS = "Troubleshooting hit has been sent : {0}";
-        static public string USAGE_SENT_SUCCESS = "Usage hit has been sent : {0}";
-        static public string URL_ACTIVATE = "activate";
-        static public string URL_EVENT = "events";
-        static public string STATUS_CODE = "StatusCode:";
-        static public string REASON_PHRASE = "ReasonPhrase";
-        static public string RESPONSE = "response";
-        static public string ITEM_DURATION = "duration";
-        static public string ITEM_BATCH_TRIGGERED_BY = "batchTriggeredBy";
+        public static string PROCESS_CACHE_HIT = "CACHE HIT";
+        public static string HIT_DATA_CACHED = "Hit data has been saved into database : {0}";
+        public static string PROCESS_FLUSH_HIT = "FLUSH HIT";
+        public static string HIT_DATA_FLUSHED =
+            "The following hit keys have been flushed from database : {0}";
+        public static string FLUSH_ALL_HITS = "All hits have been flushed from database";
+        public static string ADD_HIT = "ADD HIT";
+        public static string ADD_TROUBELSHOOTING_HIT = "ADD TROUBLESHOOTING HIT";
+        public static string ADD_ANALYTIC_HIT = "ADD ANALYTIC HIT";
+        public static string HIT_ADDED_IN_QUEUE = "The hit has been added to the pool queue : {0}";
+        public static string HIT_TROUBLESHOOTING_ADDED_IN_QUEUE =
+            "The hit troubleshooting has been added to the pool queue : {0}";
+        public static string HIT_ANALYTIC_ADDED_IN_QUEUE =
+            "The hit analytic has been added to the pool queue : {0}";
+        public static string BATCH_SENT_SUCCESS = "Batch hit has been sent : {0}";
+        public static string SEND_BATCH = "SEND BATCH";
+        public static string SEND_HIT = "SEND HIT";
+        public static string SEND_ACTIVATE = "SEND ACTIVATE";
+        public static string SEND_TROUBLESHOOTING = "SEND TROUBLESHOOTING";
+        public static string SEND_TROUBLESHOOTING_QUEUE = "SEND TROUBLESHOOTING QUEUE";
+        public static string SEND_USAGE_HIT = "SEND USAGE HIT";
+        public static string SEND_USAGE_HIT_QUEUE = "SEND USAGE HIT QUEUE";
+        public static string ON_VISITOR_EXPOSED = "ON_VISITOR_EXPOSED";
+        public static string SEND_SEGMENT_HIT = "SEND SEGMENT HIT";
+        public static string HIT_SENT_SUCCESS = "hit has been sent : {0}";
+        public static string TROUBLESHOOTING_SENT_SUCCESS =
+            "Troubleshooting hit has been sent : {0}";
+        public static string USAGE_SENT_SUCCESS = "Usage hit has been sent : {0}";
+        public static string URL_ACTIVATE = "activate";
+        public static string URL_EVENT = "events";
+        public static string STATUS_CODE = "StatusCode:";
+        public static string REASON_PHRASE = "ReasonPhrase";
+        public static string RESPONSE = "response";
+        public static string ITEM_DURATION = "duration";
+        public static string ITEM_BATCH_TRIGGERED_BY = "batchTriggeredBy";
 
-        public FlagshipConfig Config { get ; set ; }
+        public FlagshipConfig Config { get; set; }
         public HttpClient HttpClient { get; set; }
 
-        public ConcurrentDictionary<string,HitAbstract> HitsPoolQueue { get; set; }
+        public ConcurrentDictionary<string, HitAbstract> HitsPoolQueue { get; set; }
         public ConcurrentDictionary<string, Activate> ActivatePoolQueue { get; set; }
-        public ConcurrentDictionary<string, Troubleshooting> TroubleshootingQueue { get; set; } 
+        public ConcurrentDictionary<string, Troubleshooting> TroubleshootingQueue { get; set; }
         public ConcurrentDictionary<string, UsageHit> UsageHitQueue { get; set; }
         bool _isAnalyticQueueSending;
 
@@ -67,7 +71,12 @@ namespace Flagship.Api
 
         public string FlagshipInstanceId { get; set; }
 
-        public BatchingCachingStrategyAbstract(FlagshipConfig config, HttpClient httpClient, ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue, ref ConcurrentDictionary<string, Activate> activatePoolQueue)
+        public BatchingCachingStrategyAbstract(
+            FlagshipConfig config,
+            HttpClient httpClient,
+            ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue,
+            ref ConcurrentDictionary<string, Activate> activatePoolQueue
+        )
         {
             Config = config;
             HttpClient = httpClient;
@@ -77,54 +86,74 @@ namespace Flagship.Api
             UsageHitQueue = new ConcurrentDictionary<string, UsageHit>();
         }
 
-        abstract public Task Add(HitAbstract hit);
+        public abstract Task Add(HitAbstract hit);
 
-        virtual public async  Task ActivateFlag(Activate hit)
+        public virtual async Task ActivateFlag(Activate hit)
         {
-
             var hitKey = string.Format("{0}:{1}", hit.VisitorId, Guid.NewGuid());
             hit.Key = hitKey;
             var activateHitPool = new List<Activate>();
             lock (ActivatePoolQueue)
             {
-                    activateHitPool = ActivatePoolQueue.Values.Take(Constants.BATCH_ACTIVATE_HIT_COUNT_LIMIT).ToList();
-                    var keys = activateHitPool.Select(x => x.Key).ToList();
-                    foreach (var item in keys)
-                    {
-                        ActivatePoolQueue.TryRemove(item, out _);
-                    }
+                activateHitPool = ActivatePoolQueue
+                    .Values.Take(Constants.BATCH_ACTIVATE_HIT_COUNT_LIMIT)
+                    .ToList();
+                var keys = activateHitPool.Select(x => x.Key).ToList();
+                foreach (var item in keys)
+                {
+                    ActivatePoolQueue.TryRemove(item, out _);
+                }
             }
 
-            await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength).ConfigureAwait(false);
+            await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength)
+                .ConfigureAwait(false);
         }
 
         protected void OnVisitorExposed(Activate activate)
         {
-            var fromFlag = new ExposedFlag(activate.FlagKey, activate.FlagValue, activate.FlagDefaultValue, activate.FlagMetadata);
-            var exposedVisitor = new ExposedVisitor(activate.VisitorId, activate.AnonymousId, activate.VisitorContext);
+            var fromFlag = new ExposedFlag(
+                activate.FlagKey,
+                activate.FlagValue,
+                activate.FlagDefaultValue,
+                activate.FlagMetadata
+            );
+            var exposedVisitor = new ExposedVisitor(
+                activate.VisitorId,
+                activate.AnonymousId,
+                activate.VisitorContext
+            );
             try
             {
                 Config.InvokeOnVisitorExposed(exposedVisitor, fromFlag);
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    fromFlag,
-                    exposedVisitor
-                }), ON_VISITOR_EXPOSED);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(ex.Message, new { fromFlag, exposedVisitor }),
+                    ON_VISITOR_EXPOSED
+                );
             }
         }
 
-        abstract protected Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy);
-        virtual public async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
+        protected abstract Task SendActivate(
+            ICollection<Activate> activateHitsPool,
+            Activate currentActivate,
+            CacheTriggeredBy batchTriggeredBy
+        );
+
+        public virtual async Task SendBatch(
+            CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength
+        )
         {
             List<Activate> activateHits = new List<Activate>();
             try
             {
                 lock (ActivatePoolQueue)
                 {
-                    activateHits = ActivatePoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value).Values.ToList();
+                    activateHits = ActivatePoolQueue
+                        .ToDictionary(entry => entry.Key, entry => entry.Value)
+                        .Values.ToList();
                     var keys = activateHits.Select(x => x.Key);
                     foreach (var item in keys)
                     {
@@ -134,11 +163,18 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    errorStackTrace = ex.StackTrace,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_BATCH);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            errorStackTrace = ex.StackTrace,
+                            batchTriggeredBy = $"{batchTriggeredBy}",
+                        }
+                    ),
+                    SEND_BATCH
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -150,33 +186,34 @@ namespace Flagship.Api
                     Config = Config,
                     ErrorMessage = ex.Message,
                     ErrorStackTrace = ex.StackTrace,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = batchTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
             }
-
 
             if (activateHits.Count > 0)
             {
                 await SendActivate(activateHits, null, batchTriggeredBy).ConfigureAwait(false);
             }
 
-            var batch = new Batch()
-            {
-                Config = Config
-            };
+            var batch = new Batch() { Config = Config };
 
             var hitKeysToRemove = new List<string>();
             try
             {
                 lock (HitsPoolQueue)
                 {
-
-                    var HitsPoolQueueClone = HitsPoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    var HitsPoolQueueClone = HitsPoolQueue.ToDictionary(
+                        entry => entry.Key,
+                        entry => entry.Value
+                    );
                     foreach (var item in HitsPoolQueueClone)
                     {
-                        if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
+                        if (
+                            (DateTime.Now - item.Value.CreatedAt).TotalMilliseconds
+                            >= Constants.DEFAULT_HIT_CACHE_TIME
+                        )
                         {
                             hitKeysToRemove.Add(item.Key);
                             continue;
@@ -199,15 +236,22 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    errorStackTrace = ex.StackTrace, 
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_BATCH);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            errorStackTrace = ex.StackTrace,
+                            batchTriggeredBy = $"{batchTriggeredBy}",
+                        }
+                    ),
+                    SEND_BATCH
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
-                    Label = DiagnosticLabel.ERROR_CATCHED, 
+                    Label = DiagnosticLabel.ERROR_CATCHED,
                     LogLevel = LogLevel.ERROR,
                     VisitorId = FlagshipInstanceId,
                     FlagshipInstanceId = FlagshipInstanceId,
@@ -215,12 +259,11 @@ namespace Flagship.Api
                     Config = Config,
                     ErrorMessage = ex.Message,
                     ErrorStackTrace = ex.StackTrace,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = batchTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
             }
-
 
             if (!batch.Hits.Any())
             {
@@ -233,13 +276,22 @@ namespace Flagship.Api
 
             try
             {
-                var requestMessage = new HttpRequestMessage(HttpMethod.Post, Constants.HIT_EVENT_URL);
+                var requestMessage = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    Constants.HIT_EVENT_URL
+                );
 
-                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+                requestMessage.Headers.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON)
+                );
 
                 var postDataJson = JsonConvert.SerializeObject(requestBody);
 
-                var stringContent = new StringContent(postDataJson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+                var stringContent = new StringContent(
+                    postDataJson,
+                    Encoding.UTF8,
+                    Constants.HEADER_APPLICATION_JSON
+                );
 
                 requestMessage.Content = stringContent;
 
@@ -249,21 +301,33 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {STATUS_CODE, response.StatusCode},
-                        {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
+                        { STATUS_CODE, response.StatusCode },
+                        { REASON_PHRASE, response.ReasonPhrase },
+                        {
+                            RESPONSE,
+                            await response.Content.ReadAsStringAsync().ConfigureAwait(false)
+                        },
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(new
-                {
-                    url = Constants.HIT_EVENT_URL,
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                })), SEND_BATCH);
+                Logger.Log.LogDebug(
+                    Config,
+                    string.Format(
+                        BATCH_SENT_SUCCESS,
+                        JsonConvert.SerializeObject(
+                            new
+                            {
+                                url = Constants.HIT_EVENT_URL,
+                                body = requestBody,
+                                duration = (DateTime.Now - now).TotalMilliseconds,
+                                batchTriggeredBy = $"{batchTriggeredBy}",
+                            }
+                        )
+                    ),
+                    SEND_BATCH
+                );
 
                 await FlushHitsAsync(hitKeysToRemove.ToArray()).ConfigureAwait(false);
             }
@@ -274,18 +338,25 @@ namespace Flagship.Api
                     HitsPoolQueue.TryAdd(item.Key, item);
                 }
 
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    url = Constants.HIT_EVENT_URL,
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_BATCH);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            url = Constants.HIT_EVENT_URL,
+                            body = requestBody,
+                            duration = (DateTime.Now - now).TotalMilliseconds,
+                            batchTriggeredBy = $"{batchTriggeredBy}",
+                        }
+                    ),
+                    SEND_BATCH
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
-                    Label= DiagnosticLabel.SEND_BATCH_HIT_ROUTE_RESPONSE_ERROR,
-                    LogLevel= LogLevel.ERROR,
+                    Label = DiagnosticLabel.SEND_BATCH_HIT_ROUTE_RESPONSE_ERROR,
+                    LogLevel = LogLevel.ERROR,
                     VisitorId = FlagshipInstanceId,
                     FlagshipInstanceId = FlagshipInstanceId,
                     Traffic = 0,
@@ -295,7 +366,7 @@ namespace Flagship.Api
                     HttpResponseBody = ex.Message,
                     HttpResponseMethod = "POST",
                     HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = batchTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
@@ -309,10 +380,14 @@ namespace Flagship.Api
 
             lock (HitsPoolQueue)
             {
-                hitKeysToRemove.AddRange(HitsPoolQueue
-                    .Where(x => !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT) &&
-                                (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId))
-                    .Select(x => x.Key));
+                hitKeysToRemove.AddRange(
+                    HitsPoolQueue
+                        .Where(x =>
+                            !(x.Value is Event eventHit && eventHit.Action == Constants.FS_CONSENT)
+                            && (x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)
+                        )
+                        .Select(x => x.Key)
+                );
 
                 foreach (var item in hitKeysToRemove)
                 {
@@ -322,9 +397,13 @@ namespace Flagship.Api
 
             lock (ActivatePoolQueue)
             {
-                activateKeysToRemove.AddRange(ActivatePoolQueue
-                    .Where(x => x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId)
-                    .Select(x => x.Key));
+                activateKeysToRemove.AddRange(
+                    ActivatePoolQueue
+                        .Where(x =>
+                            x.Value.VisitorId == visitorId || x.Value.AnonymousId == visitorId
+                        )
+                        .Select(x => x.Key)
+                );
 
                 foreach (var item in activateKeysToRemove)
                 {
@@ -340,7 +419,9 @@ namespace Flagship.Api
             }
         }
 
-        public virtual async Task CacheHitAsync(ConcurrentDictionary<string, Activate> activatesHits)
+        public virtual async Task CacheHitAsync(
+            ConcurrentDictionary<string, Activate> activatesHits
+        )
         {
             var hit = new ConcurrentDictionary<string, HitAbstract>();
             foreach (var item in activatesHits)
@@ -363,7 +444,7 @@ namespace Flagship.Api
                 var data = new JObject();
                 var jsonSerializer = new JsonSerializer
                 {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 };
                 foreach (var keyValue in hits)
                 {
@@ -376,16 +457,20 @@ namespace Flagship.Api
                             VisitorId = keyValue.Value.VisitorId,
                             Type = keyValue.Value.Type,
                             Content = keyValue.Value,
-                            Time = DateTime.Now
-                        }
+                            Time = DateTime.Now,
+                        },
                     };
 
                     data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
                 }
-                
+
                 await hitCacheInstance.CacheHit(data).ConfigureAwait(false);
-              
-                Logger.Log.LogInfo(Config, string.Format(HIT_DATA_CACHED, JsonConvert.SerializeObject(data)), PROCESS_CACHE_HIT);
+
+                Logger.Log.LogInfo(
+                    Config,
+                    string.Format(HIT_DATA_CACHED, JsonConvert.SerializeObject(data)),
+                    PROCESS_CACHE_HIT
+                );
             }
             catch (Exception ex)
             {
@@ -403,7 +488,11 @@ namespace Flagship.Api
                     return;
                 }
                 await hitCacheInstance.FlushHits(hitKeys).ConfigureAwait(false);
-                Logger.Log.LogInfo(Config, string.Format(HIT_DATA_FLUSHED, JsonConvert.SerializeObject(hitKeys)), PROCESS_FLUSH_HIT);
+                Logger.Log.LogInfo(
+                    Config,
+                    string.Format(HIT_DATA_FLUSHED, JsonConvert.SerializeObject(hitKeys)),
+                    PROCESS_FLUSH_HIT
+                );
             }
             catch (Exception ex)
             {
@@ -461,19 +550,26 @@ namespace Flagship.Api
                 hit.Key = $"{hit.VisitorId}:{Guid.NewGuid()}";
             }
 
-            TroubleshootingQueue.TryAdd(hit.Key,hit);
+            TroubleshootingQueue.TryAdd(hit.Key, hit);
 
-            Logger.Log.LogDebug(Config, string.Format(HIT_TROUBLESHOOTING_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_TROUBELSHOOTING_HIT);
+            Logger.Log.LogDebug(
+                Config,
+                string.Format(
+                    HIT_TROUBLESHOOTING_ADDED_IN_QUEUE,
+                    JsonConvert.SerializeObject(hit.ToApiKeys())
+                ),
+                ADD_TROUBELSHOOTING_HIT
+            );
         }
 
-        public async virtual Task SendTroubleshootingHit(Troubleshooting hit)
+        public virtual async Task SendTroubleshootingHit(Troubleshooting hit)
         {
             if (!IsTroubleshootingActivated())
             {
                 return;
             }
 
-            if (TroubleshootingData.Traffic < hit.Traffic )
+            if (TroubleshootingData.Traffic < hit.Traffic)
             {
                 return;
             }
@@ -481,7 +577,9 @@ namespace Flagship.Api
             var url = Constants.TROUBLESHOOTING_HIT_URL;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
 
-            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+            requestMessage.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON)
+            );
 
             var requestBody = hit.ToApiKeys();
             var now = DateTime.Now;
@@ -490,7 +588,11 @@ namespace Flagship.Api
             {
                 var postDataJson = JsonConvert.SerializeObject(requestBody);
 
-                var stringContent = new StringContent(postDataJson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+                var stringContent = new StringContent(
+                    postDataJson,
+                    Encoding.UTF8,
+                    Constants.HEADER_APPLICATION_JSON
+                );
 
                 requestMessage.Content = stringContent;
 
@@ -500,21 +602,33 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {STATUS_CODE, response.StatusCode},
-                        {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
+                        { STATUS_CODE, response.StatusCode },
+                        { REASON_PHRASE, response.ReasonPhrase },
+                        {
+                            RESPONSE,
+                            await response.Content.ReadAsStringAsync().ConfigureAwait(false)
+                        },
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                Logger.Log.LogDebug(Config, string.Format(TROUBLESHOOTING_SENT_SUCCESS, JsonConvert.SerializeObject(new
-                {
-                    url,
-                    headers = new Dictionary<string, string>(),
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds
-                })), SEND_TROUBLESHOOTING);
+                Logger.Log.LogDebug(
+                    Config,
+                    string.Format(
+                        TROUBLESHOOTING_SENT_SUCCESS,
+                        JsonConvert.SerializeObject(
+                            new
+                            {
+                                url,
+                                headers = new Dictionary<string, string>(),
+                                body = requestBody,
+                                duration = (DateTime.Now - now).TotalMilliseconds,
+                            }
+                        )
+                    ),
+                    SEND_TROUBLESHOOTING
+                );
 
                 if (!string.IsNullOrWhiteSpace(hit.Key))
                 {
@@ -525,35 +639,47 @@ namespace Flagship.Api
             {
                 if (IsTroubleshootingActivated())
                 {
-                    AddTroubleshootingHit(hit); ;
+                    AddTroubleshootingHit(hit);
+                    ;
                 }
 
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    url,
-                    headers = new Dictionary<string, string>(),
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                }), SEND_TROUBLESHOOTING);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            url,
+                            headers = new Dictionary<string, string>(),
+                            body = requestBody,
+                            duration = (DateTime.Now - now).TotalMilliseconds,
+                        }
+                    ),
+                    SEND_TROUBLESHOOTING
+                );
             }
         }
 
-        public virtual async  Task SendTroubleshootingQueue()
+        public virtual async Task SendTroubleshootingQueue()
         {
             var troubleshootingQueueClone = new Dictionary<string, Troubleshooting>();
             try
             {
                 lock (TroubleshootingQueue)
                 {
-                    troubleshootingQueueClone = TroubleshootingQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    troubleshootingQueueClone = TroubleshootingQueue.ToDictionary(
+                        entry => entry.Key,
+                        entry => entry.Value
+                    );
                 }
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    errorStackTrace = ex.StackTrace,
-                }), SEND_TROUBLESHOOTING_QUEUE);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(ex.Message, new { errorStackTrace = ex.StackTrace }),
+                    SEND_TROUBLESHOOTING_QUEUE
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -570,10 +696,13 @@ namespace Flagship.Api
                 _ = SendTroubleshootingHit(troubleshooting);
             }
 
-
-            if (!IsTroubleshootingActivated() || _isTroubleshootingQueueSending || troubleshootingQueueClone.Count == 0)
+            if (
+                !IsTroubleshootingActivated()
+                || _isTroubleshootingQueueSending
+                || troubleshootingQueueClone.Count == 0
+            )
             {
-                return; 
+                return;
             }
 
             _isTroubleshootingQueueSending = true;
@@ -588,7 +717,7 @@ namespace Flagship.Api
 
         #region Analytic
 
-        public virtual void AddUsageHit(UsageHit hit) 
+        public virtual void AddUsageHit(UsageHit hit)
         {
             if (string.IsNullOrWhiteSpace(hit.Key))
             {
@@ -597,14 +726,24 @@ namespace Flagship.Api
 
             UsageHitQueue.TryAdd(hit.Key, hit);
 
-            Logger.Log.LogDebug(Config, string.Format(HIT_ANALYTIC_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_ANALYTIC_HIT);
+            Logger.Log.LogDebug(
+                Config,
+                string.Format(
+                    HIT_ANALYTIC_ADDED_IN_QUEUE,
+                    JsonConvert.SerializeObject(hit.ToApiKeys())
+                ),
+                ADD_ANALYTIC_HIT
+            );
         }
-        public async virtual Task SendUsageHit(UsageHit hit)
+
+        public virtual async Task SendUsageHit(UsageHit hit)
         {
             var url = Constants.USAGE_HIT_URL;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
 
-            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+            requestMessage.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON)
+            );
 
             var requestBody = hit.ToApiKeys();
             var now = DateTime.Now;
@@ -613,7 +752,11 @@ namespace Flagship.Api
             {
                 var postDataJson = JsonConvert.SerializeObject(requestBody);
 
-                var stringContent = new StringContent(postDataJson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+                var stringContent = new StringContent(
+                    postDataJson,
+                    Encoding.UTF8,
+                    Constants.HEADER_APPLICATION_JSON
+                );
 
                 requestMessage.Content = stringContent;
 
@@ -623,21 +766,33 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {STATUS_CODE, response.StatusCode},
-                        {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
+                        { STATUS_CODE, response.StatusCode },
+                        { REASON_PHRASE, response.ReasonPhrase },
+                        {
+                            RESPONSE,
+                            await response.Content.ReadAsStringAsync().ConfigureAwait(false)
+                        },
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                Logger.Log.LogDebug(Config, string.Format(USAGE_SENT_SUCCESS, JsonConvert.SerializeObject(new
-                {
-                    url,
-                    headers = new Dictionary<string, string>(),
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds
-                })), SEND_USAGE_HIT);
+                Logger.Log.LogDebug(
+                    Config,
+                    string.Format(
+                        USAGE_SENT_SUCCESS,
+                        JsonConvert.SerializeObject(
+                            new
+                            {
+                                url,
+                                headers = new Dictionary<string, string>(),
+                                body = requestBody,
+                                duration = (DateTime.Now - now).TotalMilliseconds,
+                            }
+                        )
+                    ),
+                    SEND_USAGE_HIT
+                );
 
                 if (!string.IsNullOrWhiteSpace(hit.Key))
                 {
@@ -648,17 +803,24 @@ namespace Flagship.Api
             {
                 AddUsageHit(hit);
 
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    url,
-                    headers = new Dictionary<string, string>(),
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                }), SEND_USAGE_HIT);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            url,
+                            headers = new Dictionary<string, string>(),
+                            body = requestBody,
+                            duration = (DateTime.Now - now).TotalMilliseconds,
+                        }
+                    ),
+                    SEND_USAGE_HIT
+                );
             }
         }
 
-        public virtual async Task SendUsageHitQueue() 
+        public virtual async Task SendUsageHitQueue()
         {
             var usageHitQueue = new Dictionary<string, UsageHit>();
 
@@ -666,15 +828,19 @@ namespace Flagship.Api
             {
                 lock (UsageHitQueue)
                 {
-                    usageHitQueue = UsageHitQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    usageHitQueue = UsageHitQueue.ToDictionary(
+                        entry => entry.Key,
+                        entry => entry.Value
+                    );
                 }
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    errorStackTrace = ex.StackTrace,
-                }), SEND_USAGE_HIT_QUEUE); 
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(ex.Message, new { errorStackTrace = ex.StackTrace }),
+                    SEND_USAGE_HIT_QUEUE
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -690,7 +856,6 @@ namespace Flagship.Api
 
                 _ = SendTroubleshootingHit(troubleshooting);
             }
-
 
             if (_isAnalyticQueueSending || usageHitQueue.Count == 0)
             {

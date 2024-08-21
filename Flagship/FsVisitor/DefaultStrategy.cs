@@ -1,46 +1,70 @@
-﻿using Flagship.Config;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using Flagship.Config;
 using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
     internal class DefaultStrategy : StrategyAbstract
     {
         public static string FETCH_FLAGS_STARTED = "visitor {0} fetchFlags process is started";
-        public static string FETCH_CAMPAIGNS_SUCCESS = "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns {3} in {4} ms";
-        public static string FETCH_CAMPAIGNS_FROM_CACHE = "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns from cache {3} in {4} ms";
-        public static string FETCH_FLAGS_FROM_CAMPAIGNS = "Visitor {0}, anonymousId {1} with context {2} has just fetched flags {3} from Campaigns";
-        public DefaultStrategy(VisitorDelegateAbstract visitor) : base(visitor)
-        {
-        }
+        public static string FETCH_CAMPAIGNS_SUCCESS =
+            "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns {3} in {4} ms";
+        public static string FETCH_CAMPAIGNS_FROM_CACHE =
+            "Visitor {0}, anonymousId {1} with context {2} has just fetched campaigns from cache {3} in {4} ms";
+        public static string FETCH_FLAGS_FROM_CAMPAIGNS =
+            "Visitor {0}, anonymousId {1} with context {2} has just fetched flags {3} from Campaigns";
 
-        virtual protected void UpdateContextKeyValue(string key, object value)
+        public DefaultStrategy(VisitorDelegateAbstract visitor)
+            : base(visitor) { }
+
+        protected virtual void UpdateContextKeyValue(string key, object value)
         {
-            if (PredefinedContext.IsPredefinedContext(key) && !PredefinedContext.CheckType(key, value))
+            if (
+                PredefinedContext.IsPredefinedContext(key)
+                && !PredefinedContext.CheckType(key, value)
+            )
             {
                 Log.LogError(
                     Config,
-                    string.Format(Constants.PREDEFINED_CONTEXT_TYPE_ERROR, key, PredefinedContext.GetPredefinedType(key)),
-                    "UpdateContext");
+                    string.Format(
+                        Constants.PREDEFINED_CONTEXT_TYPE_ERROR,
+                        key,
+                        PredefinedContext.GetPredefinedType(key)
+                    ),
+                    "UpdateContext"
+                );
                 return;
             }
 
-            if (!(value is string) && !(value is bool) && !(value is double) && !(value is long) && !(value is int))
+            if (
+                !(value is string)
+                && !(value is bool)
+                && !(value is double)
+                && !(value is long)
+                && !(value is int)
+            )
             {
-                Log.LogError(Config, string.Format(Constants.CONTEXT_PARAM_ERROR, key), "UpdateContex");
+                Log.LogError(
+                    Config,
+                    string.Format(Constants.CONTEXT_PARAM_ERROR, key),
+                    "UpdateContex"
+                );
                 return;
             }
 
-            if (key == PredefinedContext.FLAGSHIP_CLIENT || key == PredefinedContext.FLAGSHIP_VERSION || key == PredefinedContext.FLAGSHIP_VISITOR)
+            if (
+                key == PredefinedContext.FLAGSHIP_CLIENT
+                || key == PredefinedContext.FLAGSHIP_VERSION
+                || key == PredefinedContext.FLAGSHIP_VISITOR
+            )
             {
                 return;
             }
@@ -48,12 +72,22 @@ namespace Flagship.FsVisitor
             Visitor.Context[key] = value;
         }
 
-        protected void UpdateContextFetchFlagsStatus()
+        protected void UpdateContextFetchFlagsStatus(
+            IDictionary<string, object> oldContext,
+            IDictionary<string, object> newContext
+        )
         {
+            if (Utils.Helper.IsDeepEqual(oldContext, newContext))
+            {
+                return;
+            }
+
+            Visitor.HasContextBeenUpdated = true;
+
             Visitor.FlagsStatus = new FlagsStatus
             {
                 Reason = FSFetchReasons.VISITOR_CONTEXT_UPDATED,
-                Status = FSFlagStatus.FETCH_REQUIRED
+                Status = FSFlagStatus.FETCH_REQUIRED,
             };
         }
 
@@ -63,38 +97,55 @@ namespace Flagship.FsVisitor
             {
                 return;
             }
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             foreach (var item in context)
             {
                 UpdateContextKeyValue(item.Key, item.Value);
             }
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void UpdateContext(string key, string value)
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             UpdateContextKeyValue(key, value);
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void UpdateContext(string key, double value)
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             UpdateContextKeyValue(key, value);
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void UpdateContext(string key, bool value)
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             UpdateContextKeyValue(key, value);
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void ClearContext()
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             Visitor.Context.Clear();
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
-        protected virtual ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
+        protected virtual ICollection<Campaign> FetchVisitorCacheCampaigns(
+            VisitorDelegateAbstract visitor
+        )
         {
             var campaigns = new Collection<Campaign>();
             if (visitor.VisitorCache == null || visitor.VisitorCache.Data == null)
@@ -107,21 +158,23 @@ namespace Flagship.FsVisitor
 
                 foreach (var item in data.Data.Campaigns)
                 {
-                    campaigns.Add(new Campaign
-                    {
-                        Id = item.CampaignId,
-                        VariationGroupId = item.VariationGroupId,
-                        Variation = new Variation
+                    campaigns.Add(
+                        new Campaign
                         {
-                            Id = item.VariationId,
-                            Reference = item.IsReference ?? false,
-                            Modifications = new Modifications
+                            Id = item.CampaignId,
+                            VariationGroupId = item.VariationGroupId,
+                            Variation = new Variation
                             {
-                                Type = item.Type,
-                                Value = item.Flags
-                            }
+                                Id = item.VariationId,
+                                Reference = item.IsReference ?? false,
+                                Modifications = new Modifications
+                                {
+                                    Type = item.Type,
+                                    Value = item.Flags,
+                                },
+                            },
                         }
-                    });
+                    );
                 }
 
                 return campaigns;
@@ -130,14 +183,17 @@ namespace Flagship.FsVisitor
             return campaigns;
         }
 
-        async protected Task<ICollection<Campaign>> GetCampaignsFromDecisionManager(string functionName, DateTime now)
+        protected async Task<ICollection<Campaign>> GetCampaignsFromDecisionManager(
+            string functionName,
+            DateTime now
+        )
         {
             try
             {
                 Visitor.FlagsStatus = new FlagsStatus
                 {
                     Reason = FSFetchReasons.NONE,
-                    Status = FSFlagStatus.FETCHING
+                    Status = FSFlagStatus.FETCHING,
                 };
 
                 var campaigns = await DecisionManager.GetCampaigns(Visitor).ConfigureAwait(false);
@@ -146,14 +202,22 @@ namespace Flagship.FsVisitor
                     Visitor.FlagsStatus = new FlagsStatus
                     {
                         Reason = FSFetchReasons.NONE,
-                        Status = FSFlagStatus.PANIC
+                        Status = FSFlagStatus.PANIC,
                     };
                 }
 
-                Log.LogDebug(Config, string.Format(FETCH_CAMPAIGNS_SUCCESS,
-                    Visitor.VisitorId, Visitor.AnonymousId,
-                    JsonConvert.SerializeObject(Visitor.Context),
-                    JsonConvert.SerializeObject(campaigns), (DateTime.Now - now).Milliseconds), functionName);
+                Log.LogDebug(
+                    Config,
+                    string.Format(
+                        FETCH_CAMPAIGNS_SUCCESS,
+                        Visitor.VisitorId,
+                        Visitor.AnonymousId,
+                        JsonConvert.SerializeObject(Visitor.Context),
+                        JsonConvert.SerializeObject(campaigns),
+                        (DateTime.Now - now).Milliseconds
+                    ),
+                    functionName
+                );
 
                 return campaigns;
             }
@@ -162,36 +226,49 @@ namespace Flagship.FsVisitor
                 Visitor.FlagsStatus = new FlagsStatus
                 {
                     Reason = FSFetchReasons.FLAGS_FETCHING_ERROR,
-                    Status = FSFlagStatus.FETCH_REQUIRED
+                    Status = FSFlagStatus.FETCH_REQUIRED,
                 };
                 Log.LogError(Config, ex.Message, functionName);
             }
             return null;
         }
 
-        async public override Task FetchFlags()
+        public override async Task FetchFlags()
         {
             const string FUNCTION_NAME = "FetchFlags";
-            Log.LogDebug(Config, string.Format(FETCH_FLAGS_STARTED, Visitor.VisitorId), FUNCTION_NAME);
+            Log.LogDebug(
+                Config,
+                string.Format(FETCH_FLAGS_STARTED, Visitor.VisitorId),
+                FUNCTION_NAME
+            );
             ICollection<Campaign> campaigns = new List<Campaign>();
             var now = DateTime.Now;
 
             try
             {
-                campaigns = await GetCampaignsFromDecisionManager(FUNCTION_NAME, now).ConfigureAwait(false);
+                campaigns = await GetCampaignsFromDecisionManager(FUNCTION_NAME, now)
+                    .ConfigureAwait(false);
                 if (campaigns.Count == 0)
                 {
                     campaigns = FetchVisitorCacheCampaigns(Visitor);
                     if (campaigns.Count > 0)
                     {
-                        Log.LogDebug(Config, string.Format(FETCH_CAMPAIGNS_FROM_CACHE,
-                    Visitor.VisitorId, Visitor.AnonymousId,
-                    JsonConvert.SerializeObject(Visitor.Context),
-                    JsonConvert.SerializeObject(campaigns), (DateTime.Now - now).Milliseconds), FUNCTION_NAME);
+                        Log.LogDebug(
+                            Config,
+                            string.Format(
+                                FETCH_CAMPAIGNS_FROM_CACHE,
+                                Visitor.VisitorId,
+                                Visitor.AnonymousId,
+                                JsonConvert.SerializeObject(Visitor.Context),
+                                JsonConvert.SerializeObject(campaigns),
+                                (DateTime.Now - now).Milliseconds
+                            ),
+                            FUNCTION_NAME
+                        );
                         Visitor.FlagsStatus = new FlagsStatus
                         {
                             Reason = FSFetchReasons.FLAGS_FETCHED_FROM_CACHE,
-                            Status = FSFlagStatus.FETCH_REQUIRED
+                            Status = FSFlagStatus.FETCH_REQUIRED,
                         };
                     }
                 }
@@ -205,18 +282,24 @@ namespace Flagship.FsVisitor
                     Visitor.FlagsStatus = new FlagsStatus
                     {
                         Reason = FSFetchReasons.NONE,
-                        Status = FSFlagStatus.FETCHED
+                        Status = FSFlagStatus.FETCHED,
                     };
                 }
 
-                Log.LogDebug(Config, string.Format(FETCH_FLAGS_FROM_CAMPAIGNS,
-                    Visitor.VisitorId, Visitor.AnonymousId,
-                    JsonConvert.SerializeObject(Visitor.Context),
-                    JsonConvert.SerializeObject(Visitor.Flags)), FUNCTION_NAME);
+                Log.LogDebug(
+                    Config,
+                    string.Format(
+                        FETCH_FLAGS_FROM_CAMPAIGNS,
+                        Visitor.VisitorId,
+                        Visitor.AnonymousId,
+                        JsonConvert.SerializeObject(Visitor.Context),
+                        JsonConvert.SerializeObject(Visitor.Flags)
+                    ),
+                    FUNCTION_NAME
+                );
 
                 _ = SendFetchFlagsTroubleshootingHit(campaigns, now);
                 _ = SendUsageHitSdkConfig();
-
             }
             catch (Exception ex)
             {
@@ -239,30 +322,37 @@ namespace Flagship.FsVisitor
                     VisitorIsAuthenticated = string.IsNullOrEmpty(Visitor.AnonymousId),
                     VisitorFlags = Visitor.Flags,
                     LastBucketingTimestamp = DecisionManager.LastBucketingTimestamp,
-                    LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
+                    LastInitializationTimestamp = Visitor
+                        .SdkInitialData
+                        ?.LastInitializationTimestamp,
                     HttpResponseTime = (DateTime.Now - now).Milliseconds,
 
                     SdkConfigMode = Config.DecisionMode,
                     SdkConfigTimeout = Config.Timeout,
-                    SdkConfigTrackingManagerConfigStrategy = Config.TrackingManagerConfig.CacheStrategy,
-                    SdkConfigTrackingManagerConfigBatchIntervals = Config.TrackingManagerConfig.BatchIntervals,
-                    SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,
+                    SdkConfigTrackingManagerConfigStrategy = Config
+                        .TrackingManagerConfig
+                        .CacheStrategy,
+                    SdkConfigTrackingManagerConfigBatchIntervals = Config
+                        .TrackingManagerConfig
+                        .BatchIntervals,
+                    SdkConfigTrackingManagerConfigPoolMaxSize = Config
+                        .TrackingManagerConfig
+                        .PoolMaxSize,
                     SdkConfigUsingCustomHitCache = Config.HitCacheImplementation != null,
                     SdkConfigUsingCustomVisitorCache = Config.VisitorCacheImplementation != null,
                     SdkConfigUsingOnVisitorExposed = Config.HasOnVisitorExposed(),
-                    SdkConfigDisableCache = Config.DisableCache
+                    SdkConfigDisableCache = Config.DisableCache,
                 };
 
                 if (Config is BucketingConfig bucketingConfig)
                 {
-                    fetchFlagTroubleshootingHit.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
+                    fetchFlagTroubleshootingHit.SdkConfigPollingInterval =
+                        bucketingConfig.PollingInterval;
                 }
 
                 _ = SendTroubleshootingHit(fetchFlagTroubleshootingHit);
             }
         }
-
-
 
         protected override async Task SendActivate(FlagDTO flag, object defaultValue = null)
         {
@@ -275,7 +365,17 @@ namespace Flagship.FsVisitor
                 FlagValue = flag.Value,
                 FlagDefaultValue = defaultValue,
                 VisitorContext = Visitor.Context,
-                FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
+                FlagMetadata = new FlagMetadata(
+                    flag.CampaignId,
+                    flag.VariationGroupId,
+                    flag.VariationId,
+                    flag.IsReference,
+                    flag.CampaignType,
+                    flag.Slug,
+                    flag.CampaignName,
+                    flag.VariationGroupName,
+                    flag.VariationName
+                ),
             };
 
             await TrackingManager.ActivateFlag(activate).ConfigureAwait(false);
@@ -290,13 +390,18 @@ namespace Flagship.FsVisitor
                 AnonymousId = Visitor.AnonymousId,
                 VisitorId = Visitor.VisitorId,
                 Config = Config,
-                HitContent = activate.ToApiKeys()
+                HitContent = activate.ToApiKeys(),
             };
 
             _ = TrackingManager.SendTroubleshootingHit(activateTroubleshooting);
         }
 
-        private void sendFlagTroubleshooting(DiagnosticLabel label, string key, object defaultValue, bool? visitorExposed)
+        private void sendFlagTroubleshooting(
+            DiagnosticLabel label,
+            string key,
+            object defaultValue,
+            bool? visitorExposed
+        )
         {
             var troubleshootingHit = new Troubleshooting()
             {
@@ -311,45 +416,106 @@ namespace Flagship.FsVisitor
                 Config = Config,
                 FlagKey = key,
                 FlagDefaultValue = defaultValue,
-                VisitorExposed = visitorExposed
+                VisitorExposed = visitorExposed,
             };
 
             _ = SendTroubleshootingHit(troubleshootingHit);
         }
-        public override async Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
+
+        public override async Task VisitorExposed<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool hasGetValueBeenCalled = false
+        )
         {
             const string functionName = "VisitorExposed";
             if (flag == null)
             {
-                Log.LogError(Config, string.Format(Constants.GET_FLAG_ERROR, Visitor.VisitorId, key), functionName);
-                sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_FLAG_NOT_FOUND, key, defaultValue, null);
+                Log.LogError(
+                    Config,
+                    string.Format(Constants.GET_FLAG_ERROR, Visitor.VisitorId, key),
+                    functionName
+                );
+                sendFlagTroubleshooting(
+                    DiagnosticLabel.VISITOR_EXPOSED_FLAG_NOT_FOUND,
+                    key,
+                    defaultValue,
+                    null
+                );
                 return;
             }
 
             if (!hasGetValueBeenCalled)
             {
-                Log.LogWarning(Config, string.Format(Constants.VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED, Visitor.VisitorId, key), functionName);
-                sendFlagTroubleshooting(DiagnosticLabel.FLAG_VALUE_NOT_CALLED, key, defaultValue, null);
+                Log.LogWarning(
+                    Config,
+                    string.Format(
+                        Constants.VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED,
+                        Visitor.VisitorId,
+                        key
+                    ),
+                    functionName
+                );
+                sendFlagTroubleshooting(
+                    DiagnosticLabel.FLAG_VALUE_NOT_CALLED,
+                    key,
+                    defaultValue,
+                    null
+                );
+                return;
             }
 
-
-            if (flag.Value != null && defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
+            if (
+                flag.Value != null
+                && defaultValue != null
+                && !Utils.Helper.HasSameType(flag.Value, defaultValue)
+            )
             {
-                Log.LogWarning(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, Visitor.VisitorId, key), functionName);
-                sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING, key, defaultValue, null);
+                Log.LogWarning(
+                    Config,
+                    string.Format(Constants.USER_EXPOSED_CAST_ERROR, Visitor.VisitorId, key),
+                    functionName
+                );
+                sendFlagTroubleshooting(
+                    DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING,
+                    key,
+                    defaultValue,
+                    null
+                );
+                return;
             }
 
             await SendActivate(flag, defaultValue).ConfigureAwait(false);
         }
 
-        public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed = true)
+        public override T GetFlagValue<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool visitorExposed = true
+        )
         {
             const string functionName = "getFlag.value";
 
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
-                sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_FLAG_NOT_FOUND, key, defaultValue, visitorExposed);
+                Log.LogWarning(
+                    Config,
+                    string.Format(
+                        Constants.GET_FLAG_MISSING_ERROR,
+                        Visitor.VisitorId,
+                        key,
+                        defaultValue
+                    ),
+                    functionName
+                );
+                sendFlagTroubleshooting(
+                    DiagnosticLabel.GET_FLAG_VALUE_FLAG_NOT_FOUND,
+                    key,
+                    defaultValue,
+                    visitorExposed
+                );
 
                 return defaultValue;
             }
@@ -366,18 +532,36 @@ namespace Flagship.FsVisitor
 
             if (defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
-                sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING, key, defaultValue, visitorExposed);
+                Log.LogWarning(
+                    Config,
+                    string.Format(
+                        Constants.GET_FLAG_CAST_ERROR,
+                        Visitor.VisitorId,
+                        key,
+                        defaultValue
+                    ),
+                    functionName
+                );
+                sendFlagTroubleshooting(
+                    DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING,
+                    key,
+                    defaultValue,
+                    visitorExposed
+                );
 
                 return defaultValue;
             }
 
-            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, Visitor.VisitorId, key,  flag.Value), functionName);
+            Log.LogDebug(
+                Config,
+                string.Format(Constants.GET_FLAG_VALUE, Visitor.VisitorId, key, flag.Value),
+                functionName
+            );
 
             return (T)flag.Value;
         }
 
-        virtual protected void SendFlagMetadataTroubleshooting(string key)
+        protected virtual void SendFlagMetadataTroubleshooting(string key)
         {
             var troubleshootingHit = new Troubleshooting()
             {
@@ -401,7 +585,11 @@ namespace Flagship.FsVisitor
             const string functionName = "flag.metadata";
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, Visitor.VisitorId,  key), functionName);
+                Log.LogWarning(
+                    Config,
+                    string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, Visitor.VisitorId, key),
+                    functionName
+                );
 
                 SendFlagMetadataTroubleshooting(key);
 
@@ -410,14 +598,15 @@ namespace Flagship.FsVisitor
 
             return new FlagMetadata(
                 flag.CampaignId,
-                flag.VariationGroupId, 
+                flag.VariationGroupId,
                 flag.VariationId,
-                flag.IsReference, 
+                flag.IsReference,
                 flag.CampaignType,
-                flag.Slug, 
+                flag.Slug,
                 flag.CampaignName,
                 flag.VariationGroupName,
-                flag.VariationName);
+                flag.VariationName
+            );
         }
 
         public override async Task SendHit(IEnumerable<HitAbstract> hits)
@@ -427,6 +616,7 @@ namespace Flagship.FsVisitor
                 await SendHit(item).ConfigureAwait(false);
             }
         }
+
         public override async Task SendHit(HitAbstract hit)
         {
             const string functionName = "SendHit";
@@ -466,7 +656,7 @@ namespace Flagship.FsVisitor
                     AnonymousId = Visitor.AnonymousId,
                     VisitorId = Visitor.VisitorId,
                     Config = Config,
-                    HitContent = hit.ToApiKeys()
+                    HitContent = hit.ToApiKeys(),
                 };
 
                 _ = SendTroubleshootingHit(troubleshootingHit);
@@ -480,7 +670,8 @@ namespace Flagship.FsVisitor
         public override void Authenticate(string visitorId)
         {
             const string methodName = "Authenticate";
-            if (Config.DecisionMode == DecisionMode.BUCKETING)
+            var visitorCacheInstance = Config.VisitorCacheImplementation;
+            if (Config.DecisionMode == DecisionMode.BUCKETING && visitorCacheInstance == null)
             {
                 LogDeactivateOnBucketingMode(methodName);
                 return;
@@ -488,7 +679,11 @@ namespace Flagship.FsVisitor
 
             if (string.IsNullOrWhiteSpace(visitorId))
             {
-                Log.LogError(Config, string.Format(Constants.VISITOR_ID_ERROR, methodName), methodName);
+                Log.LogError(
+                    Config,
+                    string.Format(Constants.VISITOR_ID_ERROR, methodName),
+                    methodName
+                );
                 return;
             }
 
@@ -498,9 +693,8 @@ namespace Flagship.FsVisitor
             Visitor.FlagsStatus = new FlagsStatus
             {
                 Reason = FSFetchReasons.VISITOR_AUTHENTICATED,
-                Status = FSFlagStatus.FETCH_REQUIRED
+                Status = FSFlagStatus.FETCH_REQUIRED,
             };
-
 
             var troubleshootingHit = new Troubleshooting()
             {
@@ -521,7 +715,8 @@ namespace Flagship.FsVisitor
         public override void Unauthenticate()
         {
             const string methodName = "Unauthenticate";
-            if (Config.DecisionMode == DecisionMode.BUCKETING)
+            var visitorCacheInstance = Config.VisitorCacheImplementation;
+            if (Config.DecisionMode == DecisionMode.BUCKETING && visitorCacheInstance == null)
             {
                 LogDeactivateOnBucketingMode(methodName);
                 return;
@@ -529,7 +724,11 @@ namespace Flagship.FsVisitor
 
             if (string.IsNullOrWhiteSpace(Visitor.AnonymousId))
             {
-                Log.LogError(Config, string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName), methodName);
+                Log.LogError(
+                    Config,
+                    string.Format(Constants.FLAGSHIP_VISITOR_NOT_AUTHENTICATE, methodName),
+                    methodName
+                );
                 return;
             }
 
@@ -539,7 +738,7 @@ namespace Flagship.FsVisitor
             Visitor.FlagsStatus = new FlagsStatus
             {
                 Reason = FSFetchReasons.VISITOR_UNAUTHENTICATED,
-                Status = FSFlagStatus.FETCH_REQUIRED
+                Status = FSFlagStatus.FETCH_REQUIRED,
             };
 
             var troubleshootingHit = new Troubleshooting()
@@ -556,12 +755,11 @@ namespace Flagship.FsVisitor
             };
 
             _ = SendTroubleshootingHit(troubleshootingHit);
-
         }
 
         protected void LogDeactivateOnBucketingMode(string methodName)
         {
-            Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName);
+            Log.LogError(Config, Constants.XPC_BUCKETING_WARNING, methodName);
         }
     }
 }

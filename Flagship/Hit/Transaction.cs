@@ -1,16 +1,12 @@
-﻿using Flagship.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Flagship.Enums;
 
 namespace Flagship.Hit
 {
     /// <summary>
     /// This hit should be sent when a user complete a Transaction.
     /// </summary>
-    public class Transaction:HitAbstract
+    public class Transaction : HitAbstract
     {
         /// <summary>
         /// Unique identifier for your transaction.
@@ -18,7 +14,7 @@ namespace Flagship.Hit
         public string TransactionId { get; set; }
 
         /// <summary>
-        /// The name of the KPI that you will have inside your reporting. 
+        /// The name of the KPI that you will have inside your reporting.
         /// </summary>
         public string Affiliation { get; set; }
 
@@ -67,7 +63,8 @@ namespace Flagship.Hit
         /// </summary>
         /// <param name="transactionId">Unique identifier for your transaction.</param>
         /// <param name="affiliation">The name of the KPI that you will have inside your reporting. </param>
-        public Transaction(string transactionId, string affiliation):base(HitType.TRANSACTION)
+        public Transaction(string transactionId, string affiliation)
+            : base(HitType.TRANSACTION)
         {
             TransactionId = transactionId;
             Affiliation = affiliation;
@@ -81,17 +78,17 @@ namespace Flagship.Hit
 
             if (Taxes.HasValue)
             {
-                apiKeys[Constants.TT_API_ITEM]= Taxes.Value;
+                apiKeys[Constants.TT_API_ITEM] = Taxes.Value;
             }
 
-            if (Currency!=null)
+            if (Currency != null)
             {
                 apiKeys[Constants.TC_API_ITEM] = Currency;
             }
 
             if (CouponCode != null)
             {
-                apiKeys[Constants.TCC_API_ITEM]= CouponCode;
+                apiKeys[Constants.TCC_API_ITEM] = CouponCode;
             }
 
             if (ItemCount.HasValue)
@@ -99,24 +96,24 @@ namespace Flagship.Hit
                 apiKeys[Constants.ICN_API_ITEM] = ItemCount.Value;
             }
 
-            if (ShippingMethod!=null)
+            if (ShippingMethod != null)
             {
                 apiKeys[Constants.SM_API_ITEM] = ShippingMethod;
             }
 
-            if (PaymentMethod!=null)
+            if (PaymentMethod != null)
             {
                 apiKeys[Constants.PM_API_ITEM] = PaymentMethod;
             }
 
             if (TotalRevenue.HasValue)
             {
-                apiKeys[Constants.TR_API_ITEM]= TotalRevenue.Value;
+                apiKeys[Constants.TR_API_ITEM] = TotalRevenue.Value;
             }
 
             if (ShippingCosts.HasValue)
             {
-                apiKeys[Constants.TS_API_ITEM]= ShippingCosts.Value;
+                apiKeys[Constants.TS_API_ITEM] = ShippingCosts.Value;
             }
 
             return apiKeys;
@@ -124,13 +121,14 @@ namespace Flagship.Hit
 
         internal override bool IsReady(bool checkParent = true)
         {
-            return (!checkParent || base.IsReady()) && !string.IsNullOrWhiteSpace(TransactionId) && !string.IsNullOrWhiteSpace(Affiliation);
+            return (!checkParent || base.IsReady())
+                && !string.IsNullOrWhiteSpace(TransactionId)
+                && !string.IsNullOrWhiteSpace(Affiliation);
         }
 
         internal override string GetErrorMessage()
         {
             return Constants.HIT_TRANSACTION_ERROR_MESSAGE;
         }
-
     }
 }

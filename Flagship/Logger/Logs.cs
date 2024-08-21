@@ -1,20 +1,19 @@
-﻿using Flagship.Config;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Flagship.Config;
 
-namespace Flagship.Logger 
+namespace Flagship.Logger
 {
     internal static class Log
     {
-
         public static void LogError(FlagshipConfig config, string message, string tag)
         {
             try
             {
-                if (config == null || config.LogManager == null ||  config.LogLevel< Enums.LogLevel.ERROR)
+                if (
+                    config == null
+                    || config.LogManager == null
+                    || config.LogLevel < Enums.LogLevel.ERROR
+                )
                 {
                     return;
                 }
@@ -31,7 +30,11 @@ namespace Flagship.Logger
         {
             try
             {
-                if (config == null || config.LogManager==null || config.LogLevel < Enums.LogLevel.INFO)
+                if (
+                    config == null
+                    || config.LogManager == null
+                    || config.LogLevel < Enums.LogLevel.INFO
+                )
                 {
                     return;
                 }
@@ -48,7 +51,11 @@ namespace Flagship.Logger
         {
             try
             {
-                if (config == null || config.LogManager == null || config.LogLevel < Enums.LogLevel.WARNING)
+                if (
+                    config == null
+                    || config.LogManager == null
+                    || config.LogLevel < Enums.LogLevel.WARNING
+                )
                 {
                     return;
                 }
@@ -65,7 +72,11 @@ namespace Flagship.Logger
         {
             try
             {
-                if (config == null || config.LogManager == null || config.LogLevel < Enums.LogLevel.DEBUG)
+                if (
+                    config == null
+                    || config.LogManager == null
+                    || config.LogLevel < Enums.LogLevel.DEBUG
+                )
                 {
                     return;
                 }

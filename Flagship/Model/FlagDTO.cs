@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.Model
+﻿namespace Flagship.Model
 {
     public class FlagDTO
     {
         public string Key { get; set; }
         public string CampaignId { get; set; }
 
-        public string CampaignName { get; set; }    
+        public string CampaignName { get; set; }
 
         public string VariationGroupId { get; set; }
 
@@ -19,11 +13,11 @@ namespace Flagship.Model
 
         public string VariationId { get; set; }
 
-        public string VariationName { get; set; }  
+        public string VariationName { get; set; }
 
         public bool IsReference { get; set; }
 
-        public object Value { get; set; } 
+        public object Value { get; set; }
 
         public string CampaignType { get; set; }
         public string Slug { get; set; }

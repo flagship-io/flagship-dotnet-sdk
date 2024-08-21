@@ -1,9 +1,5 @@
-﻿using Flagship.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Flagship.Enums;
 
 namespace Flagship.Hit
 {
@@ -48,13 +44,13 @@ namespace Flagship.Hit
         /// <param name="transactionId">Unique identifier for your transaction.</param>
         /// <param name="name">Name of your item.</param>
         /// <param name="code">Specifies the SKU or item code.</param>
-        public Item(string transactionId, string name, string code ):base(HitType.ITEM)
+        public Item(string transactionId, string name, string code)
+            : base(HitType.ITEM)
         {
             TransactionId = transactionId;
             Name = name;
             Code = code;
         }
-
 
         internal override IDictionary<string, object> ToApiKeys()
         {
@@ -70,10 +66,10 @@ namespace Flagship.Hit
 
             if (Quantity.HasValue)
             {
-                apiKeys[Constants.IQ_API_ITEM]= Quantity.Value;
+                apiKeys[Constants.IQ_API_ITEM] = Quantity.Value;
             }
 
-            if (Category!=null)
+            if (Category != null)
             {
                 apiKeys[Constants.IV_API_ITEM] = Category;
             }
@@ -83,16 +79,15 @@ namespace Flagship.Hit
 
         internal override bool IsReady(bool checkParent = true)
         {
-            return (!checkParent || base.IsReady()) && 
-                !string.IsNullOrWhiteSpace(TransactionId) && 
-                !string.IsNullOrWhiteSpace(Name) && 
-                !string.IsNullOrWhiteSpace(Code);
+            return (!checkParent || base.IsReady())
+                && !string.IsNullOrWhiteSpace(TransactionId)
+                && !string.IsNullOrWhiteSpace(Name)
+                && !string.IsNullOrWhiteSpace(Code);
         }
 
         internal override string GetErrorMessage()
         {
             return Constants.HIT_ITEM_ERROR_MESSAGE;
         }
-
     }
 }

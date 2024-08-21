@@ -1,16 +1,20 @@
-﻿using Flagship.Config;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Flagship.Config;
 using Flagship.Delegate;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
     public class Visitor : IVisitor
     {
-        public string VisitorId { get => _visitorDelegate.VisitorId; set => _visitorDelegate.VisitorId = value; }
+        public string VisitorId
+        {
+            get => _visitorDelegate.VisitorId;
+            set => _visitorDelegate.VisitorId = value;
+        }
 
         public string AnonymousId => _visitorDelegate.AnonymousId;
 
@@ -26,11 +30,13 @@ namespace Flagship.FsVisitor
 
         private readonly VisitorDelegateAbstract _visitorDelegate;
 
-        public event OnFlagStatusFetchRequiredDelegate OnFlagStatusFetchRequired{
+        public event OnFlagStatusFetchRequiredDelegate OnFlagStatusFetchRequired
+        {
             add => _visitorDelegate.OnFlagStatusFetchRequired += value;
             remove => _visitorDelegate.OnFlagStatusFetchRequired -= value;
         }
-        public event OnFlagStatusFetchedDelegate OnFlagStatusFetched{
+        public event OnFlagStatusFetchedDelegate OnFlagStatusFetched
+        {
             add => _visitorDelegate.OnFlagStatusFetched += value;
             remove => _visitorDelegate.OnFlagStatusFetched -= value;
         }
@@ -58,7 +64,7 @@ namespace Flagship.FsVisitor
 
         public void SetConsent(bool hasConsented)
         {
-             _visitorDelegate.SetConsent(hasConsented);   
+            _visitorDelegate.SetConsent(hasConsented);
         }
 
         public IFlag GetFlag(string key)
@@ -83,7 +89,7 @@ namespace Flagship.FsVisitor
 
         public void UpdateContext(string key, string value)
         {
-            _visitorDelegate.UpdateContext(key, value);  
+            _visitorDelegate.UpdateContext(key, value);
         }
 
         public void UpdateContext(string key, double value)
@@ -103,7 +109,7 @@ namespace Flagship.FsVisitor
 
         public void Unauthenticate()
         {
-            _visitorDelegate.Unauthenticate();  
+            _visitorDelegate.Unauthenticate();
         }
     }
 }

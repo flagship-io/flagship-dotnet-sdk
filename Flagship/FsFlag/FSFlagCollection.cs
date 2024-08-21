@@ -17,7 +17,10 @@ namespace Flagship.FsFlag
         private readonly HashSet<string> _keys = new HashSet<string>();
         private readonly Dictionary<string, IFlag> _flags = new Dictionary<string, IFlag>();
 
-        internal FlagCollection(VisitorDelegateAbstract visitor = null, Dictionary<string, IFlag> flags = null)
+        internal FlagCollection(
+            VisitorDelegateAbstract visitor = null,
+            Dictionary<string, IFlag> flags = null
+        )
         {
             _visitor = visitor;
             _flags = flags ?? new Dictionary<string, IFlag>();
@@ -44,7 +47,11 @@ namespace Flagship.FsFlag
         {
             if (!_flags.TryGetValue(key, out var flag))
             {
-                Log.LogWarning(_visitor?.Config, string.Format(Constants.GET_FLAG_NOT_FOUND, _visitor?.VisitorId, key), Constants.GET_FLAG);
+                Log.LogWarning(
+                    _visitor?.Config,
+                    string.Format(Constants.GET_FLAG_NOT_FOUND, _visitor?.VisitorId, key),
+                    Constants.GET_FLAG
+                );
                 return new Flag(key, null);
             }
             return flag;
@@ -85,7 +92,8 @@ namespace Flagship.FsFlag
 
         public async Task ExposeAllAsync()
         {
-            await Task.WhenAll(_flags.Values.Select(flag => flag.VisitorExposed())).ConfigureAwait(false);
+            await Task.WhenAll(_flags.Values.Select(flag => flag.VisitorExposed()))
+                .ConfigureAwait(false);
         }
 
         public Dictionary<string, IFlagMetadata> GetMetadata()
@@ -108,20 +116,24 @@ namespace Flagship.FsFlag
                 var flag = kvp.Value;
                 var metadata = flag.Metadata;
                 var value = flag.GetValue<object>(null, false);
-                serializedData.Add(new SerializedFlagMetadata
-                {
-                    Key = key,
-                    CampaignId = metadata.CampaignId,
-                    CampaignName = metadata.CampaignName,
-                    VariationGroupId = metadata.VariationGroupId,
-                    VariationGroupName = metadata.VariationGroupName,
-                    VariationId = metadata.VariationId,
-                    VariationName = metadata.VariationName,
-                    IsReference = metadata.IsReference,
-                    CampaignType = metadata.CampaignType,
-                    Slug = metadata.Slug,
-                    Hex = Utils.Helper.ValueToHex(new Dictionary<string, object> { { "v", value } })
-                });
+                serializedData.Add(
+                    new SerializedFlagMetadata
+                    {
+                        Key = key,
+                        CampaignId = metadata.CampaignId,
+                        CampaignName = metadata.CampaignName,
+                        VariationGroupId = metadata.VariationGroupId,
+                        VariationGroupName = metadata.VariationGroupName,
+                        VariationId = metadata.VariationId,
+                        VariationName = metadata.VariationName,
+                        IsReference = metadata.IsReference,
+                        CampaignType = metadata.CampaignType,
+                        Slug = metadata.Slug,
+                        Hex = Utils.Helper.ValueToHex(
+                            new Dictionary<string, object> { { "v", value } }
+                        ),
+                    }
+                );
             }
             return JsonConvert.SerializeObject(serializedData);
         }

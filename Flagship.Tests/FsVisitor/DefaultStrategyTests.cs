@@ -1,10 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Flagship.FsVisitor;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Moq;
 using Flagship.Enums;
 using Newtonsoft.Json.Linq;
@@ -364,7 +358,7 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.VisitorExposed(flagDto.Key, defaultValueString, flagDto, false).ConfigureAwait(false);
 
-            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, defaultValueString]);
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Never(), [flagDto, defaultValueString]);
 
             fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED, visitorDelegate.VisitorId, flagDto.Key), "VisitorExposed"), Times.Once());
 
@@ -394,7 +388,7 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.VisitorExposed(flagDto.Key, 1, flagDto, true).ConfigureAwait(false);
 
-            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, 1]);
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Never(), [flagDto, 1]);
 
             fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.USER_EXPOSED_CAST_ERROR, visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Once());
 
@@ -500,7 +494,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultMetadata));
 
-            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, visitorDelegate.VisitorId,  "key"), functionName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, visitorDelegate.VisitorId, "key"), functionName), Times.Once());
 
             defaultStrategyMock.Protected().Verify("SendFlagMetadataTroubleshooting", Times.Once(), ["key"]);
         }
@@ -526,7 +520,7 @@ namespace Flagship.FsVisitor.Tests
             var resultMetadata = defaultStrategy.GetFlagMetadata(flagDto.Key, flagDto);
 
             Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(resultMetadata));
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND,visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Never());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Never());
         }
 
         [TestMethod()]
@@ -640,7 +634,7 @@ namespace Flagship.FsVisitor.Tests
             Assert.AreEqual(visitorId, visitorDelegate.AnonymousId);
             Assert.AreEqual(newVisitorId, visitorDelegate.VisitorId);
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(Constants.XPC_BUCKETING_WARNING, methodName), Times.Once());
 
             // Unauthenticate bucketing mode test
 
@@ -653,7 +647,7 @@ namespace Flagship.FsVisitor.Tests
 
             methodName = "Unauthenticate";
 
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Error(Constants.XPC_BUCKETING_WARNING, methodName), Times.Once());
 
 
             visitorDelegate.ConfigManager.Config = new DecisionApiConfig()
@@ -677,7 +671,7 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod]
-        public void LookupVisitorTest()
+        public async Task LookupVisitorTest()
         {
             var visitorCache = new Mock<IVisitorCacheImplementation>();
             var visitorId = visitorDelegate.VisitorId;
@@ -741,7 +735,7 @@ namespace Flagship.FsVisitor.Tests
 
             visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(JObject.FromObject(failedData)));
 
-            defaultStrategy.LookupVisitor();
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Info(string.Format(StrategyAbstract.VISITOR_ID_MISMATCH_ERROR, "any", visitorId), "LookupVisitor"), Times.Once());
 
@@ -764,7 +758,7 @@ namespace Flagship.FsVisitor.Tests
 
             visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(dataJson));
 
-            defaultStrategy.LookupVisitor();
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
 
             Assert.IsNotNull(visitorDelegate.VisitorCache);
 
@@ -774,23 +768,160 @@ namespace Flagship.FsVisitor.Tests
 
             visitorCache.Setup(x => x.LookupVisitor(visitorId)).Throws(error);
 
-            defaultStrategy.LookupVisitor();
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(error.Message, "LookupVisitor"), Times.Once());
 
             visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(new JObject()));
 
-            defaultStrategy.LookupVisitor();
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
 
             fsLogManagerMock.Verify(x => x.Error(StrategyAbstract.LOOKUP_VISITOR_JSON_OBJECT_ERROR, "LookupVisitor"), Times.Once());
 
             visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult<JObject>(null));
 
-            defaultStrategy.LookupVisitor();
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
         }
 
         [TestMethod]
-        public void VisitorCacheTest()
+        public async Task XpcLookupVisitorTest()
+        {
+            var visitorCache = new Mock<IVisitorCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            var anonymousId = "anonymousId";
+            visitorDelegate.VisitorCache = null;
+            visitorDelegate.Config.VisitorCacheImplementation = visitorCache.Object;
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            ICollection<Campaign> campaigns =
+            [
+                new()
+                {
+                    Id = "id",
+                    Variation = new Variation
+                    {
+                        Id = "varID",
+                        Modifications = new Modifications
+                        {
+                            Type = ModificationType.FLAG,
+                            Value = new Dictionary<string, object>
+                            {
+                                ["key"] = "value"
+                            }
+                        },
+                        Reference = false
+                    },
+                    Type = "ab",
+                    VariationGroupId = "varGroupId"
+                }
+            ];
+
+            var VisitorCacheCampaigns = new Collection<VisitorCacheCampaign>();
+
+            foreach (var item in campaigns)
+            {
+                VisitorCacheCampaigns.Add(new VisitorCacheCampaign
+                {
+                    CampaignId = item.Id,
+                    VariationGroupId = item.VariationGroupId,
+                    VariationId = item.Variation.Id,
+                    IsReference = item.Variation.Reference,
+                    Type = item.Variation.Modifications.Type,
+                    Activated = false,
+                    Flags = item.Variation.Modifications.Value
+                });
+            }
+
+            var data = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = VisitorCacheCampaigns
+                }
+            };
+
+            var dataAnonymous = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = anonymousId,
+                    AnonymousId = null,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = VisitorCacheCampaigns
+                }
+            };
+
+            var dataJson = JObject.FromObject(data);
+
+            var dataJsonAnonymous = JObject.FromObject(dataAnonymous);
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(dataJson));
+
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
+
+            visitorCache.Verify(x => x.LookupVisitor(visitorId), Times.Once());
+
+            Assert.AreEqual(visitorDelegate.VisitorCacheStatus, VisitorCacheStatus.VISITOR_ID_CACHE);
+
+            Assert.IsNotNull(visitorDelegate.VisitorCache);
+
+            Assert.AreEqual(JsonConvert.SerializeObject(visitorDelegate.VisitorCache.Data), JsonConvert.SerializeObject(data));
+
+            visitorDelegate.AnonymousId = anonymousId;
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult<JObject>(null));
+            visitorCache.Setup(x => x.LookupVisitor(anonymousId)).Returns(Task.FromResult(dataJsonAnonymous));
+
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
+
+            visitorCache.Verify(x => x.LookupVisitor(visitorId), Times.Exactly(2));
+            visitorCache.Verify(x => x.LookupVisitor(anonymousId), Times.Once());
+
+            Assert.AreEqual(visitorDelegate.VisitorCacheStatus, VisitorCacheStatus.ANONYMOUS_ID_CACHE);
+
+            Assert.IsNotNull(visitorDelegate.VisitorCache);
+
+            Assert.AreEqual(JsonConvert.SerializeObject(visitorDelegate.VisitorCache.Data), JsonConvert.SerializeObject(dataAnonymous));
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult(dataJson));
+            visitorCache.Setup(x => x.LookupVisitor(anonymousId)).Returns(Task.FromResult(dataJsonAnonymous));
+
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
+
+            visitorCache.Verify(x => x.LookupVisitor(visitorId), Times.Exactly(3));
+            visitorCache.Verify(x => x.LookupVisitor(anonymousId), Times.Exactly(2));
+
+            Assert.AreEqual(visitorDelegate.VisitorCacheStatus, VisitorCacheStatus.VISITOR_ID_CACHE_WITH_ANONYMOUS_ID_CACHE);
+
+            Assert.IsNotNull(visitorDelegate.VisitorCache);
+
+            Assert.AreEqual(JsonConvert.SerializeObject(visitorDelegate.VisitorCache.Data), JsonConvert.SerializeObject(data));
+
+            visitorCache.Setup(x => x.LookupVisitor(visitorId)).Returns(Task.FromResult<JObject>(null));
+            visitorCache.Setup(x => x.LookupVisitor(anonymousId)).Returns(Task.FromResult<JObject>(null));
+
+            await defaultStrategy.LookupVisitor().ConfigureAwait(false);
+
+            visitorCache.Verify(x => x.LookupVisitor(visitorId), Times.Exactly(4));
+            visitorCache.Verify(x => x.LookupVisitor(anonymousId), Times.Exactly(3));
+
+            Assert.AreEqual(visitorDelegate.VisitorCacheStatus, VisitorCacheStatus.NONE);
+
+            Assert.IsNull(visitorDelegate.VisitorCache);
+
+
+        }
+
+        [TestMethod]
+        public async Task VisitorCacheTest()
         {
             ICollection<Campaign> campaigns = new Collection<Campaign>()
             {
@@ -888,6 +1019,8 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.CacheVisitorAsync();
 
+            await Task.Delay(1000);
+
             visitorCache.Verify(x => x.CacheVisitor(visitorId, It.Is<JObject>(y => y.ToString() == dataJson.ToString())), Times.Once);
 
             var error = new Exception("visitorCache error");
@@ -896,11 +1029,120 @@ namespace Flagship.FsVisitor.Tests
 
             defaultStrategy.CacheVisitorAsync();
 
+            await Task.Delay(1000);
+
             fsLogManagerMock.Verify(x => x.Error(error.Message, "CacheVisitor"), Times.Once());
 
             visitorDelegate.Config.VisitorCacheImplementation = null;
 
             defaultStrategy.CacheVisitorAsync();
+
+            await Task.Delay(1000);
+        }
+
+        [TestMethod]
+        public async Task XpcVisitorCacheTest()
+        {
+
+            var visitorCache = new Mock<IVisitorCacheImplementation>();
+            var visitorId = visitorDelegate.VisitorId;
+            var anonymousId = "anonymousId";
+            visitorDelegate.Config.VisitorCacheImplementation = visitorCache.Object;
+
+            visitorDelegate.Campaigns = [];
+
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+
+            visitorDelegate.VisitorCacheStatus = VisitorCacheStatus.VISITOR_ID_CACHE;
+
+            var data = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = [],
+                    AssignmentsHistory = new Dictionary<string, string>()
+                }
+            };
+
+            var dataJson = JObject.FromObject(data);
+
+            visitorCache.Setup(x => x.CacheVisitor(visitorId, It.Is<JObject>(y => y.ToString() == dataJson.ToString())));
+
+            defaultStrategy.CacheVisitorAsync();
+
+            await Task.Delay(1000);
+
+            visitorCache.Verify(x => x.CacheVisitor(visitorId, It.Is<JObject>(y => y.ToString() == dataJson.ToString())), Times.Once);
+            visitorCache.Verify(x => x.CacheVisitor(It.Is<string>(y => y != visitorId), It.IsAny<JObject>()), Times.Never);
+
+            visitorDelegate.AnonymousId = anonymousId;
+
+            defaultStrategy.CacheVisitorAsync();
+
+            await Task.Delay(1000);
+
+            data = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = visitorDelegate.VisitorId,
+                    AnonymousId = visitorDelegate.AnonymousId,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = [],
+                    AssignmentsHistory = new Dictionary<string, string>()
+                }
+            };
+
+            dataJson = JObject.FromObject(data);
+
+
+
+            visitorCache.Verify(x => x.CacheVisitor(visitorId, It.Is<JObject>(y => y.ToString() == dataJson.ToString())), Times.Exactly(1));
+
+            var dataAnonymous = new VisitorCacheDTOV1
+            {
+                Version = 1,
+                Data = new VisitorCacheData
+                {
+                    VisitorId = visitorDelegate.AnonymousId,
+                    AnonymousId = null,
+                    Consent = visitorDelegate.HasConsented,
+                    Context = visitorDelegate.Context,
+                    Campaigns = [],
+                    AssignmentsHistory = new Dictionary<string, string>()
+                }
+            };
+            var dataJsonAnonymous = JObject.FromObject(dataAnonymous);
+            visitorCache.Verify(x => x.CacheVisitor(anonymousId, It.Is<JObject>(y => y.ToString() == dataJsonAnonymous.ToString())), Times.Exactly(1));
+            visitorCache.Verify(x => x.CacheVisitor(It.Is<string>(y => y != visitorId && y != anonymousId), It.IsAny<JObject>()), Times.Never);
+
+            visitorDelegate.VisitorCacheStatus = VisitorCacheStatus.NONE;
+
+            defaultStrategy.CacheVisitorAsync();
+
+            await Task.Delay(1000);
+
+            visitorCache.Verify(x => x.CacheVisitor(visitorId, It.Is<JObject>(y => y.ToString() == dataJson.ToString())), Times.Exactly(2));
+            visitorCache.Verify(x => x.CacheVisitor(anonymousId, It.Is<JObject>(y => y.ToString() == dataJsonAnonymous.ToString())), Times.Exactly(2));
+            visitorCache.Verify(x => x.CacheVisitor(It.Is<string>(y => y != visitorId && y != anonymousId), It.IsAny<JObject>()), Times.Never);
+
+            visitorDelegate.VisitorCacheStatus = VisitorCacheStatus.ANONYMOUS_ID_CACHE;
+
+            defaultStrategy.CacheVisitorAsync();
+
+            await Task.Delay(1000);
+
+            visitorCache.Verify(x => x.CacheVisitor(visitorId, It.Is<JObject>(y => y.ToString() == dataJson.ToString())), Times.Exactly(3));
+            visitorCache.Verify(x => x.CacheVisitor(anonymousId, It.Is<JObject>(y => y.ToString() == dataJsonAnonymous.ToString())), Times.Exactly(2));
+            visitorCache.Verify(x => x.CacheVisitor(It.Is<string>(y => y != visitorId && y != anonymousId), It.IsAny<JObject>()), Times.Never);
+
         }
 
         [TestMethod]

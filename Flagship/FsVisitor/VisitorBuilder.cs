@@ -1,11 +1,6 @@
-﻿using Flagship.Config;
-using Flagship.Enums;
+﻿using System.Collections.Generic;
+using Flagship.Config;
 using Flagship.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
@@ -16,11 +11,15 @@ namespace Flagship.FsVisitor
         private IDictionary<string, object> _context;
         private readonly string _visitorId;
         private readonly IConfigManager _configManager;
-        private  bool _shouldSaveInstance;
+        private bool _shouldSaveInstance;
         private readonly SdkInitialData _sdkInitialData;
 
-
-        private VisitorBuilder(IConfigManager configManager, string visitorId, bool hasConsented, SdkInitialData sdkInitialData = null)
+        private VisitorBuilder(
+            IConfigManager configManager,
+            string visitorId,
+            bool hasConsented,
+            SdkInitialData sdkInitialData = null
+        )
         {
             _visitorId = visitorId;
             _isAuthenticated = false;
@@ -31,7 +30,12 @@ namespace Flagship.FsVisitor
             _shouldSaveInstance = false;
         }
 
-        internal static VisitorBuilder Builder(IConfigManager configManager, string visitorId, bool hasConsented, SdkInitialData sdkInitialData = null)
+        internal static VisitorBuilder Builder(
+            IConfigManager configManager,
+            string visitorId,
+            bool hasConsented,
+            SdkInitialData sdkInitialData = null
+        )
         {
             return new VisitorBuilder(configManager, visitorId, hasConsented, sdkInitialData);
         }
@@ -43,7 +47,7 @@ namespace Flagship.FsVisitor
         /// <returns></returns>
         public VisitorBuilder SetIsAuthenticated(bool isAuthenticated)
         {
-            _isAuthenticated=isAuthenticated;   
+            _isAuthenticated = isAuthenticated;
             return this;
         }
 
@@ -51,7 +55,7 @@ namespace Flagship.FsVisitor
         /// Specifies whether the newly created visitor instance should be saved into Flagship.
         /// </summary>
         /// <param name="value">
-        /// If set to true, the newly created visitor instance will be saved into Flagship. 
+        /// If set to true, the newly created visitor instance will be saved into Flagship.
         /// If set to false, the newly created visitor instance will not be saved, but simply returned.
         /// </param>
         /// <returns></returns>
@@ -68,21 +72,27 @@ namespace Flagship.FsVisitor
         /// <returns></returns>
         public VisitorBuilder SetContext(IDictionary<string, object> context)
         {
-            if (context!=null)
+            if (context != null)
             {
                 _context = context;
             }
             return this;
         }
 
-
         /// <summary>
-        /// Complete the Visitor Creation process 
+        /// Complete the Visitor Creation process
         /// </summary>
         /// <returns></returns>
         public IVisitor Build()
         {
-            var visitorDelegate = new VisitorDelegate(_visitorId, _isAuthenticated, _context, _hasConsented, _configManager, _sdkInitialData);
+            var visitorDelegate = new VisitorDelegate(
+                _visitorId,
+                _isAuthenticated,
+                _context,
+                _hasConsented,
+                _configManager,
+                _sdkInitialData
+            );
             var visitor = new Visitor(visitorDelegate);
             Main.Fs.Visitor = null;
             if (_shouldSaveInstance)
@@ -91,6 +101,5 @@ namespace Flagship.FsVisitor
             }
             return visitor;
         }
-
     }
 }

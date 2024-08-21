@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.Enums 
+﻿namespace Flagship.Enums
 {
     /// <summary>
     /// Enum representing the status of the Flagship SDK.
@@ -29,6 +23,6 @@ namespace Flagship.Enums
         /// <summary>
         /// The Initialization is done, and Flagship SDK is ready to use.
         /// </summary>
-        SDK_INITIALIZED = 3
+        SDK_INITIALIZED = 3,
     }
 }

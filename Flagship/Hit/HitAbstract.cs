@@ -1,21 +1,17 @@
-﻿using Flagship.Config;
+﻿using System;
+using System.Collections.Generic;
+using Flagship.Config;
 using Flagship.Enums;
 using Flagship.Model;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.Hit
 {
-
     public abstract class HitAbstract
     {
-
         [JsonProperty("Key")]
         internal string Key { get; set; }
+
         [JsonProperty("VisitorId")]
         internal string VisitorId { get; set; }
         internal FlagshipConfig Config { get; set; }
@@ -62,11 +58,13 @@ namespace Flagship.Hit
 
         internal IDateTimeProvider DateTimeProvider { get; set; }
 
-        internal virtual DateTime CurrentDateTime { get => DateTimeProvider.Now; }
+        internal virtual DateTime CurrentDateTime
+        {
+            get => DateTimeProvider.Now;
+        }
 
         internal virtual IDictionary<string, object> ToApiKeys()
         {
-
             var apiKeys = new Dictionary<string, object>()
             {
                 [Constants.VISITOR_ID_API_ITEM] = AnonymousId ?? VisitorId,
@@ -74,7 +72,7 @@ namespace Flagship.Hit
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config?.EnvId,
                 [Constants.T_API_ITEM] = $"{Type}",
                 [Constants.CUSTOMER_UID] = null,
-                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds
+                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds,
             };
 
             if (UserIp != null)
@@ -108,12 +106,12 @@ namespace Flagship.Hit
 
         internal virtual bool IsReady(bool checkParent = true)
         {
-            return !string.IsNullOrWhiteSpace(VisitorId) &&
-                !string.IsNullOrWhiteSpace(DS) &&
-                Config != null &&
-                !string.IsNullOrWhiteSpace(Config.EnvId);
+            return !string.IsNullOrWhiteSpace(VisitorId)
+                && !string.IsNullOrWhiteSpace(DS)
+                && Config != null
+                && !string.IsNullOrWhiteSpace(Config.EnvId);
         }
 
-        abstract internal string GetErrorMessage();
+        internal abstract string GetErrorMessage();
     }
 }

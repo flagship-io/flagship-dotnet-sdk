@@ -1,17 +1,12 @@
-﻿using Flagship.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Flagship.Enums;
 
 namespace Flagship.Hit
 {
-
     /// <summary>
     /// This hit should be sent each time a visitor arrives on a new page.
     /// </summary>
-    public class Page:HitAbstract
+    public class Page : HitAbstract
     {
         /// <summary>
         /// Valid url
@@ -22,7 +17,8 @@ namespace Flagship.Hit
         /// This hit should be sent each time a visitor arrives on a new page.
         /// </summary>
         /// <param name="documentLocation">Valid url</param>
-        public Page(string documentLocation):base(HitType.PAGEVIEW)
+        public Page(string documentLocation)
+            : base(HitType.PAGEVIEW)
         {
             DocumentLocation = documentLocation;
         }
@@ -43,6 +39,5 @@ namespace Flagship.Hit
         {
             return Constants.HIT_PAGE_ERROR_MESSAGE;
         }
-
     }
 }

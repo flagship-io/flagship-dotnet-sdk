@@ -1,11 +1,7 @@
-﻿using Flagship.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Flagship.Enums;
 
-namespace Flagship.Logger 
+namespace Flagship.Logger
 {
     internal class FsLogManager : IFsLogManager
     {
@@ -48,9 +44,12 @@ namespace Flagship.Logger
         {
             Log(LogLevel.WARNING, message, tag);
         }
+
         public void Log(LogLevel level, string message, string tag)
         {
-            Console.WriteLine($"[{DateTime.Now:G}] [{Constants.FLAGSHIP_SDK}] [{level}] [{tag}]: {message}");
+            Console.WriteLine(
+                $"[{DateTime.Now:G}] [{Constants.FLAGSHIP_SDK}] [{level}] [{tag}]: {message}"
+            );
         }
     }
 }

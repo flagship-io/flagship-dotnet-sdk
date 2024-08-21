@@ -1,16 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
-namespace Flagship.Cache 
+namespace Flagship.Cache
 {
     public interface IVisitorCacheImplementation
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         TimeSpan? LookupTimeout { get; set; }
 

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.Enums
+﻿namespace Flagship.Enums
 {
     /// <summary>
     /// Represents the status of the flags in the Flagship SDK.
@@ -32,8 +26,8 @@ namespace Flagship.Enums
         PANIC = 3,
 
         /// <summary>
-        /// The flags were not found. 
+        /// The flags were not found.
         /// </summary>
-        NOT_FOUND = 4
+        NOT_FOUND = 4,
     }
 }

@@ -91,10 +91,13 @@ namespace Flagship.Config
         /// </summary>
         public bool DisableDeveloperUsageTracking { get; set; }
 
+        public TimeSpan HitDeduplicationTime { get; set; }
+
         public FlagshipConfig(DecisionMode decisionMode = DecisionMode.DECISION_API)
         {
             DecisionMode = decisionMode;
             LogLevel = LogLevel.ALL;
+            HitDeduplicationTime = TimeSpan.FromMilliseconds(Constants.DEFAULT_HIT_DEDUPLICATION_TIME);
             if (!Timeout.HasValue)
             {
                 Timeout = TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT);

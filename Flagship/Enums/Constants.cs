@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flagship.Enums 
+namespace Flagship.Enums
 {
     internal static class Constants
     {
@@ -24,12 +24,14 @@ namespace Flagship.Enums
 
         public const int NB_MIN_CONTEXT_KEYS = 3;
 
+        public static double DEFAULT_HIT_DEDUPLICATION_TIME = 2500;
+
         /// <summary>
         /// Default request timeout in second
         /// </summary>
         public const int REQUEST_TIME_OUT = 2000;
 
-        public const string BASE_API_URL =  "https://decision.flagship.io/v2/";
+        public const string BASE_API_URL = "https://decision.flagship.io/v2/";
 
         public const string TROUBLESHOOTING_HIT_URL = "https://events.flagship.io/troubleshooting";
 
@@ -37,7 +39,7 @@ namespace Flagship.Enums
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 
-        public const string HIT_EVENT_URL = "https://events.flagship.io/"; 
+        public const string HIT_EVENT_URL = "https://events.flagship.io/";
 
         public const string BUCKETING_API_URL = "https://cdn.flagship.io/{0}/bucketing.json";
 
@@ -78,7 +80,7 @@ namespace Flagship.Enums
 
         public const string GET_FLAG_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has a different type compared to the default value. Therefore, the default value `{2}` has been returned.";
 
-        public const string GET_FLAG_VALUE =  "For the visitor `{0}`, the flag with key `{1}` has returned the value `{2}`.";
+        public const string GET_FLAG_VALUE = "For the visitor `{0}`, the flag with key `{1}` has returned the value `{2}`.";
         public const string GET_FLAG_ERROR = "For the visitor `{0}`, no flags were found with the key `{1}`. As a result, user exposure will not be sent.";
 
         public const string VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED = "Visitor `{0}`, the flag with the key `{1}` has been exposed without calling the `getValue` method first.";
@@ -146,7 +148,6 @@ namespace Flagship.Enums
         public const string HIT_SCREEN_ERROR_MESSAGE = "documentLocation Screen name is required";
 
         public const string HIT_TRANSACTION_ERROR_MESSAGE = "Transaction Id and Transaction affiliation are required";
-
 
     }
 

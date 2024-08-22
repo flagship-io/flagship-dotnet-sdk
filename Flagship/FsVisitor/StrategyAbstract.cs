@@ -251,7 +251,7 @@ namespace Flagship.FsVisitor
         public async Task SendFetchFlagsTroubleshootingHit(ICollection<Campaign> campaigns, DateTime now)
         {
             var troubleshootingData = GetTroubleshootingData();
-            if (troubleshootingData==null)
+            if (troubleshootingData == null)
             {
                 return;
             }
@@ -300,7 +300,7 @@ namespace Flagship.FsVisitor
                 SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,
                 SdkConfigUsingCustomHitCache = Config.HitCacheImplementation != null,
                 SdkConfigUsingCustomVisitorCache = Config.VisitorCacheImplementation != null,
-                SdkConfigUsingCustomLogManagere = Config.LogManager is Logger.FsLogManager, 
+                SdkConfigUsingCustomLogManagere = Config.LogManager is Logger.FsLogManager,
                 SdkConfigUsingOnVisitorExposed = Config.HasOnVisitorExposed(),
                 SdkConfigDisableCache = Config.DisableCache
             };
@@ -332,13 +332,13 @@ namespace Flagship.FsVisitor
 
             var analyticData = new UsageHit()
             {
-                VisitorId= Visitor.SdkInitialData?.InstanceId,
+                VisitorId = Visitor.SdkInitialData?.InstanceId,
                 Label = DiagnosticLabel.SDK_CONFIG,
-                LogLevel= LogLevel.INFO,
+                LogLevel = LogLevel.INFO,
                 FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
-                Config= Config,
+                Config = Config,
                 SdkStatus = Visitor.GetSdkStatus(),
-                LastBucketingTimestamp  = DecisionManager.LastBucketingTimestamp,
+                LastBucketingTimestamp = DecisionManager.LastBucketingTimestamp,
                 LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                 SdkConfigMode = Config.DecisionMode,
                 SdkConfigTimeout = Config.Timeout,
@@ -383,6 +383,27 @@ namespace Flagship.FsVisitor
             segmentHitTroubleshooting.Traffic = Visitor.Traffic;
             await SendTroubleshootingHit(segmentHitTroubleshooting).ConfigureAwait(false);
             Visitor.SegmentHitTroubleshooting = null;
+        }
+
+        protected bool IsDeDuplicated(string key, TimeSpan deDuplicationTime)
+        {
+            if (deDuplicationTime == TimeSpan.Zero) return false;
+
+            var deDuplicationCache = Visitor.DeDuplicationCache;
+
+            var now = DateTime.Now.Ticks;
+
+            lock (deDuplicationCache)
+            {
+                if (deDuplicationCache.TryGetValue(key, out var deDuplicationCacheValue) && ((now - deDuplicationCacheValue.Ticks) < deDuplicationTime.Ticks))
+                {
+                    return true;
+                }
+
+                deDuplicationCache.TryAdd(key, new TimeSpan(now));
+            }
+
+            return false;
         }
         abstract public void ClearContext();
 

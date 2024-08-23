@@ -317,6 +317,30 @@ namespace Flagship.FsVisitor.Tests
         }
 
         [TestMethod()]
+        public async Task VisitorExposedDeduplicationTest()
+        {
+            var defaultStrategyMock = new Mock<DefaultStrategy>(visitorDelegate)
+            {
+                CallBase = true
+            };
+
+            var defaultStrategy = defaultStrategyMock.Object;
+
+            var flagDto = CampaignsData.GetFlag()[0];
+
+
+            trackingManagerMock.Setup(x => x.Add(It.IsAny<Activate>())).Returns(Task.CompletedTask);
+
+            var defaultValueString = "defaultValueString";
+
+            await defaultStrategy.VisitorExposed(flagDto.Key, defaultValueString, flagDto, true).ConfigureAwait(false);
+
+            await defaultStrategy.VisitorExposed(flagDto.Key, defaultValueString, flagDto, true).ConfigureAwait(false);
+
+            trackingManagerMock.Verify(x => x.ActivateFlag(It.IsAny<Activate>()), Times.Once());
+        }
+
+        [TestMethod()]
         //<summary>
         //Test visitor exposed with flag null
         //</summary>
@@ -500,7 +524,7 @@ namespace Flagship.FsVisitor.Tests
 
             Assert.AreEqual(JsonConvert.SerializeObject(FsFlag.FlagMetadata.EmptyMetadata()), JsonConvert.SerializeObject(resultMetadata));
 
-            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, visitorDelegate.VisitorId,  "key"), functionName), Times.Once());
+            fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, visitorDelegate.VisitorId, "key"), functionName), Times.Once());
 
             defaultStrategyMock.Protected().Verify("SendFlagMetadataTroubleshooting", Times.Once(), ["key"]);
         }
@@ -526,7 +550,7 @@ namespace Flagship.FsVisitor.Tests
             var resultMetadata = defaultStrategy.GetFlagMetadata(flagDto.Key, flagDto);
 
             Assert.AreEqual(JsonConvert.SerializeObject(metadata), JsonConvert.SerializeObject(resultMetadata));
-            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND,visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Never());
+            fsLogManagerMock.Verify(x => x.Error(string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Never());
         }
 
         [TestMethod()]
@@ -570,6 +594,27 @@ namespace Flagship.FsVisitor.Tests
             var hit = new Screen("HomeView");
             await defaultStrategy.SendHit(hit).ConfigureAwait(false);
             trackingManagerMock.Verify(x => x.Add(hit), Times.Once());
+            trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)));
+        }
+
+        [TestMethod()]
+        public async Task SendHitDeDuplicationTest()
+        {
+            var configManager = new ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["key0"] = 1,
+            };
+
+            visitorDelegate = new VisitorDelegate("visitorId", false, context, false, configManager);
+            var defaultStrategy = new DefaultStrategy(visitorDelegate);
+            var hit = new Screen("HomeView");
+            await defaultStrategy.SendHit(hit).ConfigureAwait(false);
+            await defaultStrategy.SendHit(hit).ConfigureAwait(false);
+            visitorDelegate.Config.HitDeduplicationTime = TimeSpan.FromSeconds(0);
+            await defaultStrategy.SendHit(hit).ConfigureAwait(false);
+            trackingManagerMock.Verify(x => x.Add(hit), Times.Exactly(2));
             trackingManagerMock.Verify(x => x.SendTroubleshootingHit(It.Is<Troubleshooting>(y => y.Type == HitType.TROUBLESHOOTING)));
         }
 

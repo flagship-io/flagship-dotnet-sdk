@@ -278,6 +278,16 @@ namespace Flagship.FsVisitor
                 FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
             };
 
+            var hitInstanceItem = activate.ToApiKeys();
+            hitInstanceItem[Constants.QT_API_ITEM] = 0;
+            var hitApiKey = JsonConvert.SerializeObject(hitInstanceItem);
+
+            if (IsDeDuplicated(hitApiKey, Config.HitDeduplicationTime))
+            {
+                Log.LogDebug(Config, string.Format(Constants.ACTIVATE_DEDUPLICATED, hitApiKey), Constants.SEND_ACTIVATE_HIT);
+                return;
+            }
+
             await TrackingManager.ActivateFlag(activate);
 
             var activateTroubleshooting = new Troubleshooting()
@@ -348,7 +358,7 @@ namespace Flagship.FsVisitor
 
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, Visitor.VisitorId, key, defaultValue), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_FLAG_NOT_FOUND, key, defaultValue, visitorExposed);
 
                 return defaultValue;
@@ -366,13 +376,13 @@ namespace Flagship.FsVisitor
 
             if (defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, Visitor.VisitorId, key, defaultValue), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING, key, defaultValue, visitorExposed);
 
                 return defaultValue;
             }
 
-            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, Visitor.VisitorId, key,  flag.Value), functionName);
+            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, Visitor.VisitorId, key, flag.Value), functionName);
 
             return (T)flag.Value;
         }
@@ -401,7 +411,7 @@ namespace Flagship.FsVisitor
             const string functionName = "flag.metadata";
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, Visitor.VisitorId,  key), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, Visitor.VisitorId, key), functionName);
 
                 SendFlagMetadataTroubleshooting(key);
 
@@ -410,11 +420,11 @@ namespace Flagship.FsVisitor
 
             return new FlagMetadata(
                 flag.CampaignId,
-                flag.VariationGroupId, 
+                flag.VariationGroupId,
                 flag.VariationId,
-                flag.IsReference, 
+                flag.IsReference,
                 flag.CampaignType,
-                flag.Slug, 
+                flag.Slug,
                 flag.CampaignName,
                 flag.VariationGroupName,
                 flag.VariationName);
@@ -446,6 +456,16 @@ namespace Flagship.FsVisitor
                 if (!hit.IsReady())
                 {
                     Log.LogError(Config, hit.GetErrorMessage(), functionName);
+                    return;
+                }
+
+                var hitInstanceItem = hit.ToApiKeys();
+                hitInstanceItem[Constants.QT_API_ITEM] = 0;
+                var hitApiKey = JsonConvert.SerializeObject(hitInstanceItem);
+
+                if (IsDeDuplicated(hitApiKey, Config.HitDeduplicationTime))
+                {
+                    Log.LogDebug(Config, string.Format(Constants.HIT_DEDUPLICATED, hitApiKey), Constants.SEND_HIT);
                     return;
                 }
 

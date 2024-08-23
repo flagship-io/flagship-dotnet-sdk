@@ -300,6 +300,16 @@ namespace Flagship.FsVisitor
                 FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
             };
 
+            var hitInstanceItem = activate.ToApiKeys();
+            hitInstanceItem[Constants.QT_API_ITEM] = 0;
+            var hitApiKey = JsonConvert.SerializeObject(hitInstanceItem);
+
+            if (IsDeDuplicated(hitApiKey, Config.HitDeduplicationTime))
+            {
+                Log.LogDebug(Config, string.Format(Constants.ACTIVATE_DEDUPLICATED, hitApiKey), Constants.SEND_ACTIVATE_HIT);
+                return;
+            }
+
             await TrackingManager.ActivateFlag(activate).ConfigureAwait(false);
 
             var activateTroubleshooting = new Troubleshooting()
@@ -468,6 +478,16 @@ namespace Flagship.FsVisitor
                 if (!hit.IsReady())
                 {
                     Log.LogError(Config, hit.GetErrorMessage(), functionName);
+                    return;
+                }
+
+                var hitInstanceItem = hit.ToApiKeys();
+                hitInstanceItem[Constants.QT_API_ITEM] = 0;
+                var hitApiKey = JsonConvert.SerializeObject(hitInstanceItem);
+
+                if (IsDeDuplicated(hitApiKey, Config.HitDeduplicationTime))
+                {
+                    Log.LogDebug(Config, string.Format(Constants.HIT_DEDUPLICATED, hitApiKey), Constants.SEND_HIT);
                     return;
                 }
 

@@ -97,6 +97,14 @@ namespace Flagship.Enums
 
         public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
 
+        public const string ACTIVATE_DEDUPLICATED = "The Activate hit {0} has been deduplicated";
+
+        public const string HIT_DEDUPLICATED = "The hit {0} has been deduplicated";
+
+        public const string SEND_ACTIVATE_HIT = "SEND-ACTIVATE-HIT";
+
+        public const string SEND_HIT = "SEND-HIT";
+
         public const string GET_FLAG = "GET_FLAG";
 
         public const string GET_FLAG_NOT_FOUND = "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, an empty flag has been returned.";

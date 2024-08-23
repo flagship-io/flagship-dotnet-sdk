@@ -385,6 +385,23 @@ namespace Flagship.FsVisitor
             Visitor.SegmentHitTroubleshooting = null;
         }
 
+        protected void ClearDeDuplicationCache(TimeSpan deDuplicationTime){
+            var deDuplicationCache = Visitor.DeDuplicationCache;
+
+            var now = DateTime.Now.Ticks;
+
+            lock (deDuplicationCache)
+            {
+                foreach (var key in deDuplicationCache.Keys)
+                {
+                    if ((now - deDuplicationCache[key].Ticks) > deDuplicationTime.Ticks)
+                    {
+                        deDuplicationCache.TryRemove(key, out _);
+                    }
+                }
+            }
+        }
+
         protected bool IsDeDuplicated(string key, TimeSpan deDuplicationTime)
         {
             if (deDuplicationTime == TimeSpan.Zero) return false;
@@ -402,6 +419,8 @@ namespace Flagship.FsVisitor
 
                 deDuplicationCache.TryAdd(key, new TimeSpan(now));
             }
+
+            ClearDeDuplicationCache(deDuplicationTime);
 
             return false;
         }

@@ -388,7 +388,7 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.VisitorExposed(flagDto.Key, defaultValueString, flagDto, false).ConfigureAwait(false);
 
-            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, defaultValueString]);
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Never(), [flagDto, defaultValueString]);
 
             fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED, visitorDelegate.VisitorId, flagDto.Key), "VisitorExposed"), Times.Once());
 
@@ -418,7 +418,7 @@ namespace Flagship.FsVisitor.Tests
 
             await defaultStrategy.VisitorExposed(flagDto.Key, 1, flagDto, true).ConfigureAwait(false);
 
-            defaultStrategyMock.Protected().Verify("SendActivate", Times.Once(), [flagDto, 1]);
+            defaultStrategyMock.Protected().Verify("SendActivate", Times.Never(), [flagDto, 1]);
 
             fsLogManagerMock.Verify(x => x.Warning(string.Format(Constants.USER_EXPOSED_CAST_ERROR, visitorDelegate.VisitorId, flagDto.Key), functionName), Times.Once());
 

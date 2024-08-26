@@ -362,6 +362,7 @@ namespace Flagship.FsVisitor
             {
                 Log.LogWarning(Config, string.Format(Constants.VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED, Visitor.VisitorId, key), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.FLAG_VALUE_NOT_CALLED, key, defaultValue, null);
+                return;
             }
 
 
@@ -369,6 +370,7 @@ namespace Flagship.FsVisitor
             {
                 Log.LogWarning(Config, string.Format(Constants.USER_EXPOSED_CAST_ERROR, Visitor.VisitorId, key), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING, key, defaultValue, null);
+                return;
             }
 
             await SendActivate(flag, defaultValue).ConfigureAwait(false);

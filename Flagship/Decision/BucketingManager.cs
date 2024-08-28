@@ -36,6 +36,9 @@ namespace Flagship.Decision
 
         protected Timer _timer;
 
+        public const string FETCH_THIRD_PARTY_SUCCESS = "THIRD_PARTY_SEGMENT has been fetched : {0}";
+        public const string GET_THIRD_PARTY_SEGMENT = "GetThirdPartySegments";
+
         public BucketingManager(BucketingConfig config, HttpClient httpClient, Murmur32 murmur32) : base(config, httpClient)
         {
             _murmur32 = murmur32;
@@ -222,6 +225,42 @@ namespace Flagship.Decision
                 Log.LogError(Config, ex.Message, "SendContext");
             }
         }
+
+        protected async Task<Dictionary<string, object>> GetThirdPartySegmentsAsync(string visitorId)
+        {
+            var url = string.Format(Constants.THIRD_PARTY_SEGMENT_URL, Config.EnvId, visitorId);
+            var contexts = new Dictionary<string, object>();
+            try
+            {
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    using (var response = await HttpClient.SendAsync(requestMessage))
+                    {
+                        if (response.StatusCode == HttpStatusCode.OK)
+                        {
+                            string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            var thirdPartySegments = JsonConvert.DeserializeObject<List<ThirdPartySegmentDTO>>(responseBody);
+                            if (thirdPartySegments != null && thirdPartySegments.Count > 0)
+                            {
+                                foreach (var segment in thirdPartySegments)
+                                {
+                                    var key = segment.Partner + "::" + segment.Segment;
+                                    contexts[key] = segment.Value;
+                                }
+                                Log.LogDebug(Config, string.Format(FETCH_THIRD_PARTY_SUCCESS, JsonConvert.SerializeObject(contexts)), GET_THIRD_PARTY_SEGMENT);
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(Config, ex.Message, GET_THIRD_PARTY_SEGMENT);
+            }
+            return contexts;
+        }
+
         public override async Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
         {
             ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
@@ -244,7 +283,16 @@ namespace Flagship.Decision
 
             IsPanic = false;
 
-            await SendContextAsync(visitor).ConfigureAwait(false);
+            if (Config.FetchThirdPartyData)
+            {
+                var thirdPartySegments = await GetThirdPartySegmentsAsync(visitor.VisitorId);
+                foreach (var item in thirdPartySegments)
+                {
+                    visitor.Context[item.Key] = item.Value;
+                }
+            }
+
+            await SendContextAsync(visitor);
 
             foreach (var item in BucketingContent.Campaigns)
             {
@@ -357,37 +405,57 @@ namespace Flagship.Decision
 
         protected bool CheckAndTargeting(IEnumerable<Targeting> targetings, VisitorDelegateAbstract visitor)
         {
-            object contextValue;
-            var check = false;
-
+            if (targetings == null || targetings.Count() == 0)
+            {
+                return false;
+            }
             foreach (var item in targetings)
             {
                 if (item.Key == "fs_all_users")
                 {
-                    check = true;
-                    continue;
-                }
-                if (item.Key == "fs_users")
-                {
-                    contextValue = visitor.VisitorId;
-                }
-                else
-                {
-                    if (!visitor.Context.ContainsKey(item.Key))
-                    {
-                        check = false;
-                        break;
-                    }
-                    contextValue = visitor.Context[item.Key];
+                    return true;
                 }
 
-                check = TestOperator(item.Operator, contextValue, item.Value);
-                if (!check)
+                object contextValue;
+
+                switch (item.Operator)
                 {
-                    break;
+                    case TargetingOperator.EXISTS:
+                        if (visitor.Context.ContainsKey(item.Key))
+                        {
+                            continue;
+                        }
+                        return false;
+
+                    case TargetingOperator.NOT_EXISTS:
+                        if (!visitor.Context.ContainsKey(item.Key))
+                        {
+                            continue;
+                        }
+                        return false;
+                    default:
+                        if (item.Key == "fs_users")
+                        {
+                            contextValue = visitor.VisitorId;
+                        }
+                        else
+                        {
+                            if (!visitor.Context.ContainsKey(item.Key))
+                            {
+                                return false;
+                            }
+                            contextValue = visitor.Context[item.Key];
+                        }
+
+                        var check = TestOperator(item.Operator, contextValue, item.Value);
+                        if (!check)
+                        {
+                            return false;
+                        }
+                        break;
                 }
             }
-            return check;
+            return true;
         }
 
         protected bool TestOperator(TargetingOperator operatorName, object contextValue, object targetingValue)
@@ -395,7 +463,6 @@ namespace Flagship.Decision
             bool check = false;
             try
             {
-
                 if (targetingValue is JArray targetingValueArray)
                 {
                     return TestListOperator(operatorName, contextValue, targetingValueArray);

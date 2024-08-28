@@ -14,7 +14,9 @@ namespace Flagship.Config
         /// Note: If 0 is given, it should poll only once at start time.
         /// </summary>
         public TimeSpan? PollingInterval { get; set; }
-        public BucketingConfig():base(DecisionMode.BUCKETING)
+
+        public bool FetchThirdPartyData { get; set; }
+        public BucketingConfig() : base(DecisionMode.BUCKETING)
         {
             if (!PollingInterval.HasValue)
             {

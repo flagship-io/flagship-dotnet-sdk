@@ -55,14 +55,14 @@ namespace Flagship.Decision
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode!= System.Net.HttpStatusCode.OK)
                 {
                     throw new Exception(response.ReasonPhrase);
                 }   
 
-                string responseBody = await response.Content.ReadAsStringAsync();
+                string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 var decisionResponse = JsonConvert.DeserializeObject<DecisionResponse>(responseBody, new IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ" });
 

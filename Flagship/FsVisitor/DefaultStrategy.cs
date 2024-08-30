@@ -140,7 +140,7 @@ namespace Flagship.FsVisitor
                     Status = FSFlagStatus.FETCHING
                 };
 
-                var campaigns = await DecisionManager.GetCampaigns(Visitor);
+                var campaigns = await DecisionManager.GetCampaigns(Visitor).ConfigureAwait(false);
                 if (DecisionManager.IsPanic)
                 {
                     Visitor.FlagsStatus = new FlagsStatus
@@ -178,7 +178,7 @@ namespace Flagship.FsVisitor
 
             try
             {
-                campaigns = await GetCampaignsFromDecisionManager(FUNCTION_NAME, now);
+                campaigns = await GetCampaignsFromDecisionManager(FUNCTION_NAME, now).ConfigureAwait(false);
                 if (campaigns.Count == 0)
                 {
                     campaigns = FetchVisitorCacheCampaigns(Visitor);
@@ -197,7 +197,7 @@ namespace Flagship.FsVisitor
                 }
 
                 Visitor.Campaigns = campaigns;
-                Visitor.Flags = await DecisionManager.GetFlags(campaigns);
+                Visitor.Flags = await DecisionManager.GetFlags(campaigns).ConfigureAwait(false);
                 Visitor.GetStrategy().CacheVisitorAsync();
 
                 if (Visitor.FlagsStatus.Status == FSFlagStatus.FETCHING)
@@ -278,7 +278,7 @@ namespace Flagship.FsVisitor
                 FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
             };
 
-            await TrackingManager.ActivateFlag(activate);
+            await TrackingManager.ActivateFlag(activate).ConfigureAwait(false);
 
             var activateTroubleshooting = new Troubleshooting()
             {
@@ -339,7 +339,7 @@ namespace Flagship.FsVisitor
                 sendFlagTroubleshooting(DiagnosticLabel.VISITOR_EXPOSED_TYPE_WARNING, key, defaultValue, null);
             }
 
-            await SendActivate(flag, defaultValue);
+            await SendActivate(flag, defaultValue).ConfigureAwait(false);
         }
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed = true)
@@ -424,7 +424,7 @@ namespace Flagship.FsVisitor
         {
             foreach (var item in hits)
             {
-                await SendHit(item);
+                await SendHit(item).ConfigureAwait(false);
             }
         }
         public override async Task SendHit(HitAbstract hit)
@@ -449,7 +449,7 @@ namespace Flagship.FsVisitor
                     return;
                 }
 
-                await TrackingManager.Add(hit);
+                await TrackingManager.Add(hit).ConfigureAwait(false);
 
                 if (hit.Type == HitType.SEGMENT)
                 {

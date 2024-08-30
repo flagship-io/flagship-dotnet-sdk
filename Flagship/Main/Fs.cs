@@ -198,9 +198,9 @@ ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
         /// 
         /// </summary>
         /// <returns></returns> 
-        public static async Task Close() 
+        public static Task Close() 
         {
-            await instance?._configManager?.TrackingManager?.SendBatch(CacheTriggeredBy.Flush);
+            return instance?._configManager?.TrackingManager?.SendBatch(CacheTriggeredBy.Flush);
         }
         private static void DecisionManager_StatusChange(FSSdkStatus status)
         {

@@ -30,11 +30,11 @@ namespace Flagship.Api
             var hitsDictionary = new ConcurrentDictionary<string, HitAbstract>();
             hitsDictionary.TryAdd(hitKey, hit);
 
-            await CacheHitAsync(hitsDictionary);
+            await CacheHitAsync(hitsDictionary).ConfigureAwait(false);
 
             if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
-                await NotConsent(hit.VisitorId);
+                await NotConsent(hit.VisitorId).ConfigureAwait(false);
             }
             Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
 
@@ -78,7 +78,7 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -86,7 +86,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -100,7 +100,7 @@ namespace Flagship.Api
                 var hitKeysToRemove = activateHitsPool.Select(x => x.Key).ToArray();
                 if (hitKeysToRemove.Any())
                 {
-                    await FlushHitsAsync(hitKeysToRemove);
+                    await FlushHitsAsync(hitKeysToRemove).ConfigureAwait(false);
                 }
 
                 Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new
@@ -128,7 +128,7 @@ namespace Flagship.Api
                 {
                     var hitsDictionary = new ConcurrentDictionary<string, HitAbstract>();
                     hitsDictionary.TryAdd(currentActivate.Key, currentActivate);
-                    await CacheHitAsync(hitsDictionary);
+                    await CacheHitAsync(hitsDictionary).ConfigureAwait(false);
                 }
 
                 Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new

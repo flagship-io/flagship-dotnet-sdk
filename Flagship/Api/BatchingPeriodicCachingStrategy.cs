@@ -32,7 +32,7 @@ namespace Flagship.Api
             HitsPoolQueue.TryAdd(hitKey, hit);
             if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
-                await NotConsent(hit.VisitorId);
+                await NotConsent(hit.VisitorId).ConfigureAwait(false);
             }
             Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
 
@@ -74,7 +74,7 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -82,7 +82,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -196,7 +196,7 @@ namespace Flagship.Api
 
             if (activateHits.Count > 0)
             {
-                await SendActivate(activateHits, null, batchTriggeredBy);
+                await SendActivate(activateHits, null, batchTriggeredBy).ConfigureAwait(false);
                 hasActivateHit = true;
             }
 
@@ -265,7 +265,7 @@ namespace Flagship.Api
             {
                 if (hasActivateHit)
                 {
-                    await CacheHitAsync(ActivatePoolQueue);
+                    await CacheHitAsync(ActivatePoolQueue).ConfigureAwait(false);
                 }
                 return;
             }
@@ -286,7 +286,7 @@ namespace Flagship.Api
                 requestMessage.Content = stringContent;
 
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -294,7 +294,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -347,8 +347,8 @@ namespace Flagship.Api
                 mergedQueue.TryAdd(item.Key, item.Value);
             }
 
-            await FlushAllHitsAsync();
-            await CacheHitAsync(mergedQueue);
+            await FlushAllHitsAsync().ConfigureAwait(false);
+            await CacheHitAsync(mergedQueue).ConfigureAwait(false);
             _isBatchSending = false;
         }
     }

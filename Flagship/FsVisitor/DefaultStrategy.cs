@@ -128,7 +128,7 @@ namespace Flagship.FsVisitor
             var now = DateTime.Now;
             try
             {
-                campaigns = await DecisionManager.GetCampaigns(Visitor);
+                campaigns = await DecisionManager.GetCampaigns(Visitor).ConfigureAwait(false);
 
                 Log.LogDebug(Config, string.Format(FETCH_CAMPAIGNS_SUCCESS,
                     Visitor.VisitorId, Visitor.AnonymousId,
@@ -154,7 +154,7 @@ namespace Flagship.FsVisitor
                 }
 
                 Visitor.Campaigns = campaigns;
-                Visitor.Flags = await DecisionManager.GetFlags(campaigns);
+                Visitor.Flags = await DecisionManager.GetFlags(campaigns).ConfigureAwait(false);
                 Visitor.GetStrategy().CacheVisitorAsync();
 
                 Visitor.FlagSyncStatus = FlagSyncStatus.FLAGS_FETCHED;
@@ -228,7 +228,7 @@ namespace Flagship.FsVisitor
                 FlagMetadata = new FlagMetadata(flag.CampaignId, flag.VariationGroupId, flag.VariationId, flag.IsReference, flag.CampaignType, flag.Slug, flag.CampaignName, flag.VariationGroupName, flag.VariationName)
             };
 
-            await TrackingManager.ActivateFlag(activate);
+            await TrackingManager.ActivateFlag(activate).ConfigureAwait(false);
 
             var activateTroubleshooting = new Troubleshooting()
             {
@@ -294,7 +294,7 @@ namespace Flagship.FsVisitor
                 return;
             }
 
-            await SendActivate(flag, defaultValue);
+            await SendActivate(flag, defaultValue).ConfigureAwait(false);
         }
 
         public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
@@ -409,7 +409,7 @@ namespace Flagship.FsVisitor
         {
             foreach (var item in hits)
             {
-                await SendHit(item);
+                await SendHit(item).ConfigureAwait(false);
             }
         }
         public override async Task SendHit(HitAbstract hit)
@@ -434,7 +434,7 @@ namespace Flagship.FsVisitor
                     return;
                 }
 
-                await TrackingManager.Add(hit);
+                await TrackingManager.Add(hit).ConfigureAwait(false);
 
                 if (hit.Type == HitType.SEGMENT)
                 {

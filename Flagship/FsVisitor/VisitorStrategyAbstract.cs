@@ -57,7 +57,7 @@ namespace Flagship.FsVisitor
                 AnonymousId = Visitor.AnonymousId
             };
 
-            await TrackingManager.Add(hitEvent);
+            await TrackingManager.Add(hitEvent).ConfigureAwait(false);
 
 
             var troubleshootingHit = new Troubleshooting()
@@ -202,7 +202,7 @@ namespace Flagship.FsVisitor
 
                 var dataJson = JObject.FromObject(data);
 
-                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson);
+                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson).ConfigureAwait(false);
 
                 Visitor.VisitorCache = new VisitorCache
                 {
@@ -225,7 +225,7 @@ namespace Flagship.FsVisitor
                 {
                     return;
                 }
-                await visitorCacheInstance.FlushVisitor(Visitor.VisitorId);
+                await visitorCacheInstance.FlushVisitor(Visitor.VisitorId).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -235,7 +235,7 @@ namespace Flagship.FsVisitor
 
         public virtual async Task SendTroubleshootingHit(Troubleshooting hit)
         {
-            await TrackingManager.SendTroubleshootingHit(hit);
+            await TrackingManager.SendTroubleshootingHit(hit).ConfigureAwait(false);
         }
 
         public virtual void AddTroubleshootingHit(Troubleshooting hit)
@@ -312,9 +312,9 @@ namespace Flagship.FsVisitor
                 fetchFlagTroubleshootingHit.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
             }
 
-            await SendTroubleshootingHit(fetchFlagTroubleshootingHit);
-            await SendConsentHitTroubleshooting();
-            await SendSegmentHitTroubleshooting();
+            await SendTroubleshootingHit(fetchFlagTroubleshootingHit).ConfigureAwait(false);
+            await SendConsentHitTroubleshooting().ConfigureAwait(false);
+            await SendSegmentHitTroubleshooting().ConfigureAwait(false);
         }
         public async virtual Task SendUsageHitSdkConfig()
         {
@@ -360,7 +360,7 @@ namespace Flagship.FsVisitor
                 analyticData.SdkConfigPollingInterval = bucketingConfig.PollingInterval;
             }
 
-            await TrackingManager.SendUsageHit(analyticData);
+            await TrackingManager.SendUsageHit(analyticData).ConfigureAwait(false);
         }
 
         public async Task SendConsentHitTroubleshooting()
@@ -371,7 +371,7 @@ namespace Flagship.FsVisitor
                 return;
             }
             consentHitTroubleshooting.Traffic = Visitor.Traffic;
-            await SendTroubleshootingHit(consentHitTroubleshooting);
+            await SendTroubleshootingHit(consentHitTroubleshooting).ConfigureAwait(false);
             Visitor.ConsentHitTroubleshooting = null;
         }
 
@@ -383,7 +383,7 @@ namespace Flagship.FsVisitor
                 return;
             }
             segmentHitTroubleshooting.Traffic = Visitor.Traffic;
-            await SendTroubleshootingHit(segmentHitTroubleshooting);
+            await SendTroubleshootingHit(segmentHitTroubleshooting).ConfigureAwait(false);
             Visitor.SegmentHitTroubleshooting = null;
         }
         abstract public void ClearContext();

@@ -95,7 +95,7 @@ namespace Flagship.Api
                     }
             }
 
-            await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength);
+            await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength).ConfigureAwait(false);
         }
 
         protected void OnVisitorExposed(Activate activate)
@@ -159,7 +159,7 @@ namespace Flagship.Api
 
             if (activateHits.Count > 0)
             {
-                await SendActivate(activateHits, null, batchTriggeredBy);
+                await SendActivate(activateHits, null, batchTriggeredBy).ConfigureAwait(false);
             }
 
             var batch = new Batch()
@@ -242,7 +242,7 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -250,7 +250,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -264,7 +264,7 @@ namespace Flagship.Api
                     batchTriggeredBy = $"{batchTriggeredBy}"
                 })), SEND_BATCH);
 
-                await FlushHitsAsync(hitKeysToRemove.ToArray());
+                await FlushHitsAsync(hitKeysToRemove.ToArray()).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -335,7 +335,7 @@ namespace Flagship.Api
 
             if (keysToFlush.Length > 0)
             {
-                await FlushHitsAsync(keysToFlush);
+                await FlushHitsAsync(keysToFlush).ConfigureAwait(false);
             }
         }
 
@@ -346,7 +346,7 @@ namespace Flagship.Api
             {
                 hit.TryAdd(item.Key, item.Value);
             }
-            await CacheHitAsync(hit);
+            await CacheHitAsync(hit).ConfigureAwait(false);
         }
 
         public virtual async Task CacheHitAsync(ConcurrentDictionary<string, HitAbstract> hits)
@@ -382,7 +382,7 @@ namespace Flagship.Api
                     data[keyValue.Key] = JObject.FromObject(hitData, jsonSerializer);
                 }
                 
-                await hitCacheInstance.CacheHit(data);
+                await hitCacheInstance.CacheHit(data).ConfigureAwait(false);
               
                 Logger.Log.LogInfo(Config, string.Format(HIT_DATA_CACHED, JsonConvert.SerializeObject(data)), PROCESS_CACHE_HIT);
             }
@@ -401,7 +401,7 @@ namespace Flagship.Api
                 {
                     return;
                 }
-                await hitCacheInstance.FlushHits(hitKeys);
+                await hitCacheInstance.FlushHits(hitKeys).ConfigureAwait(false);
                 Logger.Log.LogInfo(Config, string.Format(HIT_DATA_FLUSHED, JsonConvert.SerializeObject(hitKeys)), PROCESS_FLUSH_HIT);
             }
             catch (Exception ex)
@@ -419,7 +419,7 @@ namespace Flagship.Api
                 {
                     return;
                 }
-                await hitCacheInstance.FlushAllHits();
+                await hitCacheInstance.FlushAllHits().ConfigureAwait(false);
                 Logger.Log.LogInfo(Config, FLUSH_ALL_HITS, PROCESS_FLUSH_HIT);
             }
             catch (Exception ex)
@@ -493,7 +493,7 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -501,7 +501,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -579,7 +579,7 @@ namespace Flagship.Api
 
             foreach (var item in troubleshootingQueueClone)
             {
-                await SendTroubleshootingHit(item.Value);
+                await SendTroubleshootingHit(item.Value).ConfigureAwait(false);
             }
 
             _isTroubleshootingQueueSending = false;
@@ -616,7 +616,7 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -624,7 +624,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -700,7 +700,7 @@ namespace Flagship.Api
 
             foreach (var item in usageHitQueue)
             {
-                await SendUsageHit(item.Value);
+                await SendUsageHit(item.Value).ConfigureAwait(false);
             }
 
             _isAnalyticQueueSending = false;

@@ -55,7 +55,7 @@ namespace Flagship.Decision
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode!= System.Net.HttpStatusCode.OK)
                 {

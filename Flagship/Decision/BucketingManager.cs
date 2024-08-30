@@ -51,7 +51,7 @@ namespace Flagship.Decision
 
             var pollingInterval = Config.PollingInterval.Value;
             Log.LogInfo(Config, "Bucketing polling starts", "StartPolling");
-            await Polling();
+            await Polling().ConfigureAwait(false);
             if (pollingInterval.TotalMilliseconds == 0)
             {
                 return;
@@ -64,7 +64,7 @@ namespace Flagship.Decision
 
             _timer = new Timer(async (e) =>
             {
-                await Polling();
+                await Polling().ConfigureAwait(false);
             }, null, pollingInterval, pollingInterval);
 
 
@@ -100,12 +100,12 @@ namespace Flagship.Decision
                     requestMessage.Headers.IfModifiedSince = _lastModified;
                 }
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    string responseBody = await response.Content.ReadAsStringAsync();
+                    string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     BucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
                     LastBucketingTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
 
@@ -198,7 +198,7 @@ namespace Flagship.Decision
                     return;
                 }
                 var segment = new Segment(visitor.Context);
-                await visitor.SendHit(segment);
+                await visitor.SendHit(segment).ConfigureAwait(false);
 
                 var troubleshootingHit = new Troubleshooting()
                 {
@@ -242,7 +242,7 @@ namespace Flagship.Decision
 
             IsPanic = false;
 
-            await SendContextAsync(visitor);
+            await SendContextAsync(visitor).ConfigureAwait(false);
 
             foreach (var item in BucketingContent.Campaigns)
             {

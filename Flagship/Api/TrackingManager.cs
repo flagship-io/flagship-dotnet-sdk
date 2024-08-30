@@ -80,22 +80,22 @@ namespace Flagship.Api
             return strategy;
         }
 
-        public virtual async Task Add(HitAbstract hit)
+        public virtual Task Add(HitAbstract hit)
         {
-            await Strategy.Add(hit);
+            return Strategy.Add(hit);
         }
 
-        public virtual async Task ActivateFlag(Activate hit)
+        public virtual Task ActivateFlag(Activate hit)
         {
-            await Strategy.ActivateFlag(hit);
+            return Strategy.ActivateFlag(hit);
         }
 
         public virtual async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
         {
 
-            await Strategy.SendBatch(batchTriggeredBy);
-            await Strategy.SendTroubleshootingQueue();
-            await Strategy.SendUsageHitQueue();
+            await Strategy.SendBatch(batchTriggeredBy).ConfigureAwait(false);
+            await Strategy.SendTroubleshootingQueue().ConfigureAwait(false);
+            await Strategy.SendUsageHitQueue().ConfigureAwait(false);
         }
 
         public void StartBatchingLoop()
@@ -110,7 +110,7 @@ namespace Flagship.Api
 
             _timer = new Timer(async (e) =>
             {
-                await BatchingLoop();
+                await BatchingLoop().ConfigureAwait(false);
             }, null, batchIntervals, batchIntervals);
         }
 
@@ -122,7 +122,7 @@ namespace Flagship.Api
             }
 
             _isPolling = true;
-            await SendBatch(CacheTriggeredBy.Timer);
+            await SendBatch(CacheTriggeredBy.Timer).ConfigureAwait(false);
             _isPolling = false;
         }
 
@@ -184,7 +184,7 @@ namespace Flagship.Api
                     return;
                 }
 
-                var hitsCache = await hitCacheInstance.LookupHits();
+                var hitsCache = await hitCacheInstance.LookupHits().ConfigureAwait(false);
 
                 if (hitsCache == null)
                 {
@@ -224,7 +224,7 @@ namespace Flagship.Api
 
                 if (wrongHitKeys.Any())
                 {
-                    await Strategy.FlushHitsAsync(wrongHitKeys.ToArray());
+                    await Strategy.FlushHitsAsync(wrongHitKeys.ToArray()).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -233,14 +233,14 @@ namespace Flagship.Api
             }
         }
 
-        public virtual async Task SendTroubleshootingHit(Troubleshooting hit)
+        public virtual Task SendTroubleshootingHit(Troubleshooting hit)
         {
-            await Strategy.SendTroubleshootingHit(hit);
+            return Strategy.SendTroubleshootingHit(hit);
         }
 
-        public virtual async Task SendUsageHit(UsageHit hit)
+        public virtual Task SendUsageHit(UsageHit hit)
         {
-            await Strategy.SendUsageHit(hit);
+            return Strategy.SendUsageHit(hit);
         }
 
         public virtual void AddTroubleshootingHit(Troubleshooting hit)

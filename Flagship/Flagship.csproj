@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<SDKVersion>3.3.2</SDKVersion>
+		<SDKVersion>3.3.3</SDKVersion>
 	</PropertyGroup>
 
   <PropertyGroup>

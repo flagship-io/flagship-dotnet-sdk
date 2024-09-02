@@ -31,10 +31,10 @@ namespace Flagship.Api
 
             if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
             {
-                await NotConsent(hit.VisitorId);
+                await NotConsent(hit.VisitorId).ConfigureAwait(false);
             }
 
-            await SendHit(hit);
+            await SendHit(hit).ConfigureAwait(false);
         }
 
         public async Task SendHit(HitAbstract hit)
@@ -55,7 +55,7 @@ namespace Flagship.Api
 
                 requestMessage.Content = stringContent;
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -63,7 +63,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -85,7 +85,7 @@ namespace Flagship.Api
                 }
                 var hitDictionary = new ConcurrentDictionary<string, HitAbstract>();
                 hitDictionary.TryAdd(hit.Key, hit);
-                await CacheHitAsync(hitDictionary);
+                await CacheHitAsync(hitDictionary).ConfigureAwait(false);
 
                 Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
                 {
@@ -162,7 +162,7 @@ namespace Flagship.Api
                 return;
             }
 
-            await FlushHitsAsync(mergedKeys.ToArray());
+            await FlushHitsAsync(mergedKeys.ToArray()).ConfigureAwait(false);
         }
 
         public async override Task ActivateFlag(Activate hit)
@@ -172,7 +172,7 @@ namespace Flagship.Api
             hit.Key = hitKey;
             var activateHitPool = new List<Activate>();
 
-            await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength);
+            await SendActivate(activateHitPool, hit, CacheTriggeredBy.ActivateLength).ConfigureAwait(false);
         }
 
         protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
@@ -204,7 +204,7 @@ namespace Flagship.Api
                 requestMessage.Content = stringContent;
 
 
-                var response = await HttpClient.SendAsync(requestMessage);
+                var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Ambiguous)
                 {
@@ -212,7 +212,7 @@ namespace Flagship.Api
                     {
                         {STATUS_CODE, response.StatusCode},
                         {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync() }
+                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -221,7 +221,7 @@ namespace Flagship.Api
                 var hitKeysToRemove = activateHitsPool.Select(x => x.Key).ToArray();
                 if (hitKeysToRemove.Any())
                 {
-                    await FlushHitsAsync(hitKeysToRemove);
+                    await FlushHitsAsync(hitKeysToRemove).ConfigureAwait(false);
                 }
 
                 foreach (var item in activateBatch.Hits)
@@ -256,7 +256,7 @@ namespace Flagship.Api
                 {
                     var hitDictionary = new ConcurrentDictionary<string, Activate>();
                     hitDictionary.TryAdd(currentActivate.Key, currentActivate);
-                    await CacheHitAsync(hitDictionary);
+                    await CacheHitAsync(hitDictionary).ConfigureAwait(false);
                 }
 
                 Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new

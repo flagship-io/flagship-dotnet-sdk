@@ -85,7 +85,7 @@ namespace Flagship.FsFlag
 
         public async Task ExposeAllAsync()
         {
-            await Task.WhenAll(_flags.Values.Select(flag => flag.VisitorExposed()));
+            await Task.WhenAll(_flags.Values.Select(flag => flag.VisitorExposed())).ConfigureAwait(false);
         }
 
         public Dictionary<string, IFlagMetadata> GetMetadata()

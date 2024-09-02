@@ -39,7 +39,7 @@ namespace Flagship.FsVisitor
         public static FSSdkStatus SDKStatus { get; set; }
         public virtual IFlagsStatus FlagsStatus
         {
-            get => flagsStatus; 
+            get => flagsStatus;
             internal set
             {
                 flagsStatus = value;
@@ -59,9 +59,12 @@ namespace Flagship.FsVisitor
 
         public Troubleshooting SegmentHitTroubleshooting { get; set; }
 
+        public bool HasContextBeenUpdated { get; set; }
+
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null)
         {
+
             SdkInitialData = sdkInitialData;
             ConfigManager = configManager;
             if (isAuthenticated && configManager.Config.DecisionMode == DecisionMode.DECISION_API)
@@ -71,6 +74,7 @@ namespace Flagship.FsVisitor
             SessionId = Guid.NewGuid().ToString();
             _context = new Dictionary<string, object>();
             UpdateContext(context);
+            HasContextBeenUpdated = true;
             Flags = new HashSet<FlagDTO>();
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);

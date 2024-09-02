@@ -826,12 +826,16 @@ namespace Flagship.Decision.Tests
 
             await decisionManagerMock.SendContextAsync(visitorDelegate);
 
+            visitorDelegateMock.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Never());
+
             visitorDelegate.SetConsent(true);
 
+            await decisionManagerMock.SendContextAsync(visitorDelegate);
             await decisionManagerMock.SendContextAsync(visitorDelegate);
 
             visitorDelegateMock.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
 
+            visitorDelegate.HasContextBeenUpdated = true;
             var exception = new Exception("sendHit error");
 
             visitorDelegateMock.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);

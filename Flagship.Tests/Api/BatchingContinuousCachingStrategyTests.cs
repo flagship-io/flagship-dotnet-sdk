@@ -1031,6 +1031,79 @@ namespace Flagship.Api.Tests
         }
 
         [TestMethod()]
+        public async Task SendActivateBatchTest()
+        {
+            var fsLogManagerMock = new Mock<IFsLogManager>();
+            var config = new DecisionApiConfig()
+            {
+                EnvId = "envID",
+                LogManager = fsLogManagerMock.Object,
+                TrackingManagerConfig = new TrackingManagerConfig()
+            };
+
+            HttpResponseMessage httpResponse = new HttpResponseMessage
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
+
+            var visitorId = "visitorId";
+
+            mockHandler.Protected().Setup<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).Verifiable();
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var hitsPoolQueue = new ConcurrentDictionary<string, HitAbstract>();
+            var activatePoolQueue = new ConcurrentDictionary<string, Activate>();
+
+            var strategyMock = new Mock<BatchingContinuousCachingStrategy>(new object[] { config, httpClient, hitsPoolQueue, activatePoolQueue })
+            {
+                CallBase = true,
+            };
+
+            var strategy = strategyMock.Object;
+
+            for (int i = 0; i < 250; i++)
+            {
+                var activate = new Activate("variationGroupId" + i, "variationId" + i)
+                {
+                    VisitorId = visitorId,
+                    Config = config,
+                    Key = $"{visitorId}:{Guid.NewGuid()}"
+                };
+                activatePoolQueue.TryAdd(activate.Key, activate);
+            }
+
+            Assert.AreEqual(250, strategy.ActivatePoolQueue.Count);
+
+            await strategy.SendBatch().ConfigureAwait(false);
+
+            Assert.AreEqual(0, strategy.HitsPoolQueue.Count);
+            Assert.AreEqual(0, strategy.ActivatePoolQueue.Count);
+
+            mockHandler.Protected().Verify<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                    Times.Exactly(3),
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>()
+                );
+
+            // strategyMock.Verify(x => x.CacheHitAsync(It.IsAny<ConcurrentDictionary<string, HitAbstract>>()), Times.Never());
+            // strategyMock.Verify(x => x.FlushHitsAsync(It.Is<string[]>(y => y.Contains(activate2.Key)
+            // && y.Contains(activate3.Key) && y.Contains(activate.Key)
+            // && y.Length == 3)), Times.Once());
+
+            httpResponse.Dispose();
+        }
+
+
+        [TestMethod()]
         public async Task ActivateFlagFailedTest()
         {
             var fsLogManagerMock = new Mock<IFsLogManager>();
@@ -1199,13 +1272,13 @@ namespace Flagship.Api.Tests
                 return JToken.DeepEquals(actualData, expectedData);
             };
 
-            hitCacheImplementation.Verify(x => x.CacheHit(It.Is<JObject>((y) =>checkDeepEquals(y, data))), Times.Once());
+            hitCacheImplementation.Verify(x => x.CacheHit(It.Is<JObject>((y) => checkDeepEquals(y, data))), Times.Once());
 
             config.DisableCache = true;
 
             await strategy.CacheHitAsync(hits).ConfigureAwait(false);
 
-            hitCacheImplementation.Verify(x => x.CacheHit(It.Is<JObject>(y => checkDeepEquals(y, data) )), Times.Once());
+            hitCacheImplementation.Verify(x => x.CacheHit(It.Is<JObject>(y => checkDeepEquals(y, data))), Times.Once());
 
             config.DisableCache = false;
             config.HitCacheImplementation = null;
@@ -1246,11 +1319,12 @@ namespace Flagship.Api.Tests
             var now = DateTime.Now;
             var dateTimeProviderMock = new Mock<IDateTimeProvider>();
             dateTimeProviderMock.Setup(x => x.Now).Returns(now);
-            
+
             var key = $"{visitorId}:{Guid.NewGuid()}";
 
             var hits = new ConcurrentDictionary<string, Activate>();
-            hits.TryAdd(key, new Activate("variationGroupId", "variationId"){
+            hits.TryAdd(key, new Activate("variationGroupId", "variationId")
+            {
                 VisitorId = visitorId,
                 CreatedAt = now,
                 DateTimeProvider = dateTimeProviderMock.Object
@@ -1283,12 +1357,12 @@ namespace Flagship.Api.Tests
 
             await strategy.CacheHitAsync(hits).ConfigureAwait(false);
 
-             var checkDeepEquals = (JObject actualData, JObject expectedData) =>
-            {
-                actualData[key]["data"]["time"] = now;
-                expectedData[key]["data"]["time"] = now;
-                return JToken.DeepEquals(actualData, expectedData);
-            };
+            var checkDeepEquals = (JObject actualData, JObject expectedData) =>
+           {
+               actualData[key]["data"]["time"] = now;
+               expectedData[key]["data"]["time"] = now;
+               return JToken.DeepEquals(actualData, expectedData);
+           };
 
             hitCacheImplementation.Verify(x => x.CacheHit(It.Is<JObject>(y => checkDeepEquals(y, data))), Times.Once());
 
@@ -1325,7 +1399,8 @@ namespace Flagship.Api.Tests
 
             var hits = new ConcurrentDictionary<string, HitAbstract>()
             {
-                [key] = new Page("http://localhost"){
+                [key] = new Page("http://localhost")
+                {
                     VisitorId = visitorId,
                     CreatedAt = now,
                     DateTimeProvider = dateTimeProviderMock.Object

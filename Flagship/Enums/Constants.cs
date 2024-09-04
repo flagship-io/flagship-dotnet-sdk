@@ -16,6 +16,8 @@ namespace Flagship.Enums
 
         public const int DEFAULT_POOL_MAX_SIZE = 100;
 
+        public const int MAX_ACTIVATE_HIT_PER_BATCH = 100;
+
         public const int BATCH_MAX_SIZE = 2500000;
 
         public const int BATCH_ACTIVATE_HIT_COUNT_LIMIT = 100;

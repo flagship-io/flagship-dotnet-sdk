@@ -9,7 +9,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Flagship.Api
@@ -47,10 +46,7 @@ namespace Flagship.Api
             }
         }
 
-
-
-
-        override protected async Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
+        public async Task SendActivateHitBatch(ActivateBatch activateBatch, CacheTriggeredBy cacheTriggeredBy, Activate currentActivate = null)
         {
             var url = Constants.BASE_API_URL + URL_ACTIVATE;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
@@ -59,8 +55,6 @@ namespace Flagship.Api
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
             requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
-
-            var activateBatch = new ActivateBatch(activateHitsPool.ToList(), Config);
 
             if (currentActivate != null)
             {
@@ -72,9 +66,9 @@ namespace Flagship.Api
 
             try
             {
-                var postDatajson = JsonConvert.SerializeObject(requestBody);
+                var postDataJson = JsonConvert.SerializeObject(requestBody);
 
-                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+                var stringContent = new StringContent(postDataJson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
 
                 requestMessage.Content = stringContent;
 
@@ -97,7 +91,7 @@ namespace Flagship.Api
                     OnVisitorExposed(item);
                 }
 
-                var hitKeysToRemove = activateHitsPool.Select(x => x.Key).ToArray();
+                var hitKeysToRemove = activateBatch.Hits.Where(x => x.Key != currentActivate?.Key).Select(x => x.Key).ToArray();
                 if (hitKeysToRemove.Any())
                 {
                     await FlushHitsAsync(hitKeysToRemove).ConfigureAwait(false);
@@ -114,7 +108,7 @@ namespace Flagship.Api
                         },
                     body = requestBody,
                     duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
+                    batchTriggeredBy = $"{cacheTriggeredBy}"
                 })), SEND_ACTIVATE);
             }
             catch (Exception ex)
@@ -142,7 +136,7 @@ namespace Flagship.Api
                         },
                     body = requestBody,
                     duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
+                    batchTriggeredBy = $"{cacheTriggeredBy}"
                 }), SEND_ACTIVATE);
 
                 var troubleshooting = new Troubleshooting()
@@ -158,10 +152,28 @@ namespace Flagship.Api
                     HttpResponseBody = ex.Message,
                     HttpResponseMethod = "POST",
                     HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = cacheTriggeredBy
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
+            }
+        }
+
+        override protected async Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
+        {
+            var filteredItems = activateHitsPool.Where(item => (DateTime.Now - item.CreatedAt).TotalMilliseconds < Constants.DEFAULT_HIT_CACHE_TIME).ToList();
+
+            if (!filteredItems.Any() && currentActivate != null)
+            {
+                var batch = new ActivateBatch(new List<Activate>() { }, Config);
+                await SendActivateHitBatch(batch, batchTriggeredBy, currentActivate).ConfigureAwait(false);
+                return;
+            }
+
+            for (int i = 0; i < filteredItems.Count; i += Constants.MAX_ACTIVATE_HIT_PER_BATCH)
+            {
+                var batch = new ActivateBatch(filteredItems.Skip(i).Take(Constants.MAX_ACTIVATE_HIT_PER_BATCH).ToList(), Config);
+                _ = SendActivateHitBatch(batch, batchTriggeredBy, i == 0 ? currentActivate : null).ConfigureAwait(false);
             }
         }
 

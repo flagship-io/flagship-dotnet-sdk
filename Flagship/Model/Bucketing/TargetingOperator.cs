@@ -12,6 +12,8 @@
         ENDS_WITH,
         CONTAINS,
         NOT_CONTAINS,
-        GREATER_THAN
+        GREATER_THAN,
+        NOT_EXISTS,
+        EXISTS
     }
 }

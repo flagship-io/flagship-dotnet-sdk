@@ -62,7 +62,7 @@ namespace Flagship.Decision
                     throw new Exception(response.ReasonPhrase);
                 }   
 
-                string responseBody = await response.Content.ReadAsStringAsync();
+                string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 var decisionResponse = JsonConvert.DeserializeObject<DecisionResponse>(responseBody, new IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ" });
 

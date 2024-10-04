@@ -62,7 +62,7 @@ namespace QAApp.Controllers
             }
 
             Visitor = EnvController.Client.NewVisitor(newVisitor.Id, context);
-            await Visitor.SynchronizeModifications();
+            await Visitor.SynchronizeModifications().ConfigureAwait(false);
 
             var modifs = Visitor.GetAllModifications();
             return Content(Newtonsoft.Json.JsonConvert.SerializeObject(modifs), "application/json");

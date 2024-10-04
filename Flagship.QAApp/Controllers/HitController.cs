@@ -47,7 +47,7 @@ namespace QAApp.Controllers
                         break;
                 }
 
-                await VisitorController.Visitor.SendHit(enumType, hitObj);
+                await VisitorController.Visitor.SendHit(enumType, hitObj).ConfigureAwait(false);
 
                 return Ok();
             }

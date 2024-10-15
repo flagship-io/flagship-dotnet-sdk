@@ -1,4 +1,5 @@
 ﻿using Flagship.Api;
+using Flagship.Cache;
 using Flagship.Config;
 using Flagship.Decision;
 using Flagship.Enums;
@@ -115,6 +116,18 @@ namespace Flagship.FsVisitor
             }
         }
 
+        private JObject FetchHitCacheData(string visitorId,IVisitorCacheImplementation visitorCacheInstance,  TimeSpan? timeout)
+        {
+
+            var cts = new CancellationTokenSource();
+
+            cts.CancelAfter(timeout ?? TimeSpan.FromMilliseconds(10));
+            var lookupTask = visitorCacheInstance.LookupVisitor(visitorId);
+            lookupTask.Wait(cts.Token);
+
+            return lookupTask.Result;
+        }
+
         public virtual void LookupVisitor()
         {
             try
@@ -127,16 +140,32 @@ namespace Flagship.FsVisitor
 
                 var timeout = visitorCacheInstance?.LookupTimeout;
 
-                var cts = new CancellationTokenSource();
+                Visitor.VisitorCacheStatus = VisitorCacheStatus.NONE;
 
-                cts.CancelAfter(timeout ?? TimeSpan.FromMilliseconds(10));
+                var visitorCacheStringData = FetchHitCacheData(Visitor.VisitorId, visitorCacheInstance, timeout);
 
-                var lookupTask = visitorCacheInstance.LookupVisitor(Visitor.VisitorId);
-                lookupTask.Wait(cts.Token);
+                if (visitorCacheStringData != null)
+                {
+                    Visitor.VisitorCacheStatus = VisitorCacheStatus.VISITOR_ID_CACHE;
+                }
 
-                var visitorCacheStringData = lookupTask.Result;
+                if (visitorCacheStringData == null && !string.IsNullOrEmpty(Visitor.AnonymousId))
+                {
+                    visitorCacheStringData = FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout);
+                    if (visitorCacheStringData != null){
+                        Visitor.VisitorCacheStatus = VisitorCacheStatus.ANONYMOUS_ID_CACHE;
+                    }
+                }
 
                 MigrateVisitorCacheData(visitorCacheStringData);
+
+                if (Visitor.VisitorCacheStatus == VisitorCacheStatus.VISITOR_ID_CACHE && !string.IsNullOrEmpty(Visitor.AnonymousId))
+                {
+                    visitorCacheStringData = FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout);
+                    if (visitorCacheStringData != null){
+                        Visitor.VisitorCacheStatus = VisitorCacheStatus.VISITOR_ID_CACHE_WITH_ANONYMOUS_ID_CACHE;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -207,6 +236,24 @@ namespace Flagship.FsVisitor
                     Version = 1,
                     Data = data
                 };
+
+                if (!string.IsNullOrEmpty(Visitor.AnonymousId) && (Visitor.VisitorCacheStatus == VisitorCacheStatus.NONE 
+                || Visitor.VisitorCacheStatus == VisitorCacheStatus.VISITOR_ID_CACHE)){
+                    dataJson = JObject.FromObject(new VisitorCacheDTOV1
+                {
+                    Version = 1,
+                    Data = new VisitorCacheData
+                    {
+                        VisitorId = Visitor.AnonymousId,
+                        AnonymousId = null,
+                        Consent = Visitor.HasConsented,
+                        Context = Visitor.Context,
+                        Campaigns = Campaigns,
+                        AssignmentsHistory = assignmentsHistory,
+                    }
+                });
+                    await visitorCacheInstance.CacheVisitor(Visitor.AnonymousId, dataJson).ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {

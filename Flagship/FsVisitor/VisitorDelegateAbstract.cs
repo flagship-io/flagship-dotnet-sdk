@@ -59,6 +59,7 @@ namespace Flagship.FsVisitor
 
         public Troubleshooting SegmentHitTroubleshooting { get; set; }
 
+        internal VisitorCacheStatus VisitorCacheStatus { get; set; }
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null)
         {

@@ -108,6 +108,7 @@ namespace Flagship.Enums
         public const string SEND_ACTIVATE_HIT = "SEND-ACTIVATE-HIT";
 
         public const string SEND_HIT = "SEND-HIT";
+        public const string XPC_BUCKETING_WARNING = "Experience continuity is disabled on bucketing mode when visitor cache is not set";
 
         public const string GET_FLAG = "GET_FLAG";
 

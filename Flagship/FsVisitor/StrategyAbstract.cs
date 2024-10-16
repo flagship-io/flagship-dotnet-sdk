@@ -98,7 +98,7 @@ namespace Flagship.FsVisitor
                 if (version.ToString() == "1")
                 {
                     var data = visitorData.ToObject<VisitorCacheDTOV1>();
-                    if (data.Data.VisitorId != Visitor.VisitorId)
+                    if (data.Data.VisitorId != Visitor.VisitorId && data.Data.VisitorId != Visitor.AnonymousId)
                     {
                         Logger.Log.LogInfo(Config, string.Format(VISITOR_ID_MISMATCH_ERROR, data.Data.VisitorId, Visitor.VisitorId), "LookupVisitor");
                         return;
@@ -116,19 +116,25 @@ namespace Flagship.FsVisitor
             }
         }
 
-        private JObject FetchHitCacheData(string visitorId,IVisitorCacheImplementation visitorCacheInstance,  TimeSpan? timeout)
+        private async Task<JObject> FetchHitCacheData(string visitorId, IVisitorCacheImplementation visitorCacheInstance, TimeSpan? timeout)
         {
+            var timeoutMs = timeout ?? TimeSpan.FromMilliseconds(Constants.LOOKUP_TIMEOUT_MS);
 
-            var cts = new CancellationTokenSource();
+            using (var cts = new CancellationTokenSource(timeoutMs))
+            {
+                var lookupTask = visitorCacheInstance.LookupVisitor(visitorId);
+                var completedTask = await Task.WhenAny(lookupTask, Task.Delay(Timeout.Infinite, cts.Token)).ConfigureAwait(false);
 
-            cts.CancelAfter(timeout ?? TimeSpan.FromMilliseconds(10));
-            var lookupTask = visitorCacheInstance.LookupVisitor(visitorId);
-            lookupTask.Wait(cts.Token);
+                if (completedTask == lookupTask)
+                {
+                    return await lookupTask.ConfigureAwait(false);
+                }
 
-            return lookupTask.Result;
+                return null;
+            }
         }
 
-        public virtual void LookupVisitor()
+        public virtual async Task LookupVisitor()
         {
             try
             {
@@ -142,7 +148,7 @@ namespace Flagship.FsVisitor
 
                 Visitor.VisitorCacheStatus = VisitorCacheStatus.NONE;
 
-                var visitorCacheStringData = FetchHitCacheData(Visitor.VisitorId, visitorCacheInstance, timeout);
+                var visitorCacheStringData = await FetchHitCacheData(Visitor.VisitorId, visitorCacheInstance, timeout).ConfigureAwait(false);
 
                 if (visitorCacheStringData != null)
                 {
@@ -151,8 +157,9 @@ namespace Flagship.FsVisitor
 
                 if (visitorCacheStringData == null && !string.IsNullOrEmpty(Visitor.AnonymousId))
                 {
-                    visitorCacheStringData = FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout);
-                    if (visitorCacheStringData != null){
+                    visitorCacheStringData = await FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout).ConfigureAwait(false);
+                    if (visitorCacheStringData != null)
+                    {
                         Visitor.VisitorCacheStatus = VisitorCacheStatus.ANONYMOUS_ID_CACHE;
                     }
                 }
@@ -161,8 +168,9 @@ namespace Flagship.FsVisitor
 
                 if (Visitor.VisitorCacheStatus == VisitorCacheStatus.VISITOR_ID_CACHE && !string.IsNullOrEmpty(Visitor.AnonymousId))
                 {
-                    visitorCacheStringData = FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout);
-                    if (visitorCacheStringData != null){
+                    visitorCacheStringData = await FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout).ConfigureAwait(false);
+                    if (visitorCacheStringData != null)
+                    {
                         Visitor.VisitorCacheStatus = VisitorCacheStatus.VISITOR_ID_CACHE_WITH_ANONYMOUS_ID_CACHE;
                     }
                 }
@@ -173,73 +181,32 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public virtual async void CacheVisitorAsync()
+        private IDictionary<string, string> GetCurrentAssignmentsHistory(VisitorCacheDTOV1 visitorCacheData)
         {
-            try
+            var assignmentsHistory = new Dictionary<string, string>();
+            if (visitorCacheData == null)
             {
-                var visitorCacheInstance = Config?.VisitorCacheImplementation;
-                if (visitorCacheInstance == null || Config.DisableCache)
-                {
-                    return;
-                }
+                return assignmentsHistory;
+            }
 
-                var Campaigns = new Collection<VisitorCacheCampaign>();
-                var assignmentsHistory = new Dictionary<string, string>();
+            foreach (var item in visitorCacheData.Data.AssignmentsHistory)
+            {
+                assignmentsHistory[item.Key] = item.Value;
+            }
 
-                var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
-                if (visitorCacheData != null)
-                {
-                    foreach (var item in visitorCacheData.Data.AssignmentsHistory)
-                    {
-                        assignmentsHistory[item.Key] = item.Value;
-                    }
-                }
+            return assignmentsHistory;
+        }
 
-                foreach (var item in Visitor.Campaigns)
-                {
-                    assignmentsHistory[item.VariationGroupId] = item.Variation.Id;
-
-                    Campaigns.Add(new VisitorCacheCampaign
-                    {
-                        CampaignId = item.Id,
-                        VariationGroupId = item.VariationGroupId,
-                        VariationId = item.Variation.Id,
-                        IsReference = item.Variation.Reference,
-                        Type = item.Variation.Modifications.Type,
-                        Activated = false,
-                        Flags = item.Variation.Modifications.Value,
-                        Slug = item.Slug
-
-                    });
-                }
-
-                var data = new VisitorCacheDTOV1
-                {
-                    Version = 1,
-                    Data = new VisitorCacheData
-                    {
-                        VisitorId = Visitor.VisitorId,
-                        AnonymousId = Visitor.AnonymousId,
-                        Consent = Visitor.HasConsented,
-                        Context = Visitor.Context,
-                        Campaigns = Campaigns,
-                        AssignmentsHistory = assignmentsHistory,
-                    }
-                };
-
-                var dataJson = JObject.FromObject(data);
-
-                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson).ConfigureAwait(false);
-
-                Visitor.VisitorCache = new VisitorCache
-                {
-                    Version = 1,
-                    Data = data
-                };
-
-                if (!string.IsNullOrEmpty(Visitor.AnonymousId) && (Visitor.VisitorCacheStatus == VisitorCacheStatus.NONE 
-                || Visitor.VisitorCacheStatus == VisitorCacheStatus.VISITOR_ID_CACHE)){
-                    dataJson = JObject.FromObject(new VisitorCacheDTOV1
+        protected async void CacheVisitorForAnonymousId(
+        ICollection<VisitorCacheCampaign> Campaigns,
+        IDictionary<string, string> assignmentsHistory,
+        IVisitorCacheImplementation visitorCacheInstance
+        )
+        {
+            if (!string.IsNullOrEmpty(Visitor.AnonymousId) && (Visitor.VisitorCacheStatus == VisitorCacheStatus.NONE
+|| Visitor.VisitorCacheStatus == VisitorCacheStatus.VISITOR_ID_CACHE))
+            {
+                var dataJson = JObject.FromObject(new VisitorCacheDTOV1
                 {
                     Version = 1,
                     Data = new VisitorCacheData
@@ -252,8 +219,70 @@ namespace Flagship.FsVisitor
                         AssignmentsHistory = assignmentsHistory,
                     }
                 });
-                    await visitorCacheInstance.CacheVisitor(Visitor.AnonymousId, dataJson).ConfigureAwait(false);
-                }
+                await visitorCacheInstance.CacheVisitor(Visitor.AnonymousId, dataJson).ConfigureAwait(false);
+            }
+        }
+
+        public virtual async void CacheVisitorAsync()
+        {
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    var visitorCacheInstance = Config?.VisitorCacheImplementation;
+                    if (visitorCacheInstance == null || Config.DisableCache)
+                    {
+                        return;
+                    }
+
+                    var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
+                    var Campaigns = new Collection<VisitorCacheCampaign>();
+                    var assignmentsHistory = GetCurrentAssignmentsHistory(visitorCacheData);
+
+                    foreach (var item in Visitor.Campaigns)
+                    {
+                        assignmentsHistory[item.VariationGroupId] = item.Variation.Id;
+
+                        Campaigns.Add(new VisitorCacheCampaign
+                        {
+                            CampaignId = item.Id,
+                            VariationGroupId = item.VariationGroupId,
+                            VariationId = item.Variation.Id,
+                            IsReference = item.Variation.Reference,
+                            Type = item.Variation.Modifications.Type,
+                            Activated = false,
+                            Flags = item.Variation.Modifications.Value,
+                            Slug = item.Slug
+
+                        });
+                    }
+
+                    var data = new VisitorCacheDTOV1
+                    {
+                        Version = 1,
+                        Data = new VisitorCacheData
+                        {
+                            VisitorId = Visitor.VisitorId,
+                            AnonymousId = Visitor.AnonymousId,
+                            Consent = Visitor.HasConsented,
+                            Context = Visitor.Context,
+                            Campaigns = Campaigns,
+                            AssignmentsHistory = assignmentsHistory,
+                        }
+                    };
+
+                    var dataJson = JObject.FromObject(data);
+
+                    await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson).ConfigureAwait(false);
+
+                    Visitor.VisitorCache = new VisitorCache
+                    {
+                        Version = 1,
+                        Data = data
+                    };
+
+                    CacheVisitorForAnonymousId(Campaigns, assignmentsHistory, visitorCacheInstance);
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

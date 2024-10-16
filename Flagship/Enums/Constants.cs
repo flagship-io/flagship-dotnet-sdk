@@ -27,6 +27,7 @@ namespace Flagship.Enums
         public const int NB_MIN_CONTEXT_KEYS = 3;
 
         public static double DEFAULT_HIT_DEDUPLICATION_TIME = 2500;
+        public const int LOOKUP_TIMEOUT_MS = 2000;
 
         /// <summary>
         /// Default request timeout in second

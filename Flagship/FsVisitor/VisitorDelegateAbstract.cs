@@ -84,7 +84,7 @@ namespace Flagship.FsVisitor
             SetConsent(hasConsented);
             LoadPredefinedContext();
 
-            GetStrategy().LookupVisitor();
+
 
             FlagsStatus = new FlagsStatus
             {

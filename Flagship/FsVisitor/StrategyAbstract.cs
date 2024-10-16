@@ -86,6 +86,7 @@ namespace Flagship.FsVisitor
             {
                 if (visitorData == null)
                 {
+                    Visitor.VisitorCache = null;
                     return;
                 }
 
@@ -197,7 +198,7 @@ namespace Flagship.FsVisitor
             return assignmentsHistory;
         }
 
-        protected async void CacheVisitorForAnonymousId(
+        protected async Task CacheVisitorForAnonymousId(
         ICollection<VisitorCacheCampaign> Campaigns,
         IDictionary<string, string> assignmentsHistory,
         IVisitorCacheImplementation visitorCacheInstance
@@ -281,7 +282,7 @@ namespace Flagship.FsVisitor
                         Data = data
                     };
 
-                    CacheVisitorForAnonymousId(Campaigns, assignmentsHistory, visitorCacheInstance);
+                    await CacheVisitorForAnonymousId(Campaigns, assignmentsHistory, visitorCacheInstance).ConfigureAwait(false);
                 }).ConfigureAwait(false);
             }
             catch (Exception ex)

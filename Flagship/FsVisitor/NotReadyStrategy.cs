@@ -12,9 +12,9 @@ namespace Flagship.FsVisitor
         {
         }
 
-        public override Task LookupVisitor()
+        public override void LookupVisitor()
         {
-            return Utils.Helper.VoidTask();
+            //
         }
 
         public override void CacheVisitorAsync()

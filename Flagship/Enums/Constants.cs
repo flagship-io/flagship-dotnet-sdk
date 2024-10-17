@@ -24,8 +24,6 @@ namespace Flagship.Enums
 
         public const int NB_MIN_CONTEXT_KEYS = 3;
 
-        public const int LOOKUP_TIMEOUT_MS = 2000;
-
         /// <summary>
         /// Default request timeout in second
         /// </summary>
@@ -96,8 +94,6 @@ namespace Flagship.Enums
         public const string PREDEFINED_CONTEXT_TYPE_ERROR = "Predefined Context {0} must be type of {1}";
 
         public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
-
-        public const string XPC_BUCKETING_WARNING = "Experience continuity is disabled on bucketing mode when visitor cache is not set";
 
         public const string GET_FLAG = "GET_FLAG";
 

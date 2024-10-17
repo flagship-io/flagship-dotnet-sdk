@@ -45,6 +45,8 @@ namespace Flagship.Enums
 
         public const string BUCKETING_API_CONTEXT_URL = "https://decision.flagship.io/v2/{0}/events";
 
+        public const string THIRD_PARTY_SEGMENT_URL = "https://api-data-connector.flagship.io/accounts/{0}/segments/{1}";
+
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
         public const string SDK_VERSION = "4.0.2";

@@ -1,7 +1,7 @@
 name: CI pipeline
 on:
   pull_request:
-    branches: [main]
+    branches: [main, q2]
 
 jobs:
   build:

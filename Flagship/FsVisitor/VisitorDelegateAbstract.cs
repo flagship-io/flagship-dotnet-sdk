@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Flagship.Enums;
 using Flagship.Main;
 using Flagship.Delegate;
+using System.Collections.Concurrent;
 
 namespace Flagship.FsVisitor
 {
@@ -60,11 +61,13 @@ namespace Flagship.FsVisitor
         public Troubleshooting SegmentHitTroubleshooting { get; set; }
 
         public bool HasContextBeenUpdated { get; set; }
+        public ConcurrentDictionary<string,TimeSpan> DeDuplicationCache { get; set; }
 
 
         public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null)
         {
 
+            DeDuplicationCache = new ConcurrentDictionary<string, TimeSpan>();
             SdkInitialData = sdkInitialData;
             ConfigManager = configManager;
             if (isAuthenticated && configManager.Config.DecisionMode == DecisionMode.DECISION_API)

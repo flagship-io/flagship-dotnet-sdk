@@ -1,4 +1,5 @@
 ﻿using Flagship.Api;
+using Flagship.Cache;
 using Flagship.Config;
 using Flagship.Decision;
 using Flagship.Enums;
@@ -85,6 +86,7 @@ namespace Flagship.FsVisitor
             {
                 if (visitorData == null)
                 {
+                    Visitor.VisitorCache = null;
                     return;
                 }
 
@@ -97,7 +99,7 @@ namespace Flagship.FsVisitor
                 if (version.ToString() == "1")
                 {
                     var data = visitorData.ToObject<VisitorCacheDTOV1>();
-                    if (data.Data.VisitorId != Visitor.VisitorId)
+                    if (data.Data.VisitorId != Visitor.VisitorId && data.Data.VisitorId != Visitor.AnonymousId)
                     {
                         Logger.Log.LogInfo(Config, string.Format(VISITOR_ID_MISMATCH_ERROR, data.Data.VisitorId, Visitor.VisitorId), "LookupVisitor");
                         return;
@@ -115,7 +117,25 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public virtual void LookupVisitor()
+        private async Task<JObject> FetchHitCacheData(string visitorId, IVisitorCacheImplementation visitorCacheInstance, TimeSpan? timeout)
+        {
+            var timeoutMs = timeout ?? TimeSpan.FromMilliseconds(Constants.LOOKUP_TIMEOUT_MS);
+
+            using (var cts = new CancellationTokenSource(timeoutMs))
+            {
+                var lookupTask = visitorCacheInstance.LookupVisitor(visitorId);
+                var completedTask = await Task.WhenAny(lookupTask, Task.Delay(Timeout.Infinite, cts.Token)).ConfigureAwait(false);
+
+                if (completedTask == lookupTask)
+                {
+                    return await lookupTask.ConfigureAwait(false);
+                }
+
+                return null;
+            }
+        }
+
+        public virtual async Task LookupVisitor()
         {
             try
             {
@@ -127,16 +147,34 @@ namespace Flagship.FsVisitor
 
                 var timeout = visitorCacheInstance?.LookupTimeout;
 
-                var cts = new CancellationTokenSource();
+                Visitor.VisitorCacheStatus = VisitorCacheStatus.NONE;
 
-                cts.CancelAfter(timeout ?? TimeSpan.FromMilliseconds(10));
+                var visitorCacheStringData = await FetchHitCacheData(Visitor.VisitorId, visitorCacheInstance, timeout).ConfigureAwait(false);
 
-                var lookupTask = visitorCacheInstance.LookupVisitor(Visitor.VisitorId);
-                lookupTask.Wait(cts.Token);
+                if (visitorCacheStringData != null)
+                {
+                    Visitor.VisitorCacheStatus = VisitorCacheStatus.VISITOR_ID_CACHE;
+                }
 
-                var visitorCacheStringData = lookupTask.Result;
+                if (visitorCacheStringData == null && !string.IsNullOrEmpty(Visitor.AnonymousId))
+                {
+                    visitorCacheStringData = await FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout).ConfigureAwait(false);
+                    if (visitorCacheStringData != null)
+                    {
+                        Visitor.VisitorCacheStatus = VisitorCacheStatus.ANONYMOUS_ID_CACHE;
+                    }
+                }
 
                 MigrateVisitorCacheData(visitorCacheStringData);
+
+                if (Visitor.VisitorCacheStatus == VisitorCacheStatus.VISITOR_ID_CACHE && !string.IsNullOrEmpty(Visitor.AnonymousId))
+                {
+                    visitorCacheStringData = await FetchHitCacheData(Visitor.AnonymousId, visitorCacheInstance, timeout).ConfigureAwait(false);
+                    if (visitorCacheStringData != null)
+                    {
+                        Visitor.VisitorCacheStatus = VisitorCacheStatus.VISITOR_ID_CACHE_WITH_ANONYMOUS_ID_CACHE;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -144,69 +182,108 @@ namespace Flagship.FsVisitor
             }
         }
 
-        public virtual async void CacheVisitorAsync()
+        private IDictionary<string, string> GetCurrentAssignmentsHistory(VisitorCacheDTOV1 visitorCacheData)
         {
-            try
+            var assignmentsHistory = new Dictionary<string, string>();
+            if (visitorCacheData == null)
             {
-                var visitorCacheInstance = Config?.VisitorCacheImplementation;
-                if (visitorCacheInstance == null || Config.DisableCache)
-                {
-                    return;
-                }
+                return assignmentsHistory;
+            }
 
-                var Campaigns = new Collection<VisitorCacheCampaign>();
-                var assignmentsHistory = new Dictionary<string, string>();
+            foreach (var item in visitorCacheData.Data.AssignmentsHistory)
+            {
+                assignmentsHistory[item.Key] = item.Value;
+            }
 
-                var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
-                if (visitorCacheData != null)
-                {
-                    foreach (var item in visitorCacheData.Data.AssignmentsHistory)
-                    {
-                        assignmentsHistory[item.Key] = item.Value;
-                    }
-                }
+            return assignmentsHistory;
+        }
 
-                foreach (var item in Visitor.Campaigns)
-                {
-                    assignmentsHistory[item.VariationGroupId] = item.Variation.Id;
-
-                    Campaigns.Add(new VisitorCacheCampaign
-                    {
-                        CampaignId = item.Id,
-                        VariationGroupId = item.VariationGroupId,
-                        VariationId = item.Variation.Id,
-                        IsReference = item.Variation.Reference,
-                        Type = item.Variation.Modifications.Type,
-                        Activated = false,
-                        Flags = item.Variation.Modifications.Value,
-                        Slug = item.Slug
-
-                    });
-                }
-
-                var data = new VisitorCacheDTOV1
+        protected async Task CacheVisitorForAnonymousId(
+        ICollection<VisitorCacheCampaign> Campaigns,
+        IDictionary<string, string> assignmentsHistory,
+        IVisitorCacheImplementation visitorCacheInstance
+        )
+        {
+            if (!string.IsNullOrEmpty(Visitor.AnonymousId) && (Visitor.VisitorCacheStatus == VisitorCacheStatus.NONE
+|| Visitor.VisitorCacheStatus == VisitorCacheStatus.VISITOR_ID_CACHE))
+            {
+                var dataJson = JObject.FromObject(new VisitorCacheDTOV1
                 {
                     Version = 1,
                     Data = new VisitorCacheData
                     {
-                        VisitorId = Visitor.VisitorId,
-                        AnonymousId = Visitor.AnonymousId,
+                        VisitorId = Visitor.AnonymousId,
+                        AnonymousId = null,
                         Consent = Visitor.HasConsented,
                         Context = Visitor.Context,
                         Campaigns = Campaigns,
                         AssignmentsHistory = assignmentsHistory,
                     }
-                };
+                });
+                await visitorCacheInstance.CacheVisitor(Visitor.AnonymousId, dataJson).ConfigureAwait(false);
+            }
+        }
 
-                var dataJson = JObject.FromObject(data);
-
-                await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson).ConfigureAwait(false);
-
-                Visitor.VisitorCache = new VisitorCache
+        public virtual async void CacheVisitorAsync()
+        {
+            try
+            {
+                await Task.Run(async () =>
                 {
-                    Version = 1,
-                    Data = data
-                };
+                    var visitorCacheInstance = Config?.VisitorCacheImplementation;
+                    if (visitorCacheInstance == null || Config.DisableCache)
+                    {
+                        return;
+                    }
+
+                    var visitorCacheData = (VisitorCacheDTOV1)Visitor.VisitorCache?.Data;
+                    var Campaigns = new Collection<VisitorCacheCampaign>();
+                    var assignmentsHistory = GetCurrentAssignmentsHistory(visitorCacheData);
+
+                    foreach (var item in Visitor.Campaigns)
+                    {
+                        assignmentsHistory[item.VariationGroupId] = item.Variation.Id;
+
+                        Campaigns.Add(new VisitorCacheCampaign
+                        {
+                            CampaignId = item.Id,
+                            VariationGroupId = item.VariationGroupId,
+                            VariationId = item.Variation.Id,
+                            IsReference = item.Variation.Reference,
+                            Type = item.Variation.Modifications.Type,
+                            Activated = false,
+                            Flags = item.Variation.Modifications.Value,
+                            Slug = item.Slug
+
+                        });
+                    }
+
+                    var data = new VisitorCacheDTOV1
+                    {
+                        Version = 1,
+                        Data = new VisitorCacheData
+                        {
+                            VisitorId = Visitor.VisitorId,
+                            AnonymousId = Visitor.AnonymousId,
+                            Consent = Visitor.HasConsented,
+                            Context = Visitor.Context,
+                            Campaigns = Campaigns,
+                            AssignmentsHistory = assignmentsHistory,
+                        }
+                    };
+
+                    var dataJson = JObject.FromObject(data);
+
+                    await visitorCacheInstance.CacheVisitor(Visitor.VisitorId, dataJson).ConfigureAwait(false);
+
+                    Visitor.VisitorCache = new VisitorCache
+                    {
+                        Version = 1,
+                        Data = data
+                    };
+
+                    await CacheVisitorForAnonymousId(Campaigns, assignmentsHistory, visitorCacheInstance).ConfigureAwait(false);
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -251,7 +328,7 @@ namespace Flagship.FsVisitor
         public async Task SendFetchFlagsTroubleshootingHit(ICollection<Campaign> campaigns, DateTime now)
         {
             var troubleshootingData = GetTroubleshootingData();
-            if (troubleshootingData==null)
+            if (troubleshootingData == null)
             {
                 return;
             }
@@ -300,7 +377,7 @@ namespace Flagship.FsVisitor
                 SdkConfigTrackingManagerConfigPoolMaxSize = Config.TrackingManagerConfig.PoolMaxSize,
                 SdkConfigUsingCustomHitCache = Config.HitCacheImplementation != null,
                 SdkConfigUsingCustomVisitorCache = Config.VisitorCacheImplementation != null,
-                SdkConfigUsingCustomLogManagere = Config.LogManager is Logger.FsLogManager, 
+                SdkConfigUsingCustomLogManagere = Config.LogManager is Logger.FsLogManager,
                 SdkConfigUsingOnVisitorExposed = Config.HasOnVisitorExposed(),
                 SdkConfigDisableCache = Config.DisableCache
             };
@@ -332,13 +409,13 @@ namespace Flagship.FsVisitor
 
             var analyticData = new UsageHit()
             {
-                VisitorId= Visitor.SdkInitialData?.InstanceId,
+                VisitorId = Visitor.SdkInitialData?.InstanceId,
                 Label = DiagnosticLabel.SDK_CONFIG,
-                LogLevel= LogLevel.INFO,
+                LogLevel = LogLevel.INFO,
                 FlagshipInstanceId = Visitor.SdkInitialData?.InstanceId,
-                Config= Config,
+                Config = Config,
                 SdkStatus = Visitor.GetSdkStatus(),
-                LastBucketingTimestamp  = DecisionManager.LastBucketingTimestamp,
+                LastBucketingTimestamp = DecisionManager.LastBucketingTimestamp,
                 LastInitializationTimestamp = Visitor.SdkInitialData?.LastInitializationTimestamp,
                 SdkConfigMode = Config.DecisionMode,
                 SdkConfigTimeout = Config.Timeout,

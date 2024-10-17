@@ -21,9 +21,10 @@ namespace Flagship.FsVisitor
             LoadPredefinedContext();
         }
 
-        public override Task FetchFlags()
+        public override async Task FetchFlags()
         {
-            return this.GetStrategy().FetchFlags();
+            await GetStrategy().LookupVisitor().ConfigureAwait(false);
+            await GetStrategy().FetchFlags().ConfigureAwait(false);
         }
 
         public override IFlag GetFlag(string key)
@@ -53,7 +54,7 @@ namespace Flagship.FsVisitor
 
         public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
         {
-            return GetStrategy().VisitorExposed(key, defaultValue, flag, hasGetValueBeenCalled);  
+            return GetStrategy().VisitorExposed(key, defaultValue, flag, hasGetValueBeenCalled);
         }
 
         public override Task SendHit(HitAbstract hit)

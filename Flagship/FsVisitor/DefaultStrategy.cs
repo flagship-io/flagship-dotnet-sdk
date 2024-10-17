@@ -48,8 +48,15 @@ namespace Flagship.FsVisitor
             Visitor.Context[key] = value;
         }
 
-        protected void UpdateContextFetchFlagsStatus()
+        protected void UpdateContextFetchFlagsStatus(IDictionary<string, object> oldContext, IDictionary<string, object> newContext)
         {
+            if (Utils.Helper.IsDeepEqual(oldContext, newContext))
+            {
+                return;
+            }
+
+            Visitor.HasContextBeenUpdated = true;
+
             Visitor.FlagsStatus = new FlagsStatus
             {
                 Reason = FSFetchReasons.VISITOR_CONTEXT_UPDATED,
@@ -63,35 +70,50 @@ namespace Flagship.FsVisitor
             {
                 return;
             }
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             foreach (var item in context)
             {
                 UpdateContextKeyValue(item.Key, item.Value);
             }
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void UpdateContext(string key, string value)
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             UpdateContextKeyValue(key, value);
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void UpdateContext(string key, double value)
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             UpdateContextKeyValue(key, value);
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void UpdateContext(string key, bool value)
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             UpdateContextKeyValue(key, value);
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         public override void ClearContext()
         {
+            Visitor.HasContextBeenUpdated = false;
+            var oldContext = new Dictionary<string, object>(Visitor.Context);
             Visitor.Context.Clear();
-            UpdateContextFetchFlagsStatus();
+            var newContext = new Dictionary<string, object>(Visitor.Context);
+            UpdateContextFetchFlagsStatus(oldContext, newContext);
         }
 
         protected virtual ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
@@ -348,7 +370,7 @@ namespace Flagship.FsVisitor
 
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_MISSING_ERROR, Visitor.VisitorId, key, defaultValue), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_FLAG_NOT_FOUND, key, defaultValue, visitorExposed);
 
                 return defaultValue;
@@ -366,13 +388,13 @@ namespace Flagship.FsVisitor
 
             if (defaultValue != null && !Utils.Helper.HasSameType(flag.Value, defaultValue))
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, Visitor.VisitorId, key,  defaultValue), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_FLAG_CAST_ERROR, Visitor.VisitorId, key, defaultValue), functionName);
                 sendFlagTroubleshooting(DiagnosticLabel.GET_FLAG_VALUE_TYPE_WARNING, key, defaultValue, visitorExposed);
 
                 return defaultValue;
             }
 
-            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, Visitor.VisitorId, key,  flag.Value), functionName);
+            Log.LogDebug(Config, string.Format(Constants.GET_FLAG_VALUE, Visitor.VisitorId, key, flag.Value), functionName);
 
             return (T)flag.Value;
         }
@@ -401,7 +423,7 @@ namespace Flagship.FsVisitor
             const string functionName = "flag.metadata";
             if (flag == null)
             {
-                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, Visitor.VisitorId,  key), functionName);
+                Log.LogWarning(Config, string.Format(Constants.GET_METADATA_NO_FLAG_FOUND, Visitor.VisitorId, key), functionName);
 
                 SendFlagMetadataTroubleshooting(key);
 
@@ -410,11 +432,11 @@ namespace Flagship.FsVisitor
 
             return new FlagMetadata(
                 flag.CampaignId,
-                flag.VariationGroupId, 
+                flag.VariationGroupId,
                 flag.VariationId,
-                flag.IsReference, 
+                flag.IsReference,
                 flag.CampaignType,
-                flag.Slug, 
+                flag.Slug,
                 flag.CampaignName,
                 flag.VariationGroupName,
                 flag.VariationName);

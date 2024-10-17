@@ -524,7 +524,8 @@ namespace Flagship.FsVisitor
         public override void Authenticate(string visitorId)
         {
             const string methodName = "Authenticate";
-            if (Config.DecisionMode == DecisionMode.BUCKETING)
+            var visitorCacheInstance = Config.VisitorCacheImplementation;
+            if (Config.DecisionMode == DecisionMode.BUCKETING && visitorCacheInstance == null)
             {
                 LogDeactivateOnBucketingMode(methodName);
                 return;
@@ -565,7 +566,8 @@ namespace Flagship.FsVisitor
         public override void Unauthenticate()
         {
             const string methodName = "Unauthenticate";
-            if (Config.DecisionMode == DecisionMode.BUCKETING)
+            var visitorCacheInstance = Config.VisitorCacheImplementation;
+            if (Config.DecisionMode == DecisionMode.BUCKETING && visitorCacheInstance == null)
             {
                 LogDeactivateOnBucketingMode(methodName);
                 return;
@@ -605,7 +607,7 @@ namespace Flagship.FsVisitor
 
         protected void LogDeactivateOnBucketingMode(string methodName)
         {
-            Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_BUCKETING_ERROR, methodName), methodName);
+            Log.LogError(Config, Constants.XPC_BUCKETING_WARNING, methodName);
         }
     }
 }

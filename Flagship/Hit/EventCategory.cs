@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.Hit
+﻿namespace Flagship.Hit
 {
     public enum EventCategory
     {
         ACTION_TRACKING,
-        USER_ENGAGEMENT
+        USER_ENGAGEMENT,
     }
 }

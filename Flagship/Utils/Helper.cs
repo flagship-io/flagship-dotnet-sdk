@@ -1,9 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Flagship.Utils
 {
@@ -30,11 +29,9 @@ namespace Flagship.Utils
 
         public static string ErrorFormat(string errorMessage, object errorData)
         {
-            return JsonConvert.SerializeObject(new
-            {
-                ErrorMessage = errorMessage,
-                ErrorData = errorData
-            });
+            return JsonConvert.SerializeObject(
+                new { ErrorMessage = errorMessage, ErrorData = errorData }
+            );
         }
 
         public static Task VoidTask()
@@ -53,6 +50,37 @@ namespace Flagship.Utils
                 sb.Append(Convert.ToInt32(c).ToString("x"));
             }
             return sb.ToString();
+        }
+
+        public static bool IsDeepEqual(
+            IDictionary<string, object> dict1,
+            IDictionary<string, object> dict2
+        )
+        {
+            if (dict1 == null && dict2 == null)
+            {
+                return true;
+            }
+            if (dict1 == null || dict2 == null)
+            {
+                return false;
+            }
+            if (dict1.Count != dict2.Count)
+            {
+                return false;
+            }
+            foreach (var key in dict1.Keys)
+            {
+                if (!dict2.ContainsKey(key))
+                {
+                    return false;
+                }
+                if (!dict1[key].Equals(dict2[key]))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

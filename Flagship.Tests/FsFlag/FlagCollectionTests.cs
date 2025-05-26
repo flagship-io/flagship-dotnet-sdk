@@ -2,12 +2,7 @@
 using Moq;
 using Flagship.FsFlag;
 using Flagship.FsVisitor;
-using Flagship.Logger;
 using Flagship.Model;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
 using Flagship.Api;
 using Flagship.Config;
 using Newtonsoft.Json.Linq;

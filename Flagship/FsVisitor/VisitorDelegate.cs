@@ -1,19 +1,26 @@
-﻿using Flagship.Config;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Flagship.Config;
 using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
     internal class VisitorDelegate : VisitorDelegateAbstract
     {
-        public VisitorDelegate(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null) : base(visitorID, isAuthenticated, context, hasConsented, configManager, sdkInitialData)
-        {
-        }
+        public VisitorDelegate(
+            string visitorID,
+            bool isAuthenticated,
+            IDictionary<string, object> context,
+            bool hasConsented,
+            IConfigManager configManager,
+            SdkInitialData sdkInitialData = null
+        )
+            : base(visitorID, isAuthenticated, context, hasConsented, configManager, sdkInitialData)
+        { }
 
         public override void ClearContext()
         {
@@ -21,17 +28,25 @@ namespace Flagship.FsVisitor
             LoadPredefinedContext();
         }
 
-        public override Task FetchFlags()
+        public override async Task FetchFlags()
         {
-            return this.GetStrategy().FetchFlags();
+            await GetStrategy().LookupVisitor().ConfigureAwait(false);
+            await GetStrategy().FetchFlags().ConfigureAwait(false);
         }
 
         public override IFlag GetFlag(string key)
         {
-            if (FlagsStatus.Status != FSFlagStatus.FETCHED && FlagsStatus.Status != FSFlagStatus.PANIC
-                && FlagsStatus.Status != FSFlagStatus.FETCHING)
+            if (
+                FlagsStatus.Status != FSFlagStatus.FETCHED
+                && FlagsStatus.Status != FSFlagStatus.PANIC
+                && FlagsStatus.Status != FSFlagStatus.FETCHING
+            )
             {
-                Log.LogWarning(Config, string.Format(FlagSyncStatusMessage(FlagsStatus.Reason), VisitorId, key), "GET_FLAG");
+                Log.LogWarning(
+                    Config,
+                    string.Format(FlagSyncStatusMessage(FlagsStatus.Reason), VisitorId, key),
+                    "GET_FLAG"
+                );
             }
             return new Flag(key, this);
         }
@@ -46,14 +61,24 @@ namespace Flagship.FsVisitor
             return GetStrategy().GetFlagMetadata(key, flag);
         }
 
-        public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed)
+        public override T GetFlagValue<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool visitorExposed
+        )
         {
             return GetStrategy().GetFlagValue(key, defaultValue, flag, visitorExposed);
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
+        public override Task VisitorExposed<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool hasGetValueBeenCalled = false
+        )
         {
-            return GetStrategy().VisitorExposed(key, defaultValue, flag, hasGetValueBeenCalled);  
+            return GetStrategy().VisitorExposed(key, defaultValue, flag, hasGetValueBeenCalled);
         }
 
         public override Task SendHit(HitAbstract hit)
@@ -84,23 +109,29 @@ namespace Flagship.FsVisitor
         protected string FlagSyncStatusMessage(FSFetchReasons reason)
         {
             var message = "";
-            const string VISITOR_SYNC_FLAGS_MESSAGE = "without calling `fetchFlags` method afterwards. So, the value of the flag `{1}` might be outdated";
+            const string VISITOR_SYNC_FLAGS_MESSAGE =
+                "without calling `fetchFlags` method afterwards. So, the value of the flag `{1}` might be outdated";
             switch (reason)
             {
                 case FSFetchReasons.FLAGS_NEVER_FETCHED:
-                    message = $"Visitor `{{0}}` has been created. So, the value of the flag `{{1}}` is the default value";
+                    message =
+                        $"Visitor `{{0}}` has been created. So, the value of the flag `{{1}}` is the default value";
                     break;
                 case FSFetchReasons.VISITOR_CONTEXT_UPDATED:
-                    message = $"Visitor context for visitor `{{0}}` has been updated {VISITOR_SYNC_FLAGS_MESSAGE}";
+                    message =
+                        $"Visitor context for visitor `{{0}}` has been updated {VISITOR_SYNC_FLAGS_MESSAGE}";
                     break;
                 case FSFetchReasons.VISITOR_AUTHENTICATED:
-                    message = $"Visitor `{{0}}` has been authenticated {VISITOR_SYNC_FLAGS_MESSAGE}";
+                    message =
+                        $"Visitor `{{0}}` has been authenticated {VISITOR_SYNC_FLAGS_MESSAGE}";
                     break;
                 case FSFetchReasons.VISITOR_UNAUTHENTICATED:
-                    message = $"Visitor `{{0}}` has been unauthenticated {VISITOR_SYNC_FLAGS_MESSAGE}";
+                    message =
+                        $"Visitor `{{0}}` has been unauthenticated {VISITOR_SYNC_FLAGS_MESSAGE}";
                     break;
                 case FSFetchReasons.FLAGS_FETCHING_ERROR:
-                    message = "There was an error while fetching flags for visitor `{0}`. So the value of the flag `{1}` may be outdated";
+                    message =
+                        "There was an error while fetching flags for visitor `{0}`. So the value of the flag `{1}` may be outdated";
                     break;
                 case FSFetchReasons.FLAGS_FETCHED_FROM_CACHE:
                     message = "Flags for visitor `{0}` have been fetched from cache";

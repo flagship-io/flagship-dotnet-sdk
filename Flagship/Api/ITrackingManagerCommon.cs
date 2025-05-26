@@ -1,11 +1,7 @@
-﻿using Flagship.Config;
+﻿using System.Threading.Tasks;
+using Flagship.Config;
 using Flagship.Enums;
 using Flagship.Hit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.Api
 {
@@ -18,5 +14,5 @@ namespace Flagship.Api
         Task ActivateFlag(Activate hit);
 
         Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength);
-    } 
+    }
 }

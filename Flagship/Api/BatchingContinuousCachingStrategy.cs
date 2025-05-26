@@ -1,26 +1,29 @@
-﻿using Flagship.Config;
-using Flagship.Enums;
-using Flagship.Hit;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Flagship.Config;
+using Flagship.Enums;
+using Flagship.Hit;
+using Newtonsoft.Json;
 
 namespace Flagship.Api
 {
     internal class BatchingContinuousCachingStrategy : BatchingCachingStrategyAbstract
     {
-        public BatchingContinuousCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue, ref ConcurrentDictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
-        {
-        }
+        public BatchingContinuousCachingStrategy(
+            FlagshipConfig config,
+            HttpClient httpClient,
+            ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue,
+            ref ConcurrentDictionary<string, Activate> activatePoolQueue
+        )
+            : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue) { }
 
-        public async override Task Add(HitAbstract hit)
+        public override async Task Add(HitAbstract hit)
         {
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
@@ -32,11 +35,19 @@ namespace Flagship.Api
 
             await CacheHitAsync(hitsDictionary).ConfigureAwait(false);
 
-            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
+            if (
+                hit is Event eventHit
+                && eventHit.Action == Constants.FS_CONSENT
+                && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}"
+            )
             {
                 await NotConsent(hit.VisitorId).ConfigureAwait(false);
             }
-            Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
+            Logger.Log.LogDebug(
+                Config,
+                string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())),
+                ADD_HIT
+            );
 
             lock (HitsPoolQueue)
             {
@@ -47,10 +58,11 @@ namespace Flagship.Api
             }
         }
 
-
-
-
-        override protected async Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
+        public async Task SendActivateHitBatch(
+            ActivateBatch activateBatch,
+            CacheTriggeredBy cacheTriggeredBy,
+            Activate currentActivate = null
+        )
         {
             var url = Constants.BASE_API_URL + URL_ACTIVATE;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
@@ -58,9 +70,9 @@ namespace Flagship.Api
             requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
-            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
-
-            var activateBatch = new ActivateBatch(activateHitsPool.ToList(), Config);
+            requestMessage.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON)
+            );
 
             if (currentActivate != null)
             {
@@ -72,9 +84,13 @@ namespace Flagship.Api
 
             try
             {
-                var postDatajson = JsonConvert.SerializeObject(requestBody);
+                var postDataJson = JsonConvert.SerializeObject(requestBody);
 
-                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+                var stringContent = new StringContent(
+                    postDataJson,
+                    Encoding.UTF8,
+                    Constants.HEADER_APPLICATION_JSON
+                );
 
                 requestMessage.Content = stringContent;
 
@@ -84,9 +100,12 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {STATUS_CODE, response.StatusCode},
-                        {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
+                        { STATUS_CODE, response.StatusCode },
+                        { REASON_PHRASE, response.ReasonPhrase },
+                        {
+                            RESPONSE,
+                            await response.Content.ReadAsStringAsync().ConfigureAwait(false)
+                        },
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -97,25 +116,37 @@ namespace Flagship.Api
                     OnVisitorExposed(item);
                 }
 
-                var hitKeysToRemove = activateHitsPool.Select(x => x.Key).ToArray();
+                var hitKeysToRemove = activateBatch
+                    .Hits.Where(x => x.Key != currentActivate?.Key)
+                    .Select(x => x.Key)
+                    .ToArray();
                 if (hitKeysToRemove.Any())
                 {
                     await FlushHitsAsync(hitKeysToRemove).ConfigureAwait(false);
                 }
 
-                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new
-                {
-                    url,
-                    headers = new Dictionary<string, string>
-                        {
-                            {Constants.HEADER_X_API_KEY, Config.ApiKey},
-                            {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
-                            {Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION }
-                        },
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                })), SEND_ACTIVATE);
+                Logger.Log.LogDebug(
+                    Config,
+                    string.Format(
+                        HIT_SENT_SUCCESS,
+                        JsonConvert.SerializeObject(
+                            new
+                            {
+                                url,
+                                headers = new Dictionary<string, string>
+                                {
+                                    { Constants.HEADER_X_API_KEY, Config.ApiKey },
+                                    { Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
+                                    { Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION },
+                                },
+                                body = requestBody,
+                                duration = (DateTime.Now - now).TotalMilliseconds,
+                                batchTriggeredBy = $"{cacheTriggeredBy}",
+                            }
+                        )
+                    ),
+                    SEND_ACTIVATE
+                );
             }
             catch (Exception ex)
             {
@@ -131,19 +162,26 @@ namespace Flagship.Api
                     await CacheHitAsync(hitsDictionary).ConfigureAwait(false);
                 }
 
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    url,
-                    headers = new Dictionary<string, string>
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
                         {
-                            {Constants.HEADER_X_API_KEY, Config.ApiKey},
-                            {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
-                            {Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION }
-                        },
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_ACTIVATE);
+                            url,
+                            headers = new Dictionary<string, string>
+                            {
+                                { Constants.HEADER_X_API_KEY, Config.ApiKey },
+                                { Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
+                                { Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION },
+                            },
+                            body = requestBody,
+                            duration = (DateTime.Now - now).TotalMilliseconds,
+                            batchTriggeredBy = $"{cacheTriggeredBy}",
+                        }
+                    ),
+                    SEND_ACTIVATE
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -158,13 +196,43 @@ namespace Flagship.Api
                     HttpResponseBody = ex.Message,
                     HttpResponseMethod = "POST",
                     HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = cacheTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
             }
         }
 
-    }
+        protected override async Task SendActivate(
+            ICollection<Activate> activateHitsPool,
+            Activate currentActivate,
+            CacheTriggeredBy batchTriggeredBy
+        )
+        {
+            var filteredItems = activateHitsPool
+                .Where(item =>
+                    (DateTime.Now - item.CreatedAt).TotalMilliseconds
+                    < Constants.DEFAULT_HIT_CACHE_TIME
+                )
+                .ToList();
 
+            if (!filteredItems.Any() && currentActivate != null)
+            {
+                var batch = new ActivateBatch(new List<Activate>() { }, Config);
+                await SendActivateHitBatch(batch, batchTriggeredBy, currentActivate)
+                    .ConfigureAwait(false);
+                return;
+            }
+
+            for (int i = 0; i < filteredItems.Count; i += Constants.MAX_ACTIVATE_HIT_PER_BATCH)
+            {
+                var batch = new ActivateBatch(
+                    filteredItems.Skip(i).Take(Constants.MAX_ACTIVATE_HIT_PER_BATCH).ToList(),
+                    Config
+                );
+                _ = SendActivateHitBatch(batch, batchTriggeredBy, i == 0 ? currentActivate : null)
+                    .ConfigureAwait(false);
+            }
+        }
+    }
 }

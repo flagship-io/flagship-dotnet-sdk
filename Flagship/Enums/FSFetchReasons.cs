@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.Enums
+﻿namespace Flagship.Enums
 {
     /// <summary>
     /// Enum representing the reasons for fetching Flags.
@@ -44,6 +38,6 @@ namespace Flagship.Enums
         /// <summary>
         /// Indicates that there is no specific reason for fetching flags.
         /// </summary>
-        NONE = 6
+        NONE = 6,
     }
 }

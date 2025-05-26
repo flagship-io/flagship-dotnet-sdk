@@ -1,9 +1,4 @@
-﻿using Flagship.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Flagship.Hit
 {
@@ -13,14 +8,15 @@ namespace Flagship.Hit
         public const string S_API_ITEM = "s";
         public IDictionary<string, object> Context { get; set; }
 
-        public Segment(IDictionary<string, object> context) :base(HitType.SEGMENT)
+        public Segment(IDictionary<string, object> context)
+            : base(HitType.SEGMENT)
         {
             Context = context;
         }
 
         internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady(checkParent) && Context!=null;
+            return base.IsReady(checkParent) && Context != null;
         }
 
         internal override IDictionary<string, object> ToApiKeys()

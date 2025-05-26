@@ -1,19 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Flagship.Decision;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Net.Http;
 using Moq;
-using System.Threading;
 using Moq.Protected;
 using Flagship.Enums;
-using System.IO;
-using System.Net.Http.Headers;
 using System.Net;
-using Flagship.Delegate;
 using Flagship.Model.Bucketing;
 using System.Collections.ObjectModel;
 using Newtonsoft.Json.Linq;
@@ -52,7 +42,6 @@ namespace Flagship.Decision.Tests
                 ApiKey = "spi",
                 PollingInterval = TimeSpan.FromSeconds(0),
             };
-
 
             HttpResponseMessage httpResponse = new()
             {
@@ -120,6 +109,87 @@ namespace Flagship.Decision.Tests
 
         }
 
+        [TestMethod()]
+        public async Task GetThirdPartySegmentsAsync()
+        {
+            var config = new Config.BucketingConfig()
+            {
+                EnvId = "envID",
+                ApiKey = "spi",
+                PollingInterval = TimeSpan.FromSeconds(0),
+                FetchThirdPartyData = true,
+            };
+
+
+
+
+
+            var trackingManagerMock = new Mock<Flagship.Api.ITrackingManager>();
+            var decisionManagerMock = new Mock<Flagship.Decision.IDecisionManager>();
+            var configManager = new Flagship.Config.ConfigManager(config, decisionManagerMock.Object, trackingManagerMock.Object);
+
+            var context = new Dictionary<string, object>()
+            {
+                ["age"] = 20
+            };
+
+            var visitorDelegate = new Flagship.FsVisitor.VisitorDelegate("visitor_1", false, context, false, configManager);
+
+
+            HttpResponseMessage httpResponse = new()
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(GetBucketing(), Encoding.UTF8, "application/json"),
+            };
+
+            var thirdPartySegmentResponse = @"[{
+    ""visitor_id"": ""visitorId"",
+    ""segment"": ""key"",
+    ""value"": ""value"",
+    ""expiration"": 123456,
+    ""partner"": ""mixpanel""
+  },
+  {
+    ""visitor_id"": ""visitorId"",
+    ""segment"": ""key2"",
+    ""value"": ""value2"",
+    ""expiration"": 123456,
+    ""partner"": ""segment.com""
+  }
+]";
+
+
+
+            HttpResponseMessage httpResponseThirdPartySegments = new()
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(thirdPartySegmentResponse, Encoding.UTF8, "application/json"),
+            };
+
+            httpResponse.Headers.Add(HttpResponseHeader.LastModified.ToString(), "2022-01-20");
+
+            var url = string.Format(Constants.BUCKETING_API_URL, config.EnvId);
+            var urlThirdPartySegments = string.Format(Constants.THIRD_PARTY_SEGMENT_URL, config.EnvId, visitorDelegate.VisitorId);
+
+            Mock<HttpMessageHandler> mockHandler = new();
+
+            mockHandler.Protected().SetupSequence<Task<HttpResponseMessage>>(
+                 "SendAsync",
+                  ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && (req.RequestUri.ToString() == url || req.RequestUri.ToString() == urlThirdPartySegments)),
+                  ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(httpResponse).ReturnsAsync(httpResponseThirdPartySegments);
+
+            var httpClient = new HttpClient(mockHandler.Object);
+
+            var decisionManager = new BucketingManager(config, httpClient, Murmur.MurmurHash.Create32());
+
+            await decisionManager.StartPolling().ConfigureAwait(false);
+
+            await decisionManager.GetCampaigns(visitorDelegate);
+
+            Assert.IsTrue(visitorDelegate.Context["mixpanel::key"].ToString() == "value");
+            Assert.IsTrue(visitorDelegate.Context["segment.com::key2"].ToString() == "value2");
+        }
         [TestMethod()]
         public void BucketingMethod()
         {
@@ -212,6 +282,44 @@ namespace Flagship.Decision.Tests
             variationResult = (Model.Variation?)GetVariation?.Invoke(decisionManager, [VariationGroup, visitorDelegate]);
 
             Assert.IsNull(variationResult);
+
+            var variations2 = new Collection<Model.Bucketing.Variation>
+            {
+             new() {
+                        Id = "c20j8bk3fk9hdphqtd30",
+                        Modifications = new Modifications{
+                            Type= Model.ModificationType.HTML,
+                            Value = new Dictionary<string, object>
+                            {
+                                ["my_html"] = "<div>\n  <p>Original</p>\n</div>"
+                            }
+                        },
+                        Allocation = 0,
+                        Reference = true
+                    },
+                    new() {
+                        Id = "c20j8bk3fk9hdphqtd3g",
+                        Modifications = new Modifications{
+                            Type= Model.ModificationType.HTML,
+                            Value = new Dictionary<string, object>
+                            {
+                                ["my_html"] = "<div>\n  <p>variation 1</p>\n</div>"
+                            }
+                        },
+                        Allocation = 100,
+                        Reference = true
+                    }
+         };
+
+            // test getVariation with allocation 0
+            VariationGroup = new VariationGroup
+            {
+                Id = "9273BKSDJtoto",
+                Variations = variations2
+            };
+            variationResult = (Model.Variation?)GetVariation?.Invoke(decisionManager, [VariationGroup, visitorDelegate]);
+            Assert.IsNotNull(variationResult);
+            Assert.AreEqual(variations2[1].Id, variationResult.Id);
 
 
             // test isMatchTargeting with empty VariationGroupDTO
@@ -366,6 +474,53 @@ namespace Flagship.Decision.Tests
 
             Assert.IsTrue(CheckAndTargetingResult);
 
+            // test checkAndTargeting key match context with operator EXISTS
+            targetings =
+                            [
+                                new() {
+                                    Key = "age",
+                                    Operator = TargetingOperator.EXISTS,
+                                    Value = 20
+                                }
+                            ];
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
+            Assert.IsTrue(CheckAndTargetingResult);
+
+            // test checkAndTargeting key match context with operator EXISTS
+            targetings =
+                            [
+                                new() {
+                                    Key = "age2",
+                                    Operator = TargetingOperator.EXISTS,
+                                    Value = 20
+                                }
+                            ];
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
+            Assert.IsFalse(CheckAndTargetingResult);
+
+            // test checkAndTargeting key match context with operator NOT_EXISTS
+            targetings =
+                            [
+                                new() {
+                                    Key = "age",
+                                    Operator = TargetingOperator.NOT_EXISTS,
+                                    Value = 20
+                                }
+                            ];
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
+            Assert.IsFalse(CheckAndTargetingResult);
+            // test checkAndTargeting key match context with operator NOT_EXISTS
+            targetings =
+                            [
+                                new() {
+                                    Key = "age2",
+                                    Operator = TargetingOperator.NOT_EXISTS,
+                                    Value = 20
+                                }
+                            ];
+            CheckAndTargetingResult = (bool?)CheckAndTargeting?.Invoke(decisionManager, [targetings, visitorDelegate]);
+            Assert.IsTrue(CheckAndTargetingResult);
+
             // test testOperator EQUALS Test different values
             var testOperator = TestHelpers.GetPrivateMethod(decisionManager, "TestOperator");
             var testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, 5, 6]);
@@ -377,7 +532,7 @@ namespace Flagship.Decision.Tests
             testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, 5, '5']);
 
             Assert.IsFalse(testOperatorResult);
-            
+
             testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, true, "5"]);
 
             Assert.IsFalse(testOperatorResult);
@@ -400,14 +555,14 @@ namespace Flagship.Decision.Tests
             Assert.IsTrue(testOperatorResult);
 
             // test testOperator EQUALS Test contextValue EQUALS targetingValue list
-            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, "a", new JArray { "a", "b", "c" }]);;
+            testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, "a", new JArray { "a", "b", "c" }]); ;
 
             Assert.IsTrue(testOperatorResult);
 
             testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, 2d, new JArray { 2d, 1d, 3d }]);
 
             Assert.IsTrue(testOperatorResult);
-            
+
             testOperatorResult = (bool?)testOperator?.Invoke(decisionManager, [TargetingOperator.EQUALS, "a", new JArray { "b", "c" }]);
 
             Assert.IsFalse(testOperatorResult);
@@ -621,6 +776,7 @@ namespace Flagship.Decision.Tests
 
             Assert.IsFalse(testOperatorResult);
 
+
             httpClient.Dispose();
         }
 
@@ -826,12 +982,16 @@ namespace Flagship.Decision.Tests
 
             await decisionManagerMock.SendContextAsync(visitorDelegate);
 
+            visitorDelegateMock.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Never());
+
             visitorDelegate.SetConsent(true);
 
+            await decisionManagerMock.SendContextAsync(visitorDelegate);
             await decisionManagerMock.SendContextAsync(visitorDelegate);
 
             visitorDelegateMock.Verify(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"])), Times.Once());
 
+            visitorDelegate.HasContextBeenUpdated = true;
             var exception = new Exception("sendHit error");
 
             visitorDelegateMock.Setup(x => x.SendHit(It.Is<Segment>(y => y.Context["age"] == context["age"]))).Throws(exception);

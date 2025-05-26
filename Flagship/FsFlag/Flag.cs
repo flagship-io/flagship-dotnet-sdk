@@ -1,7 +1,7 @@
-﻿using Flagship.FsVisitor;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using System.Linq;
 using Flagship.Enums;
+using Flagship.FsVisitor;
 
 namespace Flagship.FsFlag
 {
@@ -11,7 +11,7 @@ namespace Flagship.FsFlag
         private readonly VisitorDelegateAbstract _visitorDelegateAbstract;
         private object _defaultValue;
         private bool _hasGetValueBeenCalled;
- 
+
         internal Flag(string key, VisitorDelegateAbstract visitorDelegate)
         {
             _key = key;
@@ -29,9 +29,10 @@ namespace Flagship.FsFlag
                 }
 
                 var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
-                return flagDTO!=null && !string.IsNullOrWhiteSpace(flagDTO.CampaignId) && 
-                    !string.IsNullOrWhiteSpace(flagDTO.VariationId) && 
-                    !string.IsNullOrWhiteSpace(flagDTO.VariationGroupId);
+                return flagDTO != null
+                    && !string.IsNullOrWhiteSpace(flagDTO.CampaignId)
+                    && !string.IsNullOrWhiteSpace(flagDTO.VariationId)
+                    && !string.IsNullOrWhiteSpace(flagDTO.VariationGroupId);
             }
         }
 
@@ -41,7 +42,7 @@ namespace Flagship.FsFlag
             {
                 if (_visitorDelegateAbstract == null || _visitorDelegateAbstract.Flags == null)
                 {
-                    return  FlagMetadata.EmptyMetadata();
+                    return FlagMetadata.EmptyMetadata();
                 }
 
                 var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
@@ -83,7 +84,12 @@ namespace Flagship.FsFlag
 
             var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
 
-            return _visitorDelegateAbstract.VisitorExposed(_key, _defaultValue, flagDTO, _hasGetValueBeenCalled);
+            return _visitorDelegateAbstract.VisitorExposed(
+                _key,
+                _defaultValue,
+                flagDTO,
+                _hasGetValueBeenCalled
+            );
         }
 
         public T GetValue<T>(T defaultValue, bool visitorExposed = true)
@@ -96,9 +102,13 @@ namespace Flagship.FsFlag
                 return defaultValue;
             }
 
-
             var flagDTO = _visitorDelegateAbstract.Flags.FirstOrDefault(x => x.Key == _key);
-            return _visitorDelegateAbstract.GetFlagValue(_key, defaultValue, flagDTO, visitorExposed);
+            return _visitorDelegateAbstract.GetFlagValue(
+                _key,
+                defaultValue,
+                flagDTO,
+                visitorExposed
+            );
         }
     }
 }

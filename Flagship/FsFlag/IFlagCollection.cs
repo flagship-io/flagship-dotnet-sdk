@@ -57,7 +57,6 @@ namespace Flagship.FsFlag
         /// <returns>An array of serialized flag metadata.</returns>
         string ToJson();
 
-
         /// <summary>
         /// Return flags status
         /// </summary>

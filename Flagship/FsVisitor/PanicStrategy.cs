@@ -1,22 +1,21 @@
-﻿using Flagship.Enums;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
     internal class PanicStrategy : DefaultStrategy
     {
-        public PanicStrategy(VisitorDelegateAbstract visitor) : base(visitor)
-        {
-        }
+        public PanicStrategy(VisitorDelegateAbstract visitor)
+            : base(visitor) { }
 
-        public override void LookupVisitor()
+        public override Task LookupVisitor()
         {
-            //
+            return Utils.Helper.VoidTask();
         }
 
         public override void CacheVisitorAsync()
@@ -24,7 +23,9 @@ namespace Flagship.FsVisitor
             //
         }
 
-        protected override ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
+        protected override ICollection<Campaign> FetchVisitorCacheCampaigns(
+            VisitorDelegateAbstract visitor
+        )
         {
             return new Collection<Campaign>();
         }
@@ -39,7 +40,7 @@ namespace Flagship.FsVisitor
 
         public override void UpdateContext(IDictionary<string, object> context)
         {
-            Log("UpdateContex");    
+            Log("UpdateContex");
         }
 
         protected override void UpdateContextKeyValue(string key, object value)
@@ -60,13 +61,23 @@ namespace Flagship.FsVisitor
             });
         }
 
-        public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
+        public override T GetFlagValue<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool userExposed = true
+        )
         {
             Log("Flag.value");
             return defaultValue;
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
+        public override Task VisitorExposed<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool hasGetValueBeenCalled = false
+        )
         {
             return Task.Factory.StartNew(() =>
             {
@@ -82,7 +93,15 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Logger.Log.LogInfo(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FSSdkStatus.SDK_PANIC), methodName);
+            Logger.Log.LogInfo(
+                Config,
+                string.Format(
+                    Constants.METHOD_DEACTIVATED_ERROR,
+                    methodName,
+                    FSSdkStatus.SDK_PANIC
+                ),
+                methodName
+            );
         }
 
         public override void AddTroubleshootingHit(Troubleshooting hit)

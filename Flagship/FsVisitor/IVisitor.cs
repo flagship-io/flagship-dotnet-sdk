@@ -1,8 +1,8 @@
-﻿using Flagship.Config;
+﻿using System.Collections.Generic;
+using Flagship.Config;
 using Flagship.Delegate;
 using Flagship.FsFlag;
 using Flagship.Model;
-using System.Collections.Generic;
 
 namespace Flagship.FsVisitor
 {

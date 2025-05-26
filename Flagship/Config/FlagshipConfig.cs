@@ -1,16 +1,10 @@
-﻿using Flagship.Cache;
+﻿using System;
+using Flagship.Cache;
 using Flagship.Delegate;
 using Flagship.Enums;
-using Flagship.Logger;
-using Flagship.FsVisitor;
-using Flagship.Hit;
-using Flagship.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Flagship.FsFlag;
+using Flagship.FsVisitor;
+using Flagship.Logger;
 
 namespace Flagship.Config
 {
@@ -45,16 +39,19 @@ namespace Flagship.Config
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public event OnVisitorExposedDelegate OnVisitorExposed;
 
-        virtual internal void InvokeOnVisitorExposed(IExposedVisitor exposedVisitor, IExposedFlag exposedFlag)
+        internal virtual void InvokeOnVisitorExposed(
+            IExposedVisitor exposedVisitor,
+            IExposedFlag exposedFlag
+        )
         {
             OnVisitorExposed?.Invoke(exposedVisitor, exposedFlag);
         }
 
-        virtual internal bool HasOnVisitorExposed()
+        internal virtual bool HasOnVisitorExposed()
         {
             return OnVisitorExposed != null;
         }
@@ -83,7 +80,11 @@ namespace Flagship.Config
         /// <summary>
         /// Define options to configure hit batching
         /// </summary>
-        public ITrackingManagerConfig TrackingManagerConfig { get => trackingManagerConfig; set => trackingManagerConfig = value; }
+        public ITrackingManagerConfig TrackingManagerConfig
+        {
+            get => trackingManagerConfig;
+            set => trackingManagerConfig = value;
+        }
 
         /// <summary>
         /// The SDK will collect usage data to help us improve our product
@@ -95,12 +96,12 @@ namespace Flagship.Config
         {
             DecisionMode = decisionMode;
             LogLevel = LogLevel.ALL;
+
             if (!Timeout.HasValue)
             {
                 Timeout = TimeSpan.FromMilliseconds(Constants.REQUEST_TIME_OUT);
             }
             DisableDeveloperUsageTracking = false;
         }
-
     }
 }

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Flagship.Enums
 {
     public static class PredefinedContext
-    { 
+    {
         /// <summary>
         /// Current device locale
         /// </summary>
@@ -108,31 +104,31 @@ namespace Flagship.Enums
         /// </summary>
         public const string FLAGSHIP_VISITOR = "fs_users";
 
-
-
-        private static readonly IDictionary<string, string> FLAGSHIP_CONTEXT = new Dictionary<string, string>
+        private static readonly IDictionary<string, string> FLAGSHIP_CONTEXT = new Dictionary<
+            string,
+            string
+        >
         {
-            [DEVICE_LOCALE]= "string",
-            [DEVICE_TYPE]= "string",
-            [DEVICE_MODEL]= "string",
-            [LOCATION_CITY]= "string",
-            [LOCATION_REGION]= "string",
-            [LOCATION_COUNTRY]= "string",
-            [LOCATION_LAT]= "number",
-            [LOCATION_LONG]= "number",
-            [IP]= "string",
-            [OS_NAME]= "string",
-            [OS_VERSION_NAME]= "string",
-            [OS_VERSION_CODE]= "number",
-            [CARRIER_NAME]= "string",
-            [INTERNET_CONNECTION]= "string",
-            [APP_VERSION_NAME]= "string",
-            [APP_VERSION_CODE]= "number",
-            [INTERFACE_NAME]= "string",
-            [FLAGSHIP_CLIENT]= "string",
-            [FLAGSHIP_VERSION]= "string",
-            [FLAGSHIP_VISITOR]= "string"
-
+            [DEVICE_LOCALE] = "string",
+            [DEVICE_TYPE] = "string",
+            [DEVICE_MODEL] = "string",
+            [LOCATION_CITY] = "string",
+            [LOCATION_REGION] = "string",
+            [LOCATION_COUNTRY] = "string",
+            [LOCATION_LAT] = "number",
+            [LOCATION_LONG] = "number",
+            [IP] = "string",
+            [OS_NAME] = "string",
+            [OS_VERSION_NAME] = "string",
+            [OS_VERSION_CODE] = "number",
+            [CARRIER_NAME] = "string",
+            [INTERNET_CONNECTION] = "string",
+            [APP_VERSION_NAME] = "string",
+            [APP_VERSION_CODE] = "number",
+            [INTERFACE_NAME] = "string",
+            [FLAGSHIP_CLIENT] = "string",
+            [FLAGSHIP_VERSION] = "string",
+            [FLAGSHIP_VISITOR] = "string",
         };
 
         internal static bool IsPredefinedContext(string predefinedContext)
@@ -142,7 +138,9 @@ namespace Flagship.Enums
 
         internal static string GetPredefinedType(string predefinedContext)
         {
-            return FLAGSHIP_CONTEXT.ContainsKey(predefinedContext) ? FLAGSHIP_CONTEXT[predefinedContext]: null;
+            return FLAGSHIP_CONTEXT.ContainsKey(predefinedContext)
+                ? FLAGSHIP_CONTEXT[predefinedContext]
+                : null;
         }
 
         internal static bool CheckType(string predefinedContext, object value)
@@ -155,16 +153,17 @@ namespace Flagship.Enums
             if (!IsPredefinedContext(predefinedContext))
             {
                 return false;
-            };
+            }
+            ;
 
-            var type =  FLAGSHIP_CONTEXT[predefinedContext];
+            var type = FLAGSHIP_CONTEXT[predefinedContext];
 
             bool check = false;
 
             switch (type)
             {
-                case "string": 
-                    check=value is string;
+                case "string":
+                    check = value is string;
                     break;
                 case "number":
                     check = value is long || value is int || value is double;

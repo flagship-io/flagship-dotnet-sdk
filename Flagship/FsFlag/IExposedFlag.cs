@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.FsFlag
+﻿namespace Flagship.FsFlag
 {
     /// <summary>
     /// An interface to get information about the flag that has been exposed.
@@ -30,6 +24,5 @@ namespace Flagship.FsFlag
         /// Get the flag metadata
         /// </summary>
         IFlagMetadata Metadata { get; }
-
     }
 }

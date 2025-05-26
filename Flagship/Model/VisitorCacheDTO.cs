@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Flagship.Model
 {
@@ -18,28 +14,28 @@ namespace Flagship.Model
 
         public ModificationType Type { get; set; }
 
-        public string Slug { get; set; }  
+        public string Slug { get; set; }
 
         public bool? Activated { get; set; }
 
-        public IDictionary<string,object> Flags { get; set; }
-
+        public IDictionary<string, object> Flags { get; set; }
     }
+
     internal class VisitorCacheData
     {
-        public string VisitorId { get; set; } 
+        public string VisitorId { get; set; }
 
         public string AnonymousId { get; set; }
 
         public bool? Consent { get; set; }
 
-        public IDictionary<string,object> Context { get; set; }
+        public IDictionary<string, object> Context { get; set; }
 
         public ICollection<VisitorCacheCampaign> Campaigns { get; set; }
 
-        public IDictionary<string, string> AssignmentsHistory { get; set; } 
+        public IDictionary<string, string> AssignmentsHistory { get; set; }
     }
-     
+
     internal class VisitorCacheDTOV1
     {
         public int Version { get; set; }

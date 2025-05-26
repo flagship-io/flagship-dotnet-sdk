@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.Enums
+﻿namespace Flagship.Enums
 {
     internal enum CacheTriggeredBy
     {
@@ -13,6 +7,6 @@ namespace Flagship.Enums
         Flush,
         ActivateLength,
         DirectHit,
-        DirectActivate
+        DirectActivate,
     }
 }

@@ -1,11 +1,7 @@
-﻿using Flagship.Enums;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Flagship.Enums;
 
 namespace Flagship.Hit
 {
@@ -13,8 +9,10 @@ namespace Flagship.Hit
     {
         public const string ERROR_MESSAGE = "Please check required fields";
 
-        public ICollection<HitAbstract> Hits { get; set; } 
-        public Batch() : base(HitType.BATCH)
+        public ICollection<HitAbstract> Hits { get; set; }
+
+        public Batch()
+            : base(HitType.BATCH)
         {
             Hits = new List<HitAbstract>();
             DS = Constants.SDK_APP;
@@ -22,18 +20,20 @@ namespace Flagship.Hit
 
         internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady() && Hits!=null && Hits.Count> 0 && Hits.All(hit=> hit.IsReady(false));
+            return base.IsReady()
+                && Hits != null
+                && Hits.Count > 0
+                && Hits.All(hit => hit.IsReady(false));
         }
 
         internal override IDictionary<string, object> ToApiKeys()
         {
-
             var apiKeys = new Dictionary<string, object>()
             {
                 [Constants.DS_API_ITEM] = DS,
                 [Constants.CUSTOMER_ENV_ID_API_ITEM] = Config?.EnvId,
                 [Constants.T_API_ITEM] = $"{Type}",
-                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds
+                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds,
             };
 
             var apiKeysHits = new Collection<IDictionary<string, object>>();
@@ -53,5 +53,5 @@ namespace Flagship.Hit
         {
             return ERROR_MESSAGE;
         }
-    } 
+    }
 }

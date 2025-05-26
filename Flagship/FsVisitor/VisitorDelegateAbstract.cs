@@ -1,13 +1,14 @@
-﻿using Flagship.Config;
-using Flagship.FsFlag;
-using Flagship.Hit;
-using Flagship.Model;
-using System;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Flagship.Enums;
-using Flagship.Main;
+using Flagship.Config;
 using Flagship.Delegate;
+using Flagship.Enums;
+using Flagship.FsFlag;
+using Flagship.Hit;
+using Flagship.Main;
+using Flagship.Model;
 
 namespace Flagship.FsVisitor
 {
@@ -24,22 +25,26 @@ namespace Flagship.FsVisitor
 
         public event OnFlagStatusFetchedDelegate OnFlagStatusFetched;
 
-        virtual public string VisitorId { get; set; }
-        virtual public ICollection<FlagDTO> Flags { get; set; }
-        virtual public ICollection<Campaign> Campaigns { get; set; }
-        virtual public bool HasConsented => _hasConsented;
-        virtual public FlagshipConfig Config => ConfigManager.Config;
-        virtual public IConfigManager ConfigManager { get; set; }
-        virtual public IDictionary<string, object> Context => _context;
-        virtual public string AnonymousId { get => _anonymousId; internal set { _anonymousId = value; } }
-        virtual public VisitorCache VisitorCache { get; set; }
-        virtual public uint Traffic { get; set; }
-        virtual public string SessionId { get; set; }
-        virtual public SdkInitialData SdkInitialData { get; set; }
+        public virtual string VisitorId { get; set; }
+        public virtual ICollection<FlagDTO> Flags { get; set; }
+        public virtual ICollection<Campaign> Campaigns { get; set; }
+        public virtual bool HasConsented => _hasConsented;
+        public virtual FlagshipConfig Config => ConfigManager.Config;
+        public virtual IConfigManager ConfigManager { get; set; }
+        public virtual IDictionary<string, object> Context => _context;
+        public virtual string AnonymousId
+        {
+            get => _anonymousId;
+            internal set { _anonymousId = value; }
+        }
+        public virtual VisitorCache VisitorCache { get; set; }
+        public virtual uint Traffic { get; set; }
+        public virtual string SessionId { get; set; }
+        public virtual SdkInitialData SdkInitialData { get; set; }
         public static FSSdkStatus SDKStatus { get; set; }
         public virtual IFlagsStatus FlagsStatus
         {
-            get => flagsStatus; 
+            get => flagsStatus;
             internal set
             {
                 flagsStatus = value;
@@ -59,9 +64,21 @@ namespace Flagship.FsVisitor
 
         public Troubleshooting SegmentHitTroubleshooting { get; set; }
 
+        public bool HasContextBeenUpdated { get; set; }
+        public ConcurrentDictionary<string, TimeSpan> DeDuplicationCache { get; set; }
 
-        public VisitorDelegateAbstract(string visitorID, bool isAuthenticated, IDictionary<string, object> context, bool hasConsented, IConfigManager configManager, SdkInitialData sdkInitialData = null)
+        internal VisitorCacheStatus VisitorCacheStatus { get; set; }
+
+        public VisitorDelegateAbstract(
+            string visitorID,
+            bool isAuthenticated,
+            IDictionary<string, object> context,
+            bool hasConsented,
+            IConfigManager configManager,
+            SdkInitialData sdkInitialData = null
+        )
         {
+            DeDuplicationCache = new ConcurrentDictionary<string, TimeSpan>();
             SdkInitialData = sdkInitialData;
             ConfigManager = configManager;
             if (isAuthenticated && configManager.Config.DecisionMode == DecisionMode.DECISION_API)
@@ -71,17 +88,16 @@ namespace Flagship.FsVisitor
             SessionId = Guid.NewGuid().ToString();
             _context = new Dictionary<string, object>();
             UpdateContext(context);
+            HasContextBeenUpdated = true;
             Flags = new HashSet<FlagDTO>();
             VisitorId = visitorID ?? CreateVisitorId();
             SetConsent(hasConsented);
             LoadPredefinedContext();
 
-            GetStrategy().LookupVisitor();
-
             FlagsStatus = new FlagsStatus
             {
                 Reason = FSFetchReasons.FLAGS_NEVER_FETCHED,
-                Status = FSFlagStatus.FETCH_REQUIRED
+                Status = FSFlagStatus.FETCH_REQUIRED,
             };
         }
 
@@ -102,7 +118,7 @@ namespace Flagship.FsVisitor
             _context[PredefinedContext.FLAGSHIP_VISITOR] = VisitorId;
         }
 
-        virtual public StrategyAbstract GetStrategy()
+        public virtual StrategyAbstract GetStrategy()
         {
             StrategyAbstract strategy;
             if (Fs.Status == FSSdkStatus.SDK_NOT_INITIALIZED)
@@ -125,38 +141,48 @@ namespace Flagship.FsVisitor
             return strategy;
         }
 
-        virtual public void SetConsent(bool hasConsented)
+        public virtual void SetConsent(bool hasConsented)
         {
             _hasConsented = hasConsented;
             GetStrategy().SendConsentHitAsync(hasConsented).Wait();
         }
 
-        abstract public void ClearContext();
+        public abstract void ClearContext();
 
-        abstract public Task FetchFlags();
+        public abstract Task FetchFlags();
 
-        abstract public IFlag GetFlag(string key);
+        public abstract IFlag GetFlag(string key);
 
-        abstract public IFlagCollection GetFlags();
+        public abstract IFlagCollection GetFlags();
 
-        abstract public Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false);
-        abstract public T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool visitorExposed);
-        abstract public IFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
-        abstract public Task SendHit(HitAbstract hit);
+        public abstract Task VisitorExposed<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool hasGetValueBeenCalled = false
+        );
+        public abstract T GetFlagValue<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool visitorExposed
+        );
+        public abstract IFlagMetadata GetFlagMetadata(string key, FlagDTO flag);
+        public abstract Task SendHit(HitAbstract hit);
 
-        abstract public void UpdateContext(IDictionary<string, object> context);
-        abstract public void UpdateContext(string key, string value);
+        public abstract void UpdateContext(IDictionary<string, object> context);
+        public abstract void UpdateContext(string key, string value);
 
-        abstract public void UpdateContext(string key, double value);
+        public abstract void UpdateContext(string key, double value);
 
-        abstract public void UpdateContext(string key, bool value);
+        public abstract void UpdateContext(string key, bool value);
 
-        virtual public void Authenticate(string visitorId)
+        public virtual void Authenticate(string visitorId)
         {
             GetStrategy().Authenticate(visitorId);
         }
 
-        virtual public void Unauthenticate()
+        public virtual void Unauthenticate()
         {
             GetStrategy().Unauthenticate();
         }

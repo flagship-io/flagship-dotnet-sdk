@@ -1,10 +1,6 @@
-﻿using Flagship.Enums;
+﻿using System.Collections.Generic;
+using Flagship.Enums;
 using Flagship.FsFlag;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.Hit
 {
@@ -14,7 +10,7 @@ namespace Flagship.Hit
         public string VariationGroupId { get; set; }
         public string VariationId { get; set; }
 
-        public string FlagKey { get; set; } 
+        public string FlagKey { get; set; }
 
         public object FlagValue { get; set; }
 
@@ -22,9 +18,10 @@ namespace Flagship.Hit
 
         public IFlagMetadata FlagMetadata { get; set; }
 
-        public IDictionary<string, object> VisitorContext { get; set; } 
+        public IDictionary<string, object> VisitorContext { get; set; }
 
-        public Activate(string variationGroupId, string variationId):base(HitType.ACTIVATE)
+        public Activate(string variationGroupId, string variationId)
+            : base(HitType.ACTIVATE)
         {
             VariationGroupId = variationGroupId;
             VariationId = variationId;
@@ -32,7 +29,9 @@ namespace Flagship.Hit
 
         internal override bool IsReady(bool checkParent = true)
         {
-            return base.IsReady(checkParent) && !string.IsNullOrWhiteSpace(VariationGroupId) && !string.IsNullOrWhiteSpace(VariationId);
+            return base.IsReady(checkParent)
+                && !string.IsNullOrWhiteSpace(VariationGroupId)
+                && !string.IsNullOrWhiteSpace(VariationId);
         }
 
         internal override IDictionary<string, object> ToApiKeys()
@@ -44,7 +43,7 @@ namespace Flagship.Hit
                 [Constants.VARIATION_GROUP_ID_API_ITEM_ACTIVATE] = VariationGroupId,
                 [Constants.CUSTOMER_ENV_ID_API_ACTIVATE] = Config.EnvId,
                 [Constants.ANONYMOUS_ID] = null,
-                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds
+                [Constants.QT_API_ITEM] = (CurrentDateTime - CreatedAt).Milliseconds,
             };
 
             if (!string.IsNullOrWhiteSpace(VisitorId) && !string.IsNullOrWhiteSpace(AnonymousId))

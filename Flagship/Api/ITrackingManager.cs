@@ -1,13 +1,6 @@
-﻿using Flagship.Config;
-using Flagship.FsVisitor;
+﻿using System.Threading.Tasks;
 using Flagship.Hit;
 using Flagship.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.Api
 {
@@ -19,7 +12,7 @@ namespace Flagship.Api
 
         Task SendTroubleshootingHit(Troubleshooting hit);
         void AddTroubleshootingHit(Troubleshooting hit);
-        Task SendUsageHit(UsageHit hit); 
+        Task SendUsageHit(UsageHit hit);
 
         TroubleshootingData TroubleshootingData { set; get; }
     }

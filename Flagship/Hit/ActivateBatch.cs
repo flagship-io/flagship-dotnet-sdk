@@ -1,10 +1,7 @@
-﻿using Flagship.Config;
-using Flagship.Enums;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Flagship.Config;
+using Flagship.Enums;
 
 namespace Flagship.Hit
 {
@@ -24,10 +21,9 @@ namespace Flagship.Hit
         {
             return new Dictionary<string, object>()
             {
-                {Constants.CUSTOMER_ENV_ID_API_ITEM, Config?.EnvId },
-                {Constants.BATCH, Hits.Select(x=> x.ToApiKeys()) }
+                { Constants.CUSTOMER_ENV_ID_API_ITEM, Config?.EnvId },
+                { Constants.BATCH, Hits.Select(x => x.ToApiKeys()) },
             };
         }
-
     }
 }

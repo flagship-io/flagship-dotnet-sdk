@@ -1,40 +1,41 @@
-﻿using Flagship.Enums;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using Flagship.Enums;
 using Flagship.Hit;
 using Flagship.Model;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
     internal class NoConsentStrategy : DefaultStrategy
     {
-        public NoConsentStrategy(VisitorDelegateAbstract visitor) : base(visitor)
-        {
+        public NoConsentStrategy(VisitorDelegateAbstract visitor)
+            : base(visitor) { }
 
-        }
-
-        public override void LookupVisitor()
+        public override Task LookupVisitor()
         {
-            //
+            return Utils.Helper.VoidTask();
         }
 
         public override void CacheVisitorAsync()
         {
-           //
+            //
         }
 
-        protected override ICollection<Campaign> FetchVisitorCacheCampaigns(VisitorDelegateAbstract visitor)
+        protected override ICollection<Campaign> FetchVisitorCacheCampaigns(
+            VisitorDelegateAbstract visitor
+        )
         {
             return new Collection<Campaign>();
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
+        public override Task VisitorExposed<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool hasGetValueBeenCalled = false
+        )
         {
-
             return Task.Factory.StartNew(() =>
             {
                 Log("VisitorExposed");
@@ -43,7 +44,6 @@ namespace Flagship.FsVisitor
 
         public override Task SendHit(HitAbstract hit)
         {
-
             return Task.Factory.StartNew(() =>
             {
                 Log("SendHit");
@@ -52,7 +52,15 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Logger.Log.LogInfo(Config, string.Format(Constants.METHOD_DEACTIVATED_CONSENT_ERROR, methodName, Visitor.VisitorId), methodName);
+            Logger.Log.LogInfo(
+                Config,
+                string.Format(
+                    Constants.METHOD_DEACTIVATED_CONSENT_ERROR,
+                    methodName,
+                    Visitor.VisitorId
+                ),
+                methodName
+            );
         }
 
         public override void AddTroubleshootingHit(Troubleshooting hit)
@@ -67,13 +75,13 @@ namespace Flagship.FsVisitor
 
         public override TroubleshootingData GetTroubleshootingData()
         {
-            TrackingManager.TroubleshootingData =null;
+            TrackingManager.TroubleshootingData = null;
             return null;
         }
 
         protected override Task SendActivate(FlagDTO flag, object defaultValue = null)
         {
-           return Utils.Helper.VoidTask();
+            return Utils.Helper.VoidTask();
         }
     }
 }

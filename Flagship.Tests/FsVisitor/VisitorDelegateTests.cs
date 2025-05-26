@@ -1,14 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Flagship.FsVisitor;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Moq;
-using Moq.Protected;
 using Flagship.Tests.Data;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Flagship.Logger;
 using Flagship.Api;
@@ -16,7 +8,6 @@ using Flagship.Config;
 using Flagship.Decision;
 using Flagship.Hit;
 using Flagship.Model;
-using Flagship.Utils;
 using Flagship.Tests.Helpers;
 using Flagship.FsFlag;
 

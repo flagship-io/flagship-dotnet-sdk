@@ -1,16 +1,4 @@
-﻿using Flagship.Api;
-using Flagship.Config;
-using Flagship.Delegate;
-using Flagship.Enums;
-using Flagship.FsVisitor;
-using Flagship.Hit;
-using Flagship.Logger;
-using Flagship.Model;
-using Flagship.Model.Bucketing;
-using Murmur;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -20,23 +8,41 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Flagship.Config;
+using Flagship.Enums;
+using Flagship.FsVisitor;
+using Flagship.Hit;
+using Flagship.Logger;
+using Flagship.Model;
+using Flagship.Model.Bucketing;
+using Murmur;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Flagship.Decision
 {
     internal class BucketingManager : DecisionManager
     {
-
         protected Murmur32 _murmur32;
         protected bool _isPolling;
         protected DateTimeOffset? _lastModified;
         private BucketingDTO bucketingContent;
         protected bool _isFirstPooling;
-        new public BucketingConfig Config { get; set; }
-        protected BucketingDTO BucketingContent { get => bucketingContent; set => bucketingContent = value; }
+        public new BucketingConfig Config { get; set; }
+        protected BucketingDTO BucketingContent
+        {
+            get => bucketingContent;
+            set => bucketingContent = value;
+        }
 
         protected Timer _timer;
 
-        public BucketingManager(BucketingConfig config, HttpClient httpClient, Murmur32 murmur32) : base(config, httpClient)
+        public const string FETCH_THIRD_PARTY_SUCCESS =
+            "THIRD_PARTY_SEGMENT has been fetched : {0}";
+        public const string GET_THIRD_PARTY_SEGMENT = "GetThirdPartySegments";
+
+        public BucketingManager(BucketingConfig config, HttpClient httpClient, Murmur32 murmur32)
+            : base(config, httpClient)
         {
             _murmur32 = murmur32;
             _isPolling = false;
@@ -47,7 +53,6 @@ namespace Flagship.Decision
 
         public async Task StartPolling()
         {
-
             var pollingInterval = Config.PollingInterval.Value;
             Log.LogInfo(Config, "Bucketing polling starts", "StartPolling");
             await Polling().ConfigureAwait(false);
@@ -56,17 +61,17 @@ namespace Flagship.Decision
                 return;
             }
 
-            if (_timer != null)
-            {
-                _timer.Dispose();
-            }
+            _timer?.Dispose();
 
-            _timer = new Timer(async (e) =>
-            {
-                await Polling().ConfigureAwait(false);
-            }, null, pollingInterval, pollingInterval);
-
-
+            _timer = new Timer(
+                async (e) =>
+                {
+                    await Polling().ConfigureAwait(false);
+                },
+                null,
+                pollingInterval,
+                pollingInterval
+            );
         }
 
         public async Task Polling()
@@ -91,8 +96,9 @@ namespace Flagship.Decision
                 requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
                 requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
                 requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
-                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
-
+                requestMessage.Headers.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON)
+                );
 
                 if (_lastModified != null)
                 {
@@ -101,12 +107,15 @@ namespace Flagship.Decision
 
                 var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
-
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    string responseBody = await response
+                        .Content.ReadAsStringAsync()
+                        .ConfigureAwait(false);
                     BucketingContent = JsonConvert.DeserializeObject<BucketingDTO>(responseBody);
-                    LastBucketingTimestamp = DateTime.Now.ToUniversalTime().ToString(Constants.FORMAT_UTC);
+                    LastBucketingTimestamp = DateTime
+                        .Now.ToUniversalTime()
+                        .ToString(Constants.FORMAT_UTC);
 
                     var troubleshootingHit = new Troubleshooting()
                     {
@@ -121,20 +130,18 @@ namespace Flagship.Decision
                         {
                             [Constants.HEADER_X_API_KEY] = Config.ApiKey,
                             [Constants.HEADER_X_SDK_CLIENT] = Constants.SDK_LANGUAGE,
-                            [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION
+                            [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION,
                         },
                         HttpRequestMethod = "POST",
                         HttpRequestUrl = url,
                         HttpResponseBody = BucketingContent,
-                        HttpResponseCode = (int?)response.StatusCode
+                        HttpResponseCode = (int?)response.StatusCode,
                     };
 
                     _lastModified = response.Content.Headers.LastModified;
 
                     TrackingManager.AddTroubleshootingHit(troubleshootingHit);
                 }
-
-
 
                 if (_isFirstPooling)
                 {
@@ -167,11 +174,11 @@ namespace Flagship.Decision
                     {
                         [Constants.HEADER_X_API_KEY] = Config.ApiKey,
                         [Constants.HEADER_X_SDK_CLIENT] = Constants.SDK_LANGUAGE,
-                        [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION
+                        [Constants.HEADER_X_SDK_VERSION] = Constants.SDK_VERSION,
                     },
                     HttpRequestMethod = "POST",
                     HttpRequestUrl = url,
-                    HttpResponseBody = ex.Message
+                    HttpResponseBody = ex.Message,
                 };
 
                 TrackingManager?.AddTroubleshootingHit(troubleshootingHit);
@@ -180,22 +187,26 @@ namespace Flagship.Decision
 
         public void StopPolling()
         {
-            if (_timer != null)
-            {
-                _timer.Dispose();
-            }
+            _timer?.Dispose();
             _isPolling = false;
             Log.LogInfo(Config, "Bucketing polling stopped", "StopPolling");
         }
 
-        virtual public async Task SendContextAsync(VisitorDelegateAbstract visitor)
+        public virtual async Task SendContextAsync(VisitorDelegateAbstract visitor)
         {
             try
             {
-                if(!visitor.HasConsented || visitor.Context.Count <= Constants.NB_MIN_CONTEXT_KEYS)
+                if (
+                    !visitor.HasConsented
+                    || visitor.Context.Count <= Constants.NB_MIN_CONTEXT_KEYS
+                    || !visitor.HasContextBeenUpdated
+                )
                 {
                     return;
                 }
+
+                visitor.HasContextBeenUpdated = false;
+
                 var segment = new Segment(visitor.Context);
                 await visitor.SendHit(segment).ConfigureAwait(false);
 
@@ -209,7 +220,7 @@ namespace Flagship.Decision
                     AnonymousId = visitor.AnonymousId,
                     VisitorId = visitor.VisitorId,
                     Config = Config,
-                    HitContent = segment.ToApiKeys()
+                    HitContent = segment.ToApiKeys(),
                 };
 
                 visitor.SegmentHitTroubleshooting = troubleshootingHit;
@@ -219,7 +230,57 @@ namespace Flagship.Decision
                 Log.LogError(Config, ex.Message, "SendContext");
             }
         }
-        public override async Task<ICollection<Model.Campaign>> GetCampaigns(VisitorDelegateAbstract visitor)
+
+        protected async Task<Dictionary<string, object>> GetThirdPartySegmentsAsync(
+            string visitorId
+        )
+        {
+            var url = string.Format(Constants.THIRD_PARTY_SEGMENT_URL, Config.EnvId, visitorId);
+            var contexts = new Dictionary<string, object>();
+            try
+            {
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    using (var response = await HttpClient.SendAsync(requestMessage))
+                    {
+                        if (response.StatusCode == HttpStatusCode.OK)
+                        {
+                            string responseBody = await response
+                                .Content.ReadAsStringAsync()
+                                .ConfigureAwait(false);
+                            var thirdPartySegments = JsonConvert.DeserializeObject<
+                                List<ThirdPartySegmentDTO>
+                            >(responseBody);
+                            if (thirdPartySegments != null && thirdPartySegments.Count > 0)
+                            {
+                                foreach (var segment in thirdPartySegments)
+                                {
+                                    var key = segment.Partner + "::" + segment.Segment;
+                                    contexts[key] = segment.Value;
+                                }
+                                Log.LogDebug(
+                                    Config,
+                                    string.Format(
+                                        FETCH_THIRD_PARTY_SUCCESS,
+                                        JsonConvert.SerializeObject(contexts)
+                                    ),
+                                    GET_THIRD_PARTY_SEGMENT
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(Config, ex.Message, GET_THIRD_PARTY_SEGMENT);
+            }
+            return contexts;
+        }
+
+        public override async Task<ICollection<Model.Campaign>> GetCampaigns(
+            VisitorDelegateAbstract visitor
+        )
         {
             ICollection<Model.Campaign> campaigns = new Collection<Model.Campaign>();
 
@@ -241,11 +302,25 @@ namespace Flagship.Decision
 
             IsPanic = false;
 
-            await SendContextAsync(visitor).ConfigureAwait(false);
+            if (Config.FetchThirdPartyData)
+            {
+                var thirdPartySegments = await GetThirdPartySegmentsAsync(visitor.VisitorId);
+                foreach (var item in thirdPartySegments)
+                {
+                    visitor.Context[item.Key] = item.Value;
+                }
+            }
+
+            await SendContextAsync(visitor);
 
             foreach (var item in BucketingContent.Campaigns)
             {
-                var campaign = GetMatchingVisitorVariationGroup(item.VariationGroups, visitor, item.Id, item.Type);
+                var campaign = GetMatchingVisitorVariationGroup(
+                    item.VariationGroups,
+                    visitor,
+                    item.Id,
+                    item.Type
+                );
                 if (campaign != null)
                 {
                     campaign.Name = item.Name;
@@ -256,9 +331,16 @@ namespace Flagship.Decision
             return campaigns;
         }
 
-        protected Model.Campaign GetMatchingVisitorVariationGroup(IEnumerable<VariationGroup> variationGroups, VisitorDelegateAbstract visitor, string campaignId, string campaignType)
+        protected Model.Campaign GetMatchingVisitorVariationGroup(
+            IEnumerable<VariationGroup> variationGroups,
+            VisitorDelegateAbstract visitor,
+            string campaignId,
+            string campaignType
+        )
         {
-            var matchingGroup = variationGroups.FirstOrDefault(item => IsMatchedTargeting(item, visitor));
+            var matchingGroup = variationGroups.FirstOrDefault(item =>
+                IsMatchedTargeting(item, visitor)
+            );
             if (matchingGroup != null)
             {
                 var variation = GetVariation(matchingGroup, visitor);
@@ -270,22 +352,26 @@ namespace Flagship.Decision
                         Variation = variation,
                         VariationGroupId = matchingGroup.Id,
                         VariationGroupName = matchingGroup.Name,
-                        Type = campaignType
+                        Type = campaignType,
                     };
                 }
             }
             return null;
         }
 
-        protected Model.Variation GetVariation(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
+        protected Model.Variation GetVariation(
+            VariationGroup variationGroup,
+            VisitorDelegateAbstract visitor
+        )
         {
-
             if (variationGroup?.Variations == null)
             {
                 return null;
             }
 
-            var hashBytes = _murmur32.ComputeHash(Encoding.UTF8.GetBytes(variationGroup.Id + visitor.VisitorId));
+            var hashBytes = _murmur32.ComputeHash(
+                Encoding.UTF8.GetBytes(variationGroup.Id + visitor.VisitorId)
+            );
             var hash = BitConverter.ToUInt32(hashBytes, 0);
             var hashAllocation = hash % 100;
             var totalAllocation = 0;
@@ -297,11 +383,16 @@ namespace Flagship.Decision
                     var visitorCache = (VisitorCacheDTOV1)visitor.VisitorCache.Data;
                     var variationHistory = visitorCache?.Data?.AssignmentsHistory;
 
-                    var cacheVariationId = variationHistory != null && variationHistory.ContainsKey(variationGroup.Id) ? variationHistory[variationGroup.Id] : null;
+                    var cacheVariationId =
+                        variationHistory != null && variationHistory.ContainsKey(variationGroup.Id)
+                            ? variationHistory[variationGroup.Id]
+                            : null;
 
                     if (cacheVariationId != null)
                     {
-                        var newVariation = variationGroup.Variations.FirstOrDefault(x => x.Id == cacheVariationId);
+                        var newVariation = variationGroup.Variations.FirstOrDefault(x =>
+                            x.Id == cacheVariationId
+                        );
                         if (newVariation == null)
                         {
                             continue;
@@ -317,8 +408,13 @@ namespace Flagship.Decision
                     }
                 }
 
+                if (item.Allocation == 0)
+                {
+                    continue;
+                }
+
                 totalAllocation += item.Allocation;
-                if (hashAllocation <= totalAllocation)
+                if (hashAllocation < totalAllocation)
                 {
                     return new Model.Variation
                     {
@@ -332,7 +428,10 @@ namespace Flagship.Decision
             return null;
         }
 
-        protected bool IsMatchedTargeting(VariationGroup variationGroup, VisitorDelegateAbstract visitor)
+        protected bool IsMatchedTargeting(
+            VariationGroup variationGroup,
+            VisitorDelegateAbstract visitor
+        )
         {
             bool check = false;
 
@@ -352,47 +451,73 @@ namespace Flagship.Decision
             return check;
         }
 
-        protected bool CheckAndTargeting(IEnumerable<Targeting> targetings, VisitorDelegateAbstract visitor)
+        protected bool CheckAndTargeting(
+            IEnumerable<Targeting> targetings,
+            VisitorDelegateAbstract visitor
+        )
         {
-            object contextValue;
-            var check = false;
-
+            if (targetings == null || targetings.Count() == 0)
+            {
+                return false;
+            }
             foreach (var item in targetings)
             {
                 if (item.Key == "fs_all_users")
                 {
-                    check = true;
-                    continue;
-                }
-                if (item.Key == "fs_users")
-                {
-                    contextValue = visitor.VisitorId;
-                }
-                else
-                {
-                    if (!visitor.Context.ContainsKey(item.Key))
-                    {
-                        check = false;
-                        break;
-                    }
-                    contextValue = visitor.Context[item.Key];
+                    return true;
                 }
 
-                check = TestOperator(item.Operator, contextValue, item.Value);
-                if (!check)
+                object contextValue;
+
+                switch (item.Operator)
                 {
-                    break;
+                    case TargetingOperator.EXISTS:
+                        if (visitor.Context.ContainsKey(item.Key))
+                        {
+                            continue;
+                        }
+                        return false;
+
+                    case TargetingOperator.NOT_EXISTS:
+                        if (!visitor.Context.ContainsKey(item.Key))
+                        {
+                            continue;
+                        }
+                        return false;
+                    default:
+                        if (item.Key == "fs_users")
+                        {
+                            contextValue = visitor.VisitorId;
+                        }
+                        else
+                        {
+                            if (!visitor.Context.ContainsKey(item.Key))
+                            {
+                                return false;
+                            }
+                            contextValue = visitor.Context[item.Key];
+                        }
+
+                        var check = TestOperator(item.Operator, contextValue, item.Value);
+                        if (!check)
+                        {
+                            return false;
+                        }
+                        break;
                 }
             }
-            return check;
+            return true;
         }
 
-        protected bool TestOperator(TargetingOperator operatorName, object contextValue, object targetingValue)
+        protected bool TestOperator(
+            TargetingOperator operatorName,
+            object contextValue,
+            object targetingValue
+        )
         {
             bool check = false;
             try
             {
-
                 if (targetingValue is JArray targetingValueArray)
                 {
                     return TestListOperator(operatorName, contextValue, targetingValueArray);
@@ -437,11 +562,15 @@ namespace Flagship.Decision
                 Log.LogError(Config, ex.Message, "TestOperator");
             }
 
-
             return check;
         }
 
-        protected bool TestListOperatorLoop(TargetingOperator operatorName, object contextValue, JArray targetingValue, bool initialCheck)
+        protected bool TestListOperatorLoop(
+            TargetingOperator operatorName,
+            object contextValue,
+            JArray targetingValue,
+            bool initialCheck
+        )
         {
             var check = initialCheck;
             foreach (var item in targetingValue)
@@ -463,33 +592,53 @@ namespace Flagship.Decision
             return check;
         }
 
-        protected bool TestListOperator(TargetingOperator operatorName, object contextValue, JArray targetingValue)
+        protected bool TestListOperator(
+            TargetingOperator operatorName,
+            object contextValue,
+            JArray targetingValue
+        )
         {
-            if (operatorName == TargetingOperator.NOT_EQUALS || operatorName == TargetingOperator.NOT_CONTAINS)
+            if (
+                operatorName == TargetingOperator.NOT_EQUALS
+                || operatorName == TargetingOperator.NOT_CONTAINS
+            )
             {
                 return TestListOperatorLoop(operatorName, contextValue, targetingValue, true);
             }
             return TestListOperatorLoop(operatorName, contextValue, targetingValue, false);
         }
 
-        protected bool MatchOperator(TargetingOperator operatorName, object contextValue, object targetingValue)
+        protected bool MatchOperator(
+            TargetingOperator operatorName,
+            object contextValue,
+            object targetingValue
+        )
         {
             bool check = false;
             if (targetingValue is string value && contextValue is string contextString)
             {
                 return MatchOperator(operatorName, contextString, value);
-
             }
-            if ((targetingValue is int || targetingValue is long || targetingValue is double)
-                && (contextValue is int || contextValue is long || contextValue is double))
+            if (
+                (targetingValue is int || targetingValue is long || targetingValue is double)
+                && (contextValue is int || contextValue is long || contextValue is double)
+            )
             {
-                return MatchOperator(operatorName, Convert.ToDouble(contextValue), Convert.ToDouble(targetingValue));
+                return MatchOperator(
+                    operatorName,
+                    Convert.ToDouble(contextValue),
+                    Convert.ToDouble(targetingValue)
+                );
             }
 
             return check;
         }
 
-        protected bool MatchOperator(TargetingOperator operatorName, string contextValue, string targetingValue)
+        protected bool MatchOperator(
+            TargetingOperator operatorName,
+            string contextValue,
+            string targetingValue
+        )
         {
             bool check = false;
             switch (operatorName)
@@ -510,7 +659,11 @@ namespace Flagship.Decision
             return check;
         }
 
-        protected bool MatchOperator(TargetingOperator operatorName, double contextValue, double targetingValue)
+        protected bool MatchOperator(
+            TargetingOperator operatorName,
+            double contextValue,
+            double targetingValue
+        )
         {
             bool check = false;
             switch (operatorName)

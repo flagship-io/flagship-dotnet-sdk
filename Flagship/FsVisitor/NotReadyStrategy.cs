@@ -1,20 +1,19 @@
-﻿using Flagship.Enums;
+﻿using System.Threading.Tasks;
+using Flagship.Enums;
 using Flagship.FsFlag;
 using Flagship.Hit;
 using Flagship.Model;
-using System.Threading.Tasks;
 
 namespace Flagship.FsVisitor
 {
     internal class NotReadyStrategy : DefaultStrategy
     {
-        public NotReadyStrategy(VisitorDelegateAbstract visitor) : base(visitor)
-        {
-        }
+        public NotReadyStrategy(VisitorDelegateAbstract visitor)
+            : base(visitor) { }
 
-        public override void LookupVisitor()
+        public override Task LookupVisitor()
         {
-            //
+            return Utils.Helper.VoidTask();
         }
 
         public override void CacheVisitorAsync()
@@ -24,23 +23,42 @@ namespace Flagship.FsVisitor
 
         public override Task FetchFlags()
         {
-            return Task.Factory.StartNew(() => { Log("FetchFlags"); });
+            return Task.Factory.StartNew(() =>
+            {
+                Log("FetchFlags");
+            });
         }
 
         public override Task SendHit(HitAbstract hit)
         {
-            return Task.Factory.StartNew(() => { Log("SendHit"); });
+            return Task.Factory.StartNew(() =>
+            {
+                Log("SendHit");
+            });
         }
 
-        public override T GetFlagValue<T>(string key, T defaultValue, FlagDTO flag, bool userExposed = true)
+        public override T GetFlagValue<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool userExposed = true
+        )
         {
             Log("Flag.value");
             return defaultValue;
         }
 
-        public override Task VisitorExposed<T>(string key, T defaultValue, FlagDTO flag, bool hasGetValueBeenCalled = false)
+        public override Task VisitorExposed<T>(
+            string key,
+            T defaultValue,
+            FlagDTO flag,
+            bool hasGetValueBeenCalled = false
+        )
         {
-            return Task.Factory.StartNew(() => { Log("VisitorExposed"); });
+            return Task.Factory.StartNew(() =>
+            {
+                Log("VisitorExposed");
+            });
         }
 
         public override IFlagMetadata GetFlagMetadata(string key, FlagDTO flag)
@@ -51,7 +69,15 @@ namespace Flagship.FsVisitor
 
         private void Log(string methodName)
         {
-            Logger.Log.LogError(Config, string.Format(Constants.METHOD_DEACTIVATED_ERROR, methodName, FSSdkStatus.SDK_NOT_INITIALIZED), methodName);
+            Logger.Log.LogError(
+                Config,
+                string.Format(
+                    Constants.METHOD_DEACTIVATED_ERROR,
+                    methodName,
+                    FSSdkStatus.SDK_NOT_INITIALIZED
+                ),
+                methodName
+            );
         }
 
         public override void AddTroubleshootingHit(Troubleshooting hit)

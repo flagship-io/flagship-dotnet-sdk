@@ -1,9 +1,5 @@
-﻿using Flagship.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Flagship.Enums;
 
 namespace Flagship.Hit
 {
@@ -18,7 +14,7 @@ namespace Flagship.Hit
         public EventCategory Category { get; set; }
 
         /// <summary>
-        /// Event name that will also serve as the KPI that you will have inside your reporting. 
+        /// Event name that will also serve as the KPI that you will have inside your reporting.
         /// </summary>
         public string Action { get; set; }
 
@@ -37,7 +33,8 @@ namespace Flagship.Hit
         /// </summary>
         /// <param name="category">Specifies the category of your event.</param>
         /// <param name="action">Event name that will also serve as the KPI that you will have inside your reporting. </param>
-        public Event( EventCategory category, string action):base(HitType.EVENT)
+        public Event(EventCategory category, string action)
+            : base(HitType.EVENT)
         {
             Category = category;
             Action = action;
@@ -56,7 +53,7 @@ namespace Flagship.Hit
 
             if (Value.HasValue)
             {
-                apiKeys[Constants.EVENT_VALUE_API_ITEM]= Value.Value;
+                apiKeys[Constants.EVENT_VALUE_API_ITEM] = Value.Value;
             }
 
             return apiKeys;

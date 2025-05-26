@@ -1,9 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Flagship.FsFlag
 {
@@ -36,7 +31,17 @@ namespace Flagship.FsFlag
         [JsonProperty("variationName")]
         public string VariationName { get; set; }
 
-        internal FlagMetadata(string campaignId, string variationGroupId, string variationId, bool isReference, string campaignType, string slug, string campaignName, string variationGroupName, string variationName)
+        internal FlagMetadata(
+            string campaignId,
+            string variationGroupId,
+            string variationId,
+            bool isReference,
+            string campaignType,
+            string slug,
+            string campaignName,
+            string variationGroupName,
+            string variationName
+        )
         {
             CampaignId = campaignId;
             VariationGroupId = variationGroupId;
@@ -58,6 +63,5 @@ namespace Flagship.FsFlag
         {
             return new FlagMetadata("", "", "", false, "", null, "", "", "");
         }
-
     }
 }

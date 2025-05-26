@@ -1,9 +1,6 @@
 ﻿using Flagship.Config;
 using Flagship.Main;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Flagship.Tests.Functional_test
 {

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Flagship.Enums 
+﻿namespace Flagship.Enums
 {
     internal static class Constants
     {
@@ -16,6 +10,8 @@ namespace Flagship.Enums
 
         public const int DEFAULT_POOL_MAX_SIZE = 100;
 
+        public const int MAX_ACTIVATE_HIT_PER_BATCH = 100;
+
         public const int BATCH_MAX_SIZE = 2500000;
 
         public const int BATCH_ACTIVATE_HIT_COUNT_LIMIT = 100;
@@ -24,12 +20,14 @@ namespace Flagship.Enums
 
         public const int NB_MIN_CONTEXT_KEYS = 3;
 
+        public const int LOOKUP_TIMEOUT_MS = 2000;
+
         /// <summary>
         /// Default request timeout in second
         /// </summary>
         public const int REQUEST_TIME_OUT = 2000;
 
-        public const string BASE_API_URL =  "https://decision.flagship.io/v2/";
+        public const string BASE_API_URL = "https://decision.flagship.io/v2/";
 
         public const string TROUBLESHOOTING_HIT_URL = "https://events.flagship.io/troubleshooting";
 
@@ -37,15 +35,19 @@ namespace Flagship.Enums
 
         public const string HIT_API_URL = "https://ariane.abtasty.com";
 
-        public const string HIT_EVENT_URL = "https://events.flagship.io/"; 
+        public const string HIT_EVENT_URL = "https://events.flagship.io/";
 
         public const string BUCKETING_API_URL = "https://cdn.flagship.io/{0}/bucketing.json";
 
-        public const string BUCKETING_API_CONTEXT_URL = "https://decision.flagship.io/v2/{0}/events";
+        public const string BUCKETING_API_CONTEXT_URL =
+            "https://decision.flagship.io/v2/{0}/events";
+
+        public const string THIRD_PARTY_SEGMENT_URL =
+            "https://api-data-connector.flagship.io/accounts/{0}/segments/{1}";
 
         public const string SEND_CONTEXT_EVENT = "sendContextEvent";
 
-        public const string SDK_VERSION = "4.0.2";
+        public const string SDK_VERSION = "4.1.0";
 
         public const string FLAGSHIP_SDK = "Flagship SDK";
 
@@ -60,9 +62,11 @@ namespace Flagship.Enums
 
         public const string FS_CONSENT = "fs_consent";
 
-        public const string CONTEXT_PARAM_ERROR = "params {0} must be a non null String, and 'value' must be one of the following types string, Number, Boolean";
+        public const string CONTEXT_PARAM_ERROR =
+            "params {0} must be a non null String, and 'value' must be one of the following types string, Number, Boolean";
 
-        public const string INITIALIZATION_PARAM_ERROR = "Params 'envId' and 'apiKey' must not be null or empty.";
+        public const string INITIALIZATION_PARAM_ERROR =
+            "Params 'envId' and 'apiKey' must not be null or empty.";
 
         public const string PROCESS_INITIALIZATION = "INITIALIZATION";
 
@@ -72,32 +76,50 @@ namespace Flagship.Enums
 
         public const string SDK_STARTED_INFO = "Flagship SDK (version: {0}) {1}";
 
-        public const string METHOD_DEACTIVATED_ERROR = "Method {0} is deactivated while SDK status is: {1}.";
+        public const string METHOD_DEACTIVATED_ERROR =
+            "Method {0} is deactivated while SDK status is: {1}.";
 
-        public const string GET_FLAG_MISSING_ERROR = "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, the default value `{2}` has been returned.";
+        public const string GET_FLAG_MISSING_ERROR =
+            "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, the default value `{2}` has been returned.";
 
-        public const string GET_FLAG_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has a different type compared to the default value. Therefore, the default value `{2}` has been returned.";
+        public const string GET_FLAG_CAST_ERROR =
+            "For the visitor `{0}`, the flag with key `{1}` has a different type compared to the default value. Therefore, the default value `{2}` has been returned.";
 
-        public const string GET_FLAG_VALUE =  "For the visitor `{0}`, the flag with key `{1}` has returned the value `{2}`.";
-        public const string GET_FLAG_ERROR = "For the visitor `{0}`, no flags were found with the key `{1}`. As a result, user exposure will not be sent.";
+        public const string GET_FLAG_VALUE =
+            "For the visitor `{0}`, the flag with key `{1}` has returned the value `{2}`.";
+        public const string GET_FLAG_ERROR =
+            "For the visitor `{0}`, no flags were found with the key `{1}`. As a result, user exposure will not be sent.";
 
-        public const string VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED = "Visitor `{0}`, the flag with the key `{1}` has been exposed without calling the `getValue` method first.";
+        public const string VISITOR_EXPOSED_FLAG_VALUE_NOT_CALLED =
+            "Visitor `{0}`, the flag with the key `{1}` has been exposed without calling the `getValue` method first.";
 
-        public const string USER_EXPOSED_CAST_ERROR = "For the visitor `{0}`, the flag with key `{1}` has been exposed despite having a different type compared to the default value";
+        public const string USER_EXPOSED_CAST_ERROR =
+            "For the visitor `{0}`, the flag with key `{1}` has been exposed despite having a different type compared to the default value";
 
-        public const string GET_METADATA_NO_FLAG_FOUND = "For the visitor `{0}`, no flags were found with the key `{1}`, an empty metadata object is returned";
+        public const string GET_METADATA_NO_FLAG_FOUND =
+            "For the visitor `{0}`, no flags were found with the key `{1}`, an empty metadata object is returned";
 
         public const string HIT_NOT_NULL = "A hit must not be null";
 
-        public const string METHOD_DEACTIVATED_CONSENT_ERROR = "Method {0} is deactivated for visitor {1} : visitor did not consent.";
+        public const string METHOD_DEACTIVATED_CONSENT_ERROR =
+            "Method {0} is deactivated for visitor {1} : visitor did not consent.";
 
-        public const string PREDEFINED_CONTEXT_TYPE_ERROR = "Predefined Context {0} must be type of {1}";
+        public const string PREDEFINED_CONTEXT_TYPE_ERROR =
+            "Predefined Context {0} must be type of {1}";
 
-        public const string METHOD_DEACTIVATED_BUCKETING_ERROR = "Method {0} is deactivated on Bucketing mode.";
+        public const string METHOD_DEACTIVATED_BUCKETING_ERROR =
+            "Method {0} is deactivated on Bucketing mode.";
+
+        public const string SEND_ACTIVATE_HIT = "SEND-ACTIVATE-HIT";
+
+        public const string SEND_HIT = "SEND-HIT";
+        public const string XPC_BUCKETING_WARNING =
+            "Experience continuity is disabled on bucketing mode when visitor cache is not set";
 
         public const string GET_FLAG = "GET_FLAG";
 
-        public const string GET_FLAG_NOT_FOUND = "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, an empty flag has been returned.";
+        public const string GET_FLAG_NOT_FOUND =
+            "For the visitor `{0}`, no flags were found with the key `{1}`. Therefore, an empty flag has been returned.";
 
         public const string BATCH = "batch";
         public const string CUSTOMER_ENV_ID_API_ITEM = "cid";
@@ -137,17 +159,17 @@ namespace Flagship.Enums
         public const string CUSTOMER_ENV_ID_API_ACTIVATE = "cid";
         public const string QT_API_ITEM = "qt";
 
-        public const string HIT_EVENT_ERROR_MESSSAGE = "event category and event action are required";
+        public const string HIT_EVENT_ERROR_MESSSAGE =
+            "event category and event action are required";
 
-        public const string HIT_ITEM_ERROR_MESSAGE = "Transaction Id, Item name and item code are required";
+        public const string HIT_ITEM_ERROR_MESSAGE =
+            "Transaction Id, Item name and item code are required";
 
         public const string HIT_PAGE_ERROR_MESSAGE = "documentLocation url is required";
 
         public const string HIT_SCREEN_ERROR_MESSAGE = "documentLocation Screen name is required";
 
-        public const string HIT_TRANSACTION_ERROR_MESSAGE = "Transaction Id and Transaction affiliation are required";
-
-
+        public const string HIT_TRANSACTION_ERROR_MESSAGE =
+            "Transaction Id and Transaction affiliation are required";
     }
-
 }

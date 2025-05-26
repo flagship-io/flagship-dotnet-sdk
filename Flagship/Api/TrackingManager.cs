@@ -1,27 +1,21 @@
-﻿using Flagship.Config;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using Flagship.Config;
 using Flagship.Enums;
-using Flagship.FsVisitor;
 using Flagship.Hit;
 using Flagship.Logger;
 using Flagship.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 
 namespace Flagship.Api
 {
-
     internal class TrackingManager : ITrackingManager
     {
         public const string PROCESS_LOOKUP_HIT = "LOOKUP HIT";
@@ -32,22 +26,30 @@ namespace Flagship.Api
         protected virtual BatchingCachingStrategyAbstract Strategy { get; set; }
         public FlagshipConfig Config { get; set; }
         public HttpClient HttpClient { get; set; }
-        public ConcurrentDictionary<string, HitAbstract> HitsPoolQueue { get => _hitsPoolQueue; }
-        public ConcurrentDictionary<string, Activate> ActivatePoolQueue { get => _activatePoolQueue; }
-        public TroubleshootingData TroubleshootingData { 
-            set { 
-                Strategy.TroubleshootingData = value;
-            } 
-            get { 
-                return Strategy.TroubleshootingData; 
-            } }
+        public ConcurrentDictionary<string, HitAbstract> HitsPoolQueue
+        {
+            get => _hitsPoolQueue;
+        }
+        public ConcurrentDictionary<string, Activate> ActivatePoolQueue
+        {
+            get => _activatePoolQueue;
+        }
+        public TroubleshootingData TroubleshootingData
+        {
+            set { Strategy.TroubleshootingData = value; }
+            get { return Strategy.TroubleshootingData; }
+        }
 
         public string FlagshipInstanceId { get; set; }
 
         protected Timer _timer;
         protected bool _isPolling;
 
-        public TrackingManager(FlagshipConfig config, HttpClient httpClient, string flagshipInstanceId = null)
+        public TrackingManager(
+            FlagshipConfig config,
+            HttpClient httpClient,
+            string flagshipInstanceId = null
+        )
         {
             FlagshipInstanceId = flagshipInstanceId;
             Config = config;
@@ -65,14 +67,29 @@ namespace Flagship.Api
             switch (Config.TrackingManagerConfig.CacheStrategy)
             {
                 case CacheStrategy.PERIODIC_CACHING:
-                    strategy = new BatchingPeriodicCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
+                    strategy = new BatchingPeriodicCachingStrategy(
+                        Config,
+                        HttpClient,
+                        ref _hitsPoolQueue,
+                        ref _activatePoolQueue
+                    );
                     break;
                 case CacheStrategy.NO_BATCHING:
-                    strategy = new NoBatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
+                    strategy = new NoBatchingContinuousCachingStrategy(
+                        Config,
+                        HttpClient,
+                        ref _hitsPoolQueue,
+                        ref _activatePoolQueue
+                    );
                     break;
                 case CacheStrategy.CONTINUOUS_CACHING:
                 default:
-                    strategy = new BatchingContinuousCachingStrategy(Config, HttpClient, ref _hitsPoolQueue, ref _activatePoolQueue);
+                    strategy = new BatchingContinuousCachingStrategy(
+                        Config,
+                        HttpClient,
+                        ref _hitsPoolQueue,
+                        ref _activatePoolQueue
+                    );
                     break;
             }
 
@@ -90,9 +107,10 @@ namespace Flagship.Api
             await Strategy.ActivateFlag(hit).ConfigureAwait(false);
         }
 
-        public virtual async Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
+        public virtual async Task SendBatch(
+            CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength
+        )
         {
-
             await Strategy.SendBatch(batchTriggeredBy).ConfigureAwait(false);
             await Strategy.SendTroubleshootingQueue().ConfigureAwait(false);
             await Strategy.SendUsageHitQueue().ConfigureAwait(false);
@@ -103,15 +121,17 @@ namespace Flagship.Api
             var batchIntervals = Config.TrackingManagerConfig.BatchIntervals;
             Log.LogInfo(Config, "Batching Loop have been started", "startBatchingLoop");
 
-            if (_timer != null)
-            {
-                _timer.Dispose();
-            }
+            _timer?.Dispose();
 
-            _timer = new Timer(async (e) =>
-            {
-                await BatchingLoop().ConfigureAwait(false);
-            }, null, batchIntervals, batchIntervals);
+            _timer = new Timer(
+                async (e) =>
+                {
+                    await BatchingLoop().ConfigureAwait(false);
+                },
+                null,
+                batchIntervals,
+                batchIntervals
+            );
         }
 
         public virtual async Task BatchingLoop()
@@ -128,20 +148,20 @@ namespace Flagship.Api
 
         public void StopBatchingLoop()
         {
-
-            if (_timer != null)
-            {
-                _timer.Dispose();
-            }
+            _timer?.Dispose();
             _isPolling = false;
             Log.LogInfo(Config, "Batching Loop have been stopped", "stopBatchingLoop");
         }
 
-        protected bool CheckHitTime(DateTime time) => (DateTime.Now - time).TotalSeconds <= Constants.DEFAULT_HIT_CACHE_TIME;
+        protected bool CheckHitTime(DateTime time) =>
+            (DateTime.Now - time).TotalSeconds <= Constants.DEFAULT_HIT_CACHE_TIME;
 
         protected virtual bool ChecKLookupHitData1(JToken item)
         {
-            return item != null && item["version"].ToObject<int>() == 1 && item["data"].ToObject<HitCacheData>() != null && item["data"]["type"] != null;
+            return item != null
+                && item["version"].ToObject<int>() == 1
+                && item["data"].ToObject<HitCacheData>() != null
+                && item["data"]["type"] != null;
         }
 
         protected HitAbstract GetHitFromContent(JObject content)
@@ -174,6 +194,7 @@ namespace Flagship.Api
             hit.Config = Config;
             return hit;
         }
+
         public async Task LookupHitsAsync()
         {
             try
@@ -191,18 +212,25 @@ namespace Flagship.Api
                     return;
                 }
 
-                Log.LogInfo(Config, string.Format(HIT_DATA_LOADED, JsonConvert.SerializeObject(hitsCache)), PROCESS_LOOKUP_HIT);
+                Log.LogInfo(
+                    Config,
+                    string.Format(HIT_DATA_LOADED, JsonConvert.SerializeObject(hitsCache)),
+                    PROCESS_LOOKUP_HIT
+                );
 
                 var wrongHitKeys = new List<string>();
 
                 var jsonSerializer = new JsonSerializer
                 {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 };
 
                 foreach (var item in hitsCache)
                 {
-                    if (!ChecKLookupHitData1(item.Value) || !CheckHitTime(item.Value["data"]["time"].Value<DateTime>()))
+                    if (
+                        !ChecKLookupHitData1(item.Value)
+                        || !CheckHitTime(item.Value["data"]["time"].Value<DateTime>())
+                    )
                     {
                         wrongHitKeys.Add(item.Key);
                         continue;
@@ -219,7 +247,6 @@ namespace Flagship.Api
                     {
                         HitsPoolQueue.TryAdd(hit.Key, hit);
                     }
-
                 }
 
                 if (wrongHitKeys.Any())

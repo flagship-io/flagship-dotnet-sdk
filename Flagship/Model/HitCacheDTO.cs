@@ -1,13 +1,8 @@
-﻿using Flagship.Hit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Flagship.Hit;
 
 namespace Flagship.Model
 {
-
     internal class HitCacheData
     {
         public string VisitorId { get; set; }
@@ -20,11 +15,11 @@ namespace Flagship.Model
 
         public object Content { get; set; }
     }
+
     internal class HitCacheDTOV1
     {
         public int Version { get; set; }
 
-        public HitCacheData Data { get; set; } 
-
+        public HitCacheData Data { get; set; }
     }
 }

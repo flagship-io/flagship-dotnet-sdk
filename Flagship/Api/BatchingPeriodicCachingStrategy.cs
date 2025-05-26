@@ -1,17 +1,15 @@
-﻿using Flagship.Config;
-using Flagship.Enums;
-using Flagship.Hit;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Flagship.Config;
+using Flagship.Enums;
+using Flagship.Hit;
+using Newtonsoft.Json;
 
 namespace Flagship.Api
 {
@@ -19,22 +17,35 @@ namespace Flagship.Api
     {
         protected bool _isBatchSending;
 
-        public BatchingPeriodicCachingStrategy(FlagshipConfig config, HttpClient httpClient, ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue, ref ConcurrentDictionary<string, Activate> activatePoolQueue) : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
+        public BatchingPeriodicCachingStrategy(
+            FlagshipConfig config,
+            HttpClient httpClient,
+            ref ConcurrentDictionary<string, HitAbstract> hitsPoolQueue,
+            ref ConcurrentDictionary<string, Activate> activatePoolQueue
+        )
+            : base(config, httpClient, ref hitsPoolQueue, ref activatePoolQueue)
         {
             _isBatchSending = false;
         }
 
-        public async override Task Add(HitAbstract hit)
+        public override async Task Add(HitAbstract hit)
         {
-
             var hitKey = $"{hit.VisitorId}:{Guid.NewGuid()}";
             hit.Key = hitKey;
             HitsPoolQueue.TryAdd(hitKey, hit);
-            if (hit is Event eventHit && eventHit.Action == Constants.FS_CONSENT && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}")
+            if (
+                hit is Event eventHit
+                && eventHit.Action == Constants.FS_CONSENT
+                && eventHit.Label == $"{Constants.SDK_LANGUAGE}:{false}"
+            )
             {
                 await NotConsent(hit.VisitorId).ConfigureAwait(false);
             }
-            Logger.Log.LogDebug(Config, string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())), ADD_HIT);
+            Logger.Log.LogDebug(
+                Config,
+                string.Format(HIT_ADDED_IN_QUEUE, JsonConvert.SerializeObject(hit.ToApiKeys())),
+                ADD_HIT
+            );
 
             lock (HitsPoolQueue)
             {
@@ -43,10 +54,13 @@ namespace Flagship.Api
                     _ = SendBatch(CacheTriggeredBy.BatchLength);
                 }
             }
-
         }
 
-        protected async override Task SendActivate(ICollection<Activate> activateHitsPool, Activate currentActivate, CacheTriggeredBy batchTriggeredBy)
+        protected override async Task SendActivate(
+            ICollection<Activate> activateHitsPool,
+            Activate currentActivate,
+            CacheTriggeredBy batchTriggeredBy
+        )
         {
             var url = Constants.BASE_API_URL + URL_ACTIVATE;
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
@@ -54,7 +68,9 @@ namespace Flagship.Api
             requestMessage.Headers.Add(Constants.HEADER_X_API_KEY, Config.ApiKey);
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE);
             requestMessage.Headers.Add(Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION);
-            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+            requestMessage.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON)
+            );
 
             var activateBatch = new ActivateBatch(activateHitsPool, Config);
 
@@ -70,7 +86,11 @@ namespace Flagship.Api
             {
                 var postDatajson = JsonConvert.SerializeObject(requestBody);
 
-                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+                var stringContent = new StringContent(
+                    postDatajson,
+                    Encoding.UTF8,
+                    Constants.HEADER_APPLICATION_JSON
+                );
 
                 requestMessage.Content = stringContent;
 
@@ -80,9 +100,12 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {STATUS_CODE, response.StatusCode},
-                        {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
+                        { STATUS_CODE, response.StatusCode },
+                        { REASON_PHRASE, response.ReasonPhrase },
+                        {
+                            RESPONSE,
+                            await response.Content.ReadAsStringAsync().ConfigureAwait(false)
+                        },
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
@@ -93,19 +116,28 @@ namespace Flagship.Api
                     OnVisitorExposed(item);
                 }
 
-                Logger.Log.LogDebug(Config, string.Format(HIT_SENT_SUCCESS, JsonConvert.SerializeObject(new
-                {
-                    url,
-                    headers = new Dictionary<string, string>
-                        {
-                            {Constants.HEADER_X_API_KEY, Config.ApiKey},
-                            {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
-                            {Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION }
-                        },
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                })), SEND_ACTIVATE);
+                Logger.Log.LogDebug(
+                    Config,
+                    string.Format(
+                        HIT_SENT_SUCCESS,
+                        JsonConvert.SerializeObject(
+                            new
+                            {
+                                url,
+                                headers = new Dictionary<string, string>
+                                {
+                                    { Constants.HEADER_X_API_KEY, Config.ApiKey },
+                                    { Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
+                                    { Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION },
+                                },
+                                body = requestBody,
+                                duration = (DateTime.Now - now).TotalMilliseconds,
+                                batchTriggeredBy = $"{batchTriggeredBy}",
+                            }
+                        )
+                    ),
+                    SEND_ACTIVATE
+                );
             }
             catch (Exception ex)
             {
@@ -114,20 +146,26 @@ namespace Flagship.Api
                     ActivatePoolQueue.TryAdd(item.Key, item);
                 }
 
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    url,
-                    headers = new Dictionary<string, string>
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
                         {
-                            {Constants.HEADER_X_API_KEY, Config.ApiKey},
-                            {Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
-                            {Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION }
-                        },
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_ACTIVATE);
-
+                            url,
+                            headers = new Dictionary<string, string>
+                            {
+                                { Constants.HEADER_X_API_KEY, Config.ApiKey },
+                                { Constants.HEADER_X_SDK_CLIENT, Constants.SDK_LANGUAGE },
+                                { Constants.HEADER_X_SDK_VERSION, Constants.SDK_VERSION },
+                            },
+                            body = requestBody,
+                            duration = (DateTime.Now - now).TotalMilliseconds,
+                            batchTriggeredBy = $"{batchTriggeredBy}",
+                        }
+                    ),
+                    SEND_ACTIVATE
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -142,14 +180,16 @@ namespace Flagship.Api
                     HttpResponseBody = ex.Message,
                     HttpResponseMethod = "POST",
                     HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = batchTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
             }
         }
 
-        public async override Task SendBatch(CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength)
+        public override async Task SendBatch(
+            CacheTriggeredBy batchTriggeredBy = CacheTriggeredBy.BatchLength
+        )
         {
             var hasActivateHit = false;
             _isBatchSending = true;
@@ -160,7 +200,9 @@ namespace Flagship.Api
             {
                 lock (ActivatePoolQueue)
                 {
-                    activateHits = ActivatePoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value).Values.ToList();
+                    activateHits = ActivatePoolQueue
+                        .ToDictionary(entry => entry.Key, entry => entry.Value)
+                        .Values.ToList();
                     var keys = activateHits.Select(x => x.Key);
                     foreach (var item in keys)
                     {
@@ -170,12 +212,18 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    errorStackTrace = ex.StackTrace,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_BATCH);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            errorStackTrace = ex.StackTrace,
+                            batchTriggeredBy = $"{batchTriggeredBy}",
+                        }
+                    ),
+                    SEND_BATCH
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -187,12 +235,11 @@ namespace Flagship.Api
                     Config = Config,
                     ErrorMessage = ex.Message,
                     ErrorStackTrace = ex.StackTrace,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = batchTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
             }
-
 
             if (activateHits.Count > 0)
             {
@@ -200,10 +247,7 @@ namespace Flagship.Api
                 hasActivateHit = true;
             }
 
-            var batch = new Batch()
-            {
-                Config = Config
-            };
+            var batch = new Batch() { Config = Config };
 
             var hitKeysToRemove = new List<string>();
 
@@ -211,11 +255,17 @@ namespace Flagship.Api
             {
                 lock (HitsPoolQueue)
                 {
-                    var HitsPoolQueueClone = HitsPoolQueue.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    var HitsPoolQueueClone = HitsPoolQueue.ToDictionary(
+                        entry => entry.Key,
+                        entry => entry.Value
+                    );
 
                     foreach (var item in HitsPoolQueueClone)
                     {
-                        if ((DateTime.Now - item.Value.CreatedAt).TotalMilliseconds >= Constants.DEFAULT_HIT_CACHE_TIME)
+                        if (
+                            (DateTime.Now - item.Value.CreatedAt).TotalMilliseconds
+                            >= Constants.DEFAULT_HIT_CACHE_TIME
+                        )
                         {
                             hitKeysToRemove.Add(item.Key);
                             continue;
@@ -238,11 +288,18 @@ namespace Flagship.Api
             }
             catch (Exception ex)
             {
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    errorStackTrace = ex.StackTrace,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_BATCH);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            errorStackTrace = ex.StackTrace,
+                            batchTriggeredBy = $"{batchTriggeredBy}",
+                        }
+                    ),
+                    SEND_BATCH
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -254,12 +311,11 @@ namespace Flagship.Api
                     Config = Config,
                     ErrorMessage = ex.Message,
                     ErrorStackTrace = ex.StackTrace,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = batchTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);
             }
-
 
             if (!batch.Hits.Any())
             {
@@ -277,16 +333,24 @@ namespace Flagship.Api
 
             try
             {
-                var requestMessage = new HttpRequestMessage(HttpMethod.Post, Constants.HIT_EVENT_URL);
+                var requestMessage = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    Constants.HIT_EVENT_URL
+                );
 
-                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON));
+                requestMessage.Headers.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue(Constants.HEADER_APPLICATION_JSON)
+                );
 
                 var postDatajson = JsonConvert.SerializeObject(requestBody);
 
-                var stringContent = new StringContent(postDatajson, Encoding.UTF8, Constants.HEADER_APPLICATION_JSON);
+                var stringContent = new StringContent(
+                    postDatajson,
+                    Encoding.UTF8,
+                    Constants.HEADER_APPLICATION_JSON
+                );
 
                 requestMessage.Content = stringContent;
-
 
                 var response = await HttpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
@@ -294,21 +358,33 @@ namespace Flagship.Api
                 {
                     var message = new Dictionary<string, object>()
                     {
-                        {STATUS_CODE, response.StatusCode},
-                        {REASON_PHRASE, response.ReasonPhrase },
-                        {RESPONSE, await response.Content.ReadAsStringAsync().ConfigureAwait(false) }
+                        { STATUS_CODE, response.StatusCode },
+                        { REASON_PHRASE, response.ReasonPhrase },
+                        {
+                            RESPONSE,
+                            await response.Content.ReadAsStringAsync().ConfigureAwait(false)
+                        },
                     };
 
                     throw new Exception(JsonConvert.SerializeObject(message));
                 }
 
-                Logger.Log.LogDebug(Config, string.Format(BATCH_SENT_SUCCESS, JsonConvert.SerializeObject(new
-                {
-                    url = Constants.HIT_EVENT_URL,
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                })), SEND_BATCH);
+                Logger.Log.LogDebug(
+                    Config,
+                    string.Format(
+                        BATCH_SENT_SUCCESS,
+                        JsonConvert.SerializeObject(
+                            new
+                            {
+                                url = Constants.HIT_EVENT_URL,
+                                body = requestBody,
+                                duration = (DateTime.Now - now).TotalMilliseconds,
+                                batchTriggeredBy = $"{batchTriggeredBy}",
+                            }
+                        )
+                    ),
+                    SEND_BATCH
+                );
             }
             catch (Exception ex)
             {
@@ -316,13 +392,20 @@ namespace Flagship.Api
                 {
                     HitsPoolQueue.TryAdd(item.Key, item);
                 }
-                Logger.Log.LogError(Config, Utils.Helper.ErrorFormat(ex.Message, new
-                {
-                    url = Constants.HIT_EVENT_URL,
-                    body = requestBody,
-                    duration = (DateTime.Now - now).TotalMilliseconds,
-                    batchTriggeredBy = $"{batchTriggeredBy}"
-                }), SEND_BATCH);
+                Logger.Log.LogError(
+                    Config,
+                    Utils.Helper.ErrorFormat(
+                        ex.Message,
+                        new
+                        {
+                            url = Constants.HIT_EVENT_URL,
+                            body = requestBody,
+                            duration = (DateTime.Now - now).TotalMilliseconds,
+                            batchTriggeredBy = $"{batchTriggeredBy}",
+                        }
+                    ),
+                    SEND_BATCH
+                );
 
                 var troubleshooting = new Troubleshooting()
                 {
@@ -337,7 +420,7 @@ namespace Flagship.Api
                     HttpResponseBody = ex.Message,
                     HttpResponseMethod = "POST",
                     HttpResponseTime = (int?)(DateTime.Now - now).TotalMilliseconds,
-                    BatchTriggeredBy = batchTriggeredBy
+                    BatchTriggeredBy = batchTriggeredBy,
                 };
 
                 _ = SendTroubleshootingHit(troubleshooting);

@@ -22,7 +22,20 @@ namespace Flagship.Hit
         internal override IDictionary<string, object> ToApiKeys()
         {
             var apiKeys = base.ToApiKeys();
-            apiKeys[S_API_ITEM] = Context;
+            if (Context == null || Context.Count == 0)
+            {
+                apiKeys[S_API_ITEM] = new Dictionary<string, string>();
+                return apiKeys;
+            }
+
+            var apiContext = new Dictionary<string, string>(Context.Count);
+
+            foreach (var item in Context)
+            {
+                apiContext[item.Key] = item.Value?.ToString() ?? "null";
+            }
+
+            apiKeys[S_API_ITEM] = apiContext;
             return apiKeys;
         }
 

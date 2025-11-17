@@ -14,7 +14,10 @@ namespace Flagship.Hit.Tests
         {
             var context = new Dictionary<string, object>()
             {
-                ["isVip"] = true
+                ["isVip"] = true,
+                ["key2"] = 123,
+                ["key3"] = null,
+                ["key4"] = "value4"
             };
             var config = new DecisionApiConfig()
             {
@@ -50,7 +53,13 @@ namespace Flagship.Hit.Tests
                 [Constants.T_API_ITEM] = $"{Hit.HitType.SEGMENT}",
                 [Constants.CUSTOMER_UID] = null,
                 [Constants.QT_API_ITEM] = 0,
-                [Segment.S_API_ITEM] = context,
+                [Segment.S_API_ITEM] = new Dictionary<string, string>()
+                {
+                    ["isVip"] = "True",
+                    ["key2"] = "123",
+                    ["key3"] = "null",
+                    ["key4"] = "value4"
+                }
             };
 
             Assert.AreEqual(JsonConvert.SerializeObject(apiKeys), JsonConvert.SerializeObject(segment.ToApiKeys()));
